@@ -1,18 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useI18n } from '../I18nProvider';
 
 const items = [
-  { to: '/admin', label: 'Admin Dashboard' },
-  { to: '/client', label: 'Client Dashboard' },
-  { to: '/onboarding', label: 'Corporate Onboarding' },
-  { to: '/procurement/quote-builder', label: 'Quote Builder' },
-  { to: '/supply/order-tracker', label: 'Order Tracker' },
-  { to: '/docs', label: 'Document Manager' },
-  { to: '/comms', label: 'Communication Hub' },
-  { to: '/reporting', label: 'Reporting' },
+  { to: '/admin', key: 'nav.admin_dashboard' },
+  // Point Client Dashboard to root so it highlights when on home
+  { to: '/', key: 'nav.client_dashboard' },
+  { to: '/onboarding', key: 'nav.onboarding' },
+  { to: '/procurement/quote-builder', key: 'nav.quote_builder' },
+  { to: '/supply/order-tracker', key: 'nav.order_tracker' },
+  { to: '/docs', key: 'nav.docs' },
+  { to: '/comms', key: 'nav.comms' },
+  { to: '/reporting', key: 'nav.reporting' },
 ];
 
 export function Sidebar() {
+  const { t } = useI18n();
   return (
     <aside className="sidebar" role="navigation" aria-label="Primary">
       <div style={{ padding: 16, borderBottom: '1px solid var(--border)' }}>
@@ -27,7 +30,7 @@ export function Sidebar() {
             className={({ isActive }) => `btn ghost` + (isActive ? ' active' : '')}
             style={{ display: 'block', margin: 8 }}
           >
-            {item.label}
+            {t(item.key)}
           </NavLink>
         ))}
       </nav>

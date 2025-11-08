@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
+import { useModule } from '../components/useModule';
 
 type Message = { id: number; from: string; body: string; read: boolean; when: string };
 
 export default function CommunicationHub() {
+  useModule('procurement');
   const [thread, setThread] = useState<Message[]>([
     { id: 1, from: 'PIC Procurement - Sari', body: 'Requesting updated quote for hydraulic hoses @PIC Finance - Damar', read: true, when: '09:20' },
     { id: 2, from: 'PIC Finance - Damar', body: 'Approved budget, proceed to PO', read: false, when: '10:05' },
@@ -19,7 +21,9 @@ export default function CommunicationHub() {
 
   return (
     <div className="main">
-      <h1>Communication Hub</h1>
+      <div className="page-header procurement">
+        <h1 style={{ margin: 0 }}>Communication Hub</h1>
+      </div>
       <div className="card" style={{ padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ marginTop: 0 }}>Threads</h2>

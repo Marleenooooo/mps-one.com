@@ -1,14 +1,18 @@
 import React, { useMemo, useState } from 'react';
+import { useModule } from '../components/useModule';
 
 const statuses = ['PR', 'Quote', 'PO', 'Processing', 'Shipped', 'Delivered', 'Invoiced', 'Paid'] as const;
 
 export default function OrderTracker() {
+  useModule('inventory');
   const [current, setCurrent] = useState<typeof statuses[number]>('Processing');
   const eta = useMemo(() => new Date(Date.now() + 1000 * 60 * 60 * 24 * 4), []); // 4 days
 
   return (
     <div className="main">
-      <h1>Order Tracker</h1>
+      <div className="page-header inventory">
+        <h1 style={{ margin: 0 }}>Order Tracker</h1>
+      </div>
       <div className="card" style={{ padding: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           {statuses.map(s => (

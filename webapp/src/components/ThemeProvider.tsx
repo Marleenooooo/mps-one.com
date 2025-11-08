@@ -14,8 +14,8 @@ const THEME_KEY = 'mpsone_theme';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    const persisted = localStorage.getItem(THEME_KEY) as Theme | null;
-    if (persisted) return persisted;
+    const persisted = localStorage.getItem(THEME_KEY) as any;
+    if (persisted === 'light' || persisted === 'dark') return persisted as Theme;
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     return prefersDark ? 'dark' : 'light';
   });
@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<ThemeContextValue>(() => ({
     theme,
     setTheme,
-    toggle: () => setTheme(t => (t === 'dark' ? 'light' : 'dark')),
+    toggle: () => setTheme(t => (t === 'light' ? 'dark' : 'light')),
   }), [theme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

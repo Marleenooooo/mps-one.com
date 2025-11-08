@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useModule } from '../components/useModule';
 
 type Role = 'Admin' | 'PIC Operational' | 'PIC Procurement' | 'PIC Finance';
 
 export default function Onboarding() {
+  useModule('reports');
   const [step, setStep] = useState(1);
   const [company, setCompany] = useState('');
   const [departments, setDepartments] = useState<string[]>(['Mining Ops']);
@@ -14,7 +16,9 @@ export default function Onboarding() {
 
   return (
     <div className="main">
-      <h1>Corporate Onboarding</h1>
+      <div className="page-header reports">
+        <h1 style={{ margin: 0 }}>Corporate Onboarding</h1>
+      </div>
       <div className="card" style={{ padding: 16 }}>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <div className={`status-badge ${step>=1?'info':''}`}>Company</div>

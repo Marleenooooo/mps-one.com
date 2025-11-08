@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModule } from '../components/useModule';
 
 function Chart({ title }: { title: string }) {
   return (
@@ -13,9 +14,12 @@ function Chart({ title }: { title: string }) {
 }
 
 export default function Reporting() {
+  useModule('reports');
   return (
     <div className="main">
-      <h1>Reporting</h1>
+      <div className="page-header reports">
+        <h1 style={{ margin: 0 }}>Reporting</h1>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
         <Chart title="Spending Analytics" />
         <Chart title="Vendor Performance" />

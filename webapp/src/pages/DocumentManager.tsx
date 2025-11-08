@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useModule } from '../components/useModule';
 
 type Doc = { id: number; name: string; version: number; canAccess: boolean };
 
 export default function DocumentManager() {
+  useModule('finance');
   const [docs, setDocs] = useState<Doc[]>([
     { id: 1, name: 'Quote-Q-1209.pdf', version: 3, canAccess: true },
     { id: 2, name: 'PO-9821.pdf', version: 1, canAccess: true },
@@ -19,7 +21,9 @@ export default function DocumentManager() {
 
   return (
     <div className="main">
-      <h1>Document Manager</h1>
+      <div className="page-header finance">
+        <h1 style={{ margin: 0 }}>Document Manager</h1>
+      </div>
       <div className="card" style={{ padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>Documents</h2>

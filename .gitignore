@@ -1,0 +1,14 @@
+# Node and build artifacts
+webapp/node_modules/
+webapp/dist/
+webapp/dist.zip
+
+# IDE/Tooling
+.trae/
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+Desktop.ini

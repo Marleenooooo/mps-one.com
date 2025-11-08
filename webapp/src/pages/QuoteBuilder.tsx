@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
+import { useModule } from '../components/useModule';
 import { LoadingButton } from '../components/UI/LoadingButton';
 
 type Item = { id: number; name: string; qty: number; price: number };
 
 export default function QuoteBuilder() {
+  useModule('procurement');
   const [items, setItems] = useState<Item[]>([
     { id: 1, name: 'Excavator Bucket', qty: 2, price: 15000000 },
     { id: 2, name: 'Hydraulic Hose', qty: 6, price: 750000 },
@@ -27,7 +29,9 @@ export default function QuoteBuilder() {
 
   return (
     <div className="main">
-      <h1>Quote Builder</h1>
+      <div className="page-header procurement">
+        <h1 style={{ margin: 0 }}>Quote Builder</h1>
+      </div>
       <div className="card" style={{ padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ marginTop: 0 }}>Items</h2>

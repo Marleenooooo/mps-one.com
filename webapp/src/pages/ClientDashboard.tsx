@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useModule } from '../components/useModule';
 
 function ProgressBar({ value }: { value: number }) {
   return (
@@ -9,6 +10,7 @@ function ProgressBar({ value }: { value: number }) {
 }
 
 export default function ClientDashboard() {
+  useModule('procurement');
   const [company] = useState('Kalimantan Mining Group');
   const [budgetUsed] = useState(62);
 
@@ -22,7 +24,9 @@ export default function ClientDashboard() {
 
   return (
     <div className="main" role="main">
-      <h1>Welcome, {company}</h1>
+      <div className="page-header procurement">
+        <h1 style={{ margin: 0 }}>Welcome, {company}</h1>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
         <div className="card" style={{ padding: 16 }}>
           <h2 style={{ marginTop: 0 }}>Order Tracking</h2>

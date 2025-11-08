@@ -1,4 +1,5 @@
 import React from 'react';
+import { useModule } from '../components/useModule';
 import { DataTable } from '../components/UI/DataTable';
 
 const recentActivity = [
@@ -20,9 +21,12 @@ const clients = [
 ];
 
 export default function AdminDashboard() {
+  useModule('reports');
   return (
     <div className="main" role="main">
-      <h1>Admin Dashboard</h1>
+      <div className="page-header reports">
+        <h1 style={{ margin: 0 }}>Admin Dashboard</h1>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
         {metrics.map(m => (
           <div key={m.label} className="card" style={{ padding: 16 }}>
