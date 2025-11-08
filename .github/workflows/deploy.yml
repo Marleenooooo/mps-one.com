@@ -20,7 +20,8 @@ jobs:
 
       - name: Install dependencies
         working-directory: webapp
-        run: npm ci
+        run: |
+          npm ci || npm install
 
       - name: Build
         working-directory: webapp
