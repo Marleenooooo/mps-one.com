@@ -29,6 +29,19 @@ jobs:
           VITE_APP_URL: ${{ vars.VITE_APP_URL }}
         run: npm run build
 
+      - name: Validate FTP secrets
+        run: |
+          [ -z "${{ secrets.FTP_HOST }}" ] && echo "Missing secret: FTP_HOST" && exit 1
+          [ -z "${{ secrets.FTP_USERNAME }}" ] && echo "Missing secret: FTP_USERNAME" && exit 1
+          [ -z "${{ secrets.FTP_PASSWORD }}" ] && echo "Missing secret: FTP_PASSWORD" && exit 1
+          [ -z "${{ secrets.FTP_DIR }}" ] && echo "Missing secret: FTP_DIR" && exit 1
+          echo "All FTP secrets present."
+
+      - name: Debug build output
+        run: |
+          echo "VITE_APP_URL=${{ vars.VITE_APP_URL }}"
+          ls -la webapp/dist || true
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -38,6 +51,7 @@ jobs:
           local-dir: webapp/dist
           server-dir: ${{ secrets.FTP_DIR }}
           protocol: ftps
+          fail-on-error: true
           log-level: standard
           exclude: |
             **/.git*
