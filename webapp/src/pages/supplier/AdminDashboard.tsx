@@ -196,6 +196,7 @@ export default function AdminDashboard() {
         {invites.length === 0 ? (
           <div style={{ color: 'var(--text-secondary)' }}>{t('admin.invites.none') || 'No invites yet.'}</div>
         ) : (
+          <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontWeight: 600 }}>{t('admin.invites.filter_label') || 'Filter'}</span>
@@ -261,6 +262,7 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+          </>
         )}
       </div>
     </div>
