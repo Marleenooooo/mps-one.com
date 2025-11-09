@@ -136,3 +136,4 @@ Use a full URL if you prefer: `https://api.your-domain.com`.
 - Do NOT put `DB_HOST`, `DB_USER`, `DB_PASSWORD` in the frontend.
 - Use least-privilege DB users and rotate passwords regularly.
 - Enable TLS for API endpoints and enforce CORS to your frontend origin.
+

@@ -1,37 +1,37 @@
-Language: [English](DB_SETUP.md) | [Bahasa Indonesia](id/DB_SETUP.md)
+Bahasa: [English](../DB_SETUP.md) | [Bahasa Indonesia](DB_SETUP.md)
 
-# Backend API & MySQL Setup
+# Setup Backend API & MySQL
 
-This project’s frontend is a React SPA. Database credentials must live on the backend only — never in the frontend. Below are the steps to configure MySQL on Hostinger and wire a backend API.
+Dokumen ini merangkum langkah dasar menyiapkan MySQL di Hostinger dan menghubungkan backend API. Kredensial database hanya boleh ada di backend — jangan pernah di frontend.
 
-## MySQL Credentials (Hostinger)
-- Database Name: `mpsonedatabase`
-- Database User: `mpsone`
-- Database Password: set a strong password in hPanel
-- Host: from Hostinger hPanel (e.g., `srvXXXXXX.hstgr.cloud`)
+## Kredensial MySQL (Hostinger)
+- Nama Database: `mpsonedatabase`
+- Pengguna Database: `mpsone`
+- Kata Sandi: buat kata sandi kuat di hPanel
+- Host: dari hPanel Hostinger (mis. `srvXXXXXX.hstgr.cloud`)
 - Port: `3306`
 
-## Create the Database/User
-1. Open Hostinger hPanel → Databases → MySQL.
-2. Create database `mpsonedatabase`.
-3. Create user `mpsone` and assign it to `mpsonedatabase` with ALL privileges.
-4. Note the `Host`, `Username`, and set a strong `Password`.
+## Buat Database & Pengguna
+1. Buka hPanel Hostinger → Databases → MySQL.
+2. Buat database `mpsonedatabase`.
+3. Buat pengguna `mpsone` dan beri akses FULL ke `mpsonedatabase`.
+4. Catat `Host`, `Username`, dan setel `Password` yang kuat.
 
-## Backend Environment (.env)
-Set these environment variables in your backend service (Node, PHP, etc.):
+## Environment Backend (.env)
+Set variabel berikut di service backend (Node, PHP, dll):
 
 ```
 DB_HOST=srvXXXXXX.hstgr.cloud
 DB_PORT=3306
 DB_NAME=mpsonedatabase
 DB_USER=mpsone
-DB_PASSWORD=REPLACE_WITH_STRONG_PASSWORD
+DB_PASSWORD=GANTI_DENGAN_PASSWORD_KUAT
 
-# CORS / app origin
-APP_ORIGIN=https://your-frontend-domain
+# CORS / asal aplikasi
+APP_ORIGIN=https://domain-frontend-anda
 ```
 
-### Node (mysql2) Example
+### Contoh Node (mysql2)
 ```ts
 import mysql from 'mysql2/promise';
 
@@ -47,7 +47,7 @@ export const pool = mysql.createPool({
 });
 ```
 
-### PHP (PDO) Example
+### Contoh PHP (PDO)
 ```php
 $dsn = "mysql:host=" . getenv('DB_HOST') . ";port=" . getenv('DB_PORT') . ";dbname=" . getenv('DB_NAME');
 $pdo = new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWORD'), [
@@ -56,8 +56,8 @@ $pdo = new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWORD'), [
 ]);
 ```
 
-## Minimal Tables (starter suggestion)
-This schema is a starting point for the procurement flow — adjust as needed.
+## Tabel Minimal (saran awal)
+Skema ini sebagai awal untuk lifecycle pengadaan — sesuaikan sesuai kebutuhan.
 
 ```sql
 -- Companies & Users
@@ -120,19 +120,20 @@ CREATE TABLE invoices (
 ```
 
 ## Frontend → Backend
-- Frontend will call the backend API at `VITE_API_BASE` (see `.env` below).
-- Configure your web server to proxy `/api/*` to your backend (Apache/Nginx or Hostinger routing).
+- Frontend memanggil backend API di `VITE_API_BASE` (lihat `.env` di bawah).
+- Konfigurasikan web server untuk proxy `/api/*` ke backend (Apache/Nginx atau routing Hostinger).
 
-## Frontend Environment (Vite)
-Add this to `.env.development` and `.env.production`:
+## Environment Frontend (Vite)
+Tambahkan ke `.env.development` dan `.env.production`:
 
 ```
 VITE_API_BASE=/api
 ```
 
-Use a full URL if you prefer: `https://api.your-domain.com`.
+Gunakan URL penuh jika perlu: `https://api.domain-anda.com`.
 
-## Security Notes
-- Do NOT put `DB_HOST`, `DB_USER`, `DB_PASSWORD` in the frontend.
-- Use least-privilege DB users and rotate passwords regularly.
-- Enable TLS for API endpoints and enforce CORS to your frontend origin.
+## Catatan Keamanan
+- Jangan menaruh `DB_HOST`, `DB_USER`, `DB_PASSWORD` di frontend.
+- Gunakan user DB least-privilege dan rotasi password berkala.
+- Aktifkan TLS untuk endpoint API dan enforce CORS ke origin frontend Anda.
+
