@@ -28,9 +28,14 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
 export function Breadcrumbs({ items }: { items: string[] }) {
   const { t } = useI18n();
   function translateItem(item: string) {
-    const key = `general.${item.toLowerCase()}`;
-    const translated = t(key);
-    return translated || item;
+    // If item looks like a translation key (contains '.' and no spaces), translate it.
+    if (item.includes('.') && !item.includes(' ')) {
+      const translated = t(item);
+      // Guard: if translation returns the key itself, fallback to the original item
+      return translated !== item ? translated : item;
+    }
+    // Otherwise, treat the item as an already-translated label
+    return item;
   }
   return (
     <nav aria-label="Breadcrumb" style={{ color: 'var(--text-secondary)' }}>

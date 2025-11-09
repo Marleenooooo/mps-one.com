@@ -1,212 +1,107 @@
-# MPS One — B2B Procurement Web App
+MPSOne B2B Procurement Suite — Dokumentasi Alur Kerja Klien & Pemasok (Supplier)
 
-This is a React + Vite + TypeScript single‑page application targeting mining companies in Kalimantan. We operate with manual deployments (no CI/CD).
+Ringkasan
+- Aplikasi web ini menargetkan perusahaan tambang di Kalimantan dengan akun korporat multi‑user dan integrasi alur kerja pengadaan, email, serta pelacakan rantai pasok.
+- Dokumen ini merangkum alur kerja komplit untuk Klien (corporate users) dan Pemasok (supplier/vendor), beserta keterbatasan saat ini agar implementasi dan ekspektasi operasional jelas.
 
-## Project Structure
+Tujuan Produk
+- Menyederhanakan proses PR → Quote → PO → Processing → Shipped → Delivered → Invoiced → Paid.
+- Memberikan visibilitas status real‑time dan pusat komunikasi terpadu (in‑app + email).
+- Memastikan UI/UX enterprise: navigasi jelas, tabel data kuat, formulir kompleks dengan validasi, dan aksesibilitas WCAG AA.
 
-- `webapp/` — Vite app source
-  - `src/` — React components, pages, styles
-  - `public/.htaccess` — SPA routing fallback bundled into `dist`
-  - `vite.config.ts` — includes `base: './'` for relative asset paths
+Ikhtisar Teknis Singkat
+- Frontend React dengan tema Neon Corporate (dark & light), `useModule` untuk aksen per modul (Procurement, Finance, Inventory).
+- Routing klien/supplier melalui `App.tsx`; komponen utama: ClientDashboard, Onboarding, PRCreate/PRList, QuoteBuilder, OrderTracker, DocumentManager, CommunicationHub.
+- Auto‑save draft lokal (localStorage) pada Onboarding dan PRCreate dengan interval 60 detik.
 
-## Development
+Alur Kerja Klien (Corporate Users)
+- Onboarding Perusahaan (`src/pages/client/Onboarding.tsx`)
+  - Tab: Perusahaan, Hierarki, Peran, Anggaran.
+  - Input data perusahaan, susun struktur, tetapkan role (Admin, PIC Operational, PIC Procurement, PIC Finance), alokasi anggaran per departemen.
+  - Auto‑save draft per 1 menit; indikator “Draf tersimpan otomatis”.
+- Dasbor Klien (`src/pages/client/ClientDashboard.tsx`)
+  - Sambutan personal; ringkasan Order Tracking dengan `StatusPipeline` untuk melihat posisi keseluruhan.
+  - Widget Quick PR: memulai pembuatan PR dengan cepat; indikator utilisasi anggaran.
+  - Kartu Dokumen: akses cepat ke arsip (quote/PO/invoice/delivery proof).
+- Pembuatan & Daftar PR (`src/pages/procurement/PRCreate.tsx`, `src/pages/procurement/PRList.tsx`)
+  - PRCreate: form multi‑bagian, upload lampiran, auto‑save 60 detik.
+  - PRList: daftar PR dengan status, sorting/filtering, tanpa duplikasi key pada StrictMode.
+- Manajemen Dokumen (`src/pages/DocumentManager.tsx`)
+  - Thumbnail, riwayat versi, seleksi bulk, unduh massal, kontrol akses (allowed/denied).
+- Pelacakan Pesanan (`src/pages/OrderTracker.tsx`)
+  - Pipeline visual dari PR ke Paid; ETA, countdown harian/jam/menit.
+  - Info pengiriman (kurir, nomor lacak), upload bukti kirim (drag & drop, progress bar).
+- Komunikasi & Email (`src/pages/CommunicationHub.tsx`)
+  - Percakapan in‑app dengan read receipt (sent/delivered/read), @mentions, lampiran, simulasi sinkronisasi email.
 
-- Start dev server: `npm run dev` (in `webapp/`)
-- Preview production build locally: `npm run preview`
+Alur Kerja Pemasok (Supplier/Vendor)
+- Quote Builder (`src/pages/QuoteBuilder.tsx`)
+  - Tabel item (nama, qty, harga, total), kalkulasi pajak & diskon, pilih template, preview, kirim penawaran.
+- Penerimaan & Pemrosesan PO
+  - Setelah quote disetujui, pemasok menerima PO, memproses, hingga pengiriman.
+  - Unggah bukti pengiriman, update status agar klien melihat perkembangan di OrderTracker.
+- Komunikasi & Email
+  - Gunakan CommunicationHub untuk komunikasi cepat antar PIC; lampiran dokumen teknis, konfirmasi pengiriman, notifikasi status.
+- Manajemen Dokumen
+  - Unggah/revisi quote, PO, invoice; kelola izin akses bila diperlukan.
 
-## Build & Package (Manual Deployment)
+Komponen Pendukung UI/UX & Navigasi
+- Sidebar tetap dengan item aktif terkontrol (perbaikan untuk path dasar `/client` agar tidak ganda aktif).
+- Breadcrumb, quick search, notifikasi, badge status, progress bar, skeleton loading, tooltip.
+- Tabel data: row selection, bulk action, sorting/filtering/pagination (sebagian masih placeholder).
 
-- Build: `npm run build`
-- Build and zip (Windows): `npm run build:zip` → produces `webapp/dist.zip`
+Integrasi Email & Komunikasi
+- Visualisasi dua arah: status pesan (sent/delivered/read) dan lampiran dengan progress.
+- Template email, CC/BCC per tipe klien (konfigurasi masih bersifat UI; belum backend).
 
-## Deploy (Manual, Hostinger)
+Pelacakan Rantai Pasok
+- Timeline status dan ETA dengan countdown.
+- Antarmuka logistik (kurir, nomor lacak) dan aksi menuju portal pelacakan eksternal.
+- Zona unggah untuk bukti pengiriman; indikator selesai dan notifikasi.
 
-1. Open hPanel File Manager or connect via FTP.
-2. Upload the contents of `webapp/dist/` (or `dist.zip`) to `/public_html/`.
-3. Ensure `index.html`, `assets/`, and `.htaccess` are at the root of `/public_html/`.
-4. Hard refresh the site and verify no 404s for assets.
+Manajemen Dokumen
+- Thumbnail preview, riwayat versi, unduh massal, toggle akses.
+- Banner proses unduh dengan progress agregat; aksi hapus bulk untuk item terpilih.
 
-Details are in `DEPLOY.md`.
+Dashboard & Pelaporan
+- ClientDashboard: ringkasan order, progres, budget utilization.
+- AdminDashboard/Reporting (supplier/admin): metrik kinerja, spending analytics, skor vendor, ekspor laporan (beberapa fitur masih konseptual di UI).
 
-## Backend/API & Database
-- See `docs/DB_SETUP.md` for MySQL setup (DB: `mpsonedatabase`, User: `mpsone`) and backend environment configuration.
+Keterbatasan / Disadvantages Saat Ini
+- Tidak ada backend/persistensi server: data bersifat mock di memori; tidak aman untuk produksi.
+- RBAC belum enforced di server: role hanya mempengaruhi visibilitas menu; tidak ada otorisasi tingkat API. ✔️ Front‑end: redirect home & guard rute supplier ditambahkan.
+- Integrasi email/logistik masih dummy: hanya visualisasi/simulasi; belum sinkronisasi IMAP/SMTP atau webhook kurir nyata.
+- Auto‑save lokal: draft disimpan di localStorage; tidak ada mekanisme konflik multi‑user atau kolaborasi real‑time.
+- Ekspor CSV/PDF tabel belum implementasi penuh; beberapa kontrol masih placeholder. ✔️ Front‑end: ekspor CSV generik di DataTable (termasuk PRList & DocumentManager); PDF siap ekspor via jsPDF + html2canvas.
+- Upload dokumen tidak melakukan pemeriksaan ukuran/virus; penyimpanan file belum terhubung ke storage aman. ✔️ Front‑end: validasi tipe/ukuran file dasar.
+- Ketergantungan `Date.now()` untuk ID di beberapa tempat: risiko tabrakan rendah namun tetap ada; sebagian belum memakai `crypto.randomUUID()`. ✔️ Front‑end: util `uniqueId()` mengganti Date.now di PRCreate, PRList, QuoteBuilder, CommunicationHub, OrderTracker.
+- Aksesibilitas sebagian: telah memakai warna kontras dan fokus indikator, namun audit WCAG AA lengkap (keyboard nav, ARIA detail, skip links) belum dilakukan. ✔️ Front‑end: skip‑link aktif, aria-sort pada tabel, landmark ARIA konsisten di halaman utama, dan shortcut keyboard (Alt+←/→ untuk halaman; Enter/Space untuk sorting).
+- Performa UI: efek neon/glow dan skeleton dapat meningkatkan biaya render pada perangkat spesifikasi rendah.
+- Pelacakan waktu/ETA: perhitungan sederhana; tidak mempertimbangkan zona waktu, hari libur, atau SLA logistik.
+- Keamanan: belum ada sanitasi lampiran/teks komprehensif, tidak ada autentikasi multi‑faktor, belum ada rate limiting.
+- Integrasi ke ERP/Finance: belum ada sinkronisasi PO/invoice ke sistem eksternal; semua alur masih frontend demo.
+- I18n: label tersedia dasar; cakupan bahasa dan konsistensi terjemahan perlu diluaskan.
+- Navigasi aktif: perbaikan `NavLink end` sudah untuk `/client`, namun rute dasar lain mungkin butuh penyesuaian serupa. ✔️ Front‑end: aktif tunggal untuk `/client` terverifikasi; intensitas hover di sidebar diturunkan agar tidak menyerupai state aktif.
 
-## Environment
+Rekomendasi Peningkatan
+- Tambah backend (API) dengan autentikasi, RBAC granular, audit trail, dan penyimpanan dokumen aman (S3/Blob + AV scanning).
+- Ganti generator ID ke `crypto.randomUUID()` dan sediakan util `uniqueId()` bersama guard StrictMode untuk efek yang menambah data.
+- Implementasi penuh tabel: server‑side pagination, filter, ekspor CSV/PDF.
+- Integrasi email nyata (IMAP/SMTP OAuth) dan webhook kurir untuk status pengiriman real‑time.
+- Simpan draft di server dengan konflik resolution; tambahkan manual save dan auto‑save adaptif.
+- Lengkapi aksesibilitas: audit WCAG, fokus manajemen, ARIA detail, keyboard shortcuts.
+- Optimasi performa: lazy load komponen non‑kritis, memoization, kurangi glow berat pada daftar panjang.
+- Pelaporan: grafik spending, skor vendor, ekspor laporan siap audit.
 
-- Set `webapp/.env.production`:
-  - `VITE_APP_URL=https://mps-one.com/`
-  - `VITE_API_BASE=/api` (proxy to backend)
-- Set `webapp/.env.development`:
-  - `VITE_APP_URL=http://localhost:5173`
-  - `VITE_API_BASE=http://localhost:3000`
+Lokasi Berkas Penting
+- `src/pages/client/ClientDashboard.tsx`: Dasbor klien, tracking ringkas, Quick PR, dokumen.
+- `src/pages/client/Onboarding.tsx`: Form multi‑tab untuk registrasi korporat; auto‑save 60 detik.
+- `src/pages/procurement/PRCreate.tsx`: Form PR dengan auto‑save; lampiran.
+- `src/pages/procurement/PRList.tsx`: Daftar PR; kunci unik aman pada StrictMode.
+- `src/pages/QuoteBuilder.tsx`: Builder penawaran dengan kalkulasi pajak/diskon, template, preview.
+- `src/pages/OrderTracker.tsx`: Pipeline status, ETA, unggah bukti kirim.
+- `src/pages/DocumentManager.tsx`: Arsip dokumen, riwayat versi, bulk unduh/akses.
+- `src/pages/CommunicationHub.tsx`: Percakapan in‑app, read receipts, lampiran, simulasi email.
 
-## Theming
-
-- Light and Dark themes with corporate palette with  Neon accent variant.
-- Colors are defined in `webapp/src/index.css` via CSS variables.
-- MUST IMPLEMENT BOTH DARK & LIGHT THEMES WITH PROFESSIONAL CORPORATE DESIGN:
- 
-NEON CORPORATE COLOR PALETTE - VISUAL NAVIGATION SYSTEM
-
-🌙 DARK MODE PALETTE
-
-BASE COLORS:
-Background: #0A0F2D (Midnight Blue)
-Surface: #1A1F3A (Elevated Card)
-Surface2: #252A45 (Secondary Card)
-Text Primary: #FFFFFF
-Text Secondary: #A0A8D0
-Text Disabled: #5A6180
-Border: #2D3250
-
-MODULE SIGNATURE COLORS:
-🟦 PROCUREMENT: #00F0FF (Neon Cyan)
-🟪 FINANCE: #FF00E5 (Neon Magenta)
-🟩 INVENTORY: #39FF14 (Neon Green)
-🟨 REPORTS: #FFB800 (Neon Amber)
-🔴 ALERTS: #FF2A50 (Neon Red)
-
-DARK MODE GRADIENTS:
-PRIMARY BUTTON: linear-gradient(135deg, #00F0FF 0%, #0077FF 100%)
-SECONDARY BUTTON: linear-gradient(135deg, #FFB800 0%, #FF5E00 100%)
-SUCCESS: linear-gradient(135deg, #39FF14 0%, #00CC66 100%)
-DANGER: linear-gradient(135deg, #FF2A50 0%, #CC0000 100%)
-
-DARK MODE INTERACTION STATES:
-🟦 PRIMARY BUTTON:
-- Normal: Gradient Cyan (#00F0FF → #0077FF)
-- Hover: Glow effect + scale(1.02) + box-shadow: 0 0 15px #00F0FF
-- Active: Darker gradient (#0088CC → #0055AA)
-- Disabled: #2D3250 with 40% opacity
-
-🟪 SECONDARY BUTTON:
-- Normal: Gradient Magenta (#FF00E5 → #CC00B8)
-- Hover: Glow + pulse animation + box-shadow: 0 0 15px #FF00E5
-- Active: Darker magenta (#AA0099)
-
-OUTLINE BUTTONS:
-- Border: Gradient sesuai module
-- Background: Transparent
-- Hover: Fill dengan gradient + 20% opacity
-
-☀️ LIGHT MODE PALETTE
-
-BASE COLORS:
-Background: #FFFFFF
-Surface: #F8FAFF (Very Light Blue)
-Surface2: #F0F5FF (Light Blue Grey)
-Text Primary: #0A0F2D (Midnight Blue)
-Text Secondary: #5A6178 (Blue Grey)
-Text Disabled: #A0A8C0
-Border: #E5E9F0
-
-LIGHT MODE SIGNATURE COLORS:
-🟦 PROCUREMENT: #0077FF (Professional Blue)
-🟪 FINANCE: #B84DB8 (Soft Magenta)
-🟩 INVENTORY: #00A86B (Emerald Green)
-🟨 REPORTS: #FF8A00 (Warm Orange)
-🔴 ALERTS: #FF4444 (Alert Red)
-
-LIGHT MODE GRADIENTS:
-PRIMARY BUTTON: linear-gradient(135deg, #0077FF 0%, #0055CC 100%)
-SECONDARY BUTTON: linear-gradient(135deg, #FF8A00 0%, #FF5E00 100%)
-SUCCESS: linear-gradient(135deg, #00A86B 0%, #008855 100%)
-DANGER: linear-gradient(135deg, #FF4444 0%, #CC0000 100%)
-
-LIGHT MODE INTERACTION STATES:
-🟦 PRIMARY BUTTON:
-- Normal: Gradient Blue (#0077FF → #0055CC)
-- Hover: Soft glow + scale(1.02) + box-shadow: 0 0 10px rgba(0,119,255,0.3)
-- Active: Darker blue (#0044AA → #003388)
-- Disabled: #E5E9F0 with 40% opacity
-
-🟪 SECONDARY BUTTON:
-- Normal: Gradient Orange (#FF8A00 → #FF5E00)
-- Hover: Soft glow + box-shadow: 0 0 10px rgba(255,138,0,0.3)
-- Active: Darker orange (#CC5500)
-
-🎨 VISUAL NAVIGATION SYSTEM
-
-PAGE HEADER GRADIENTS (Dark Mode):
-PROCUREMENT: linear-gradient(90deg, #0A1F4D 0%, #0A0F2D 100%)
-FINANCE: linear-gradient(90deg, #2D0A4D 0%, #0A0F2D 100%)
-INVENTORY: linear-gradient(90deg, #0A4D2A 0%, #0A0F2D 100%)
-
-PAGE HEADER GRADIENTS (Light Mode):
-PROCUREMENT: linear-gradient(90deg, #E3F2FD 0%, #F8FAFF 100%)
-FINANCE: linear-gradient(90deg, #F3E5F5 0%, #F8FAFF 100%)
-INVENTORY: linear-gradient(90deg, #E8F5E8 0%, #F8FAFF 100%)
-
-ACCENT BORDERS:
-Border Image: linear-gradient(90deg, [module-color], [module-gradient-end]) 1
-
-SIDEBAR ACTIVE STATES:
-ACTIVE MENU ITEM:
-- Background: rgba([module-color], 0.15)
-- Border Left: 3px solid [module-color]
-- Icon Color: [module-color]
-- Text Color: [module-color]
-
-HOVER MENU ITEM:
-- Background: rgba([module-color], 0.08)
-- Transition: all 0.2s ease
-
-✨ EFFECTS & ANIMATIONS
-
-GLOW EFFECTS:
-NEON GLOW (Dark Mode): box-shadow: 0 0 10px [module-color], 0 0 20px [module-color]
-SOFT GLOW (Light Mode): box-shadow: 0 0 5px rgba([module-rgb], 0.3)
-
-MICRO-INTERACTIONS:
-BUTTON HOVER:
-- transform: scale(1.02)
-- box-shadow: 0 4px 12px rgba([module-rgb], 0.4)
-- transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1)
-
-CARD HOVER:
-- transform: translateY(-2px)
-- box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15)
-
-LOADING STATES:
-SKELETON LOADING:
-background: linear-gradient(90deg, #2D3250 25%, #3A4060 50%, #2D3250 75%)
-background-size: 200% 100%
-animation: loading 1.5s infinite
-
-PROGRESS BARS:
-background: linear-gradient(90deg, [module-color] 0%, [module-gradient-end] 100%)
-
-🎯 COLOR USAGE RULES
-
-MAXIMUM COLOR PER PAGE:
-1 PRIMARY MODULE COLOR (60%)
-1 SECONDARY ACCENT (30%)
-1 NEUTRAL BASE (10%)
-+ Success/Error states when needed
-
-ACCESSIBILITY:
-CONTRAST RATIOS:
-- Text Primary: 7:1 (AAA)
-- Text Secondary: 4.5:1 (AA)
-- Interactive Elements: 3:1 (Minimum)
-
-FOCUS INDICATORS:
-outline: 2px solid [module-color]
-outline-offset: 2px
-
-🔄 THEME TRANSITION
-
-SMOOTH THEME SWITCHING:
-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease
-
-PERSISTENT USER PREFERENCE:
-localStorage theme preference
-OS theme detection
-Manual toggle with instant preview
-
-
-## Product Specification
-
-The full product spec and UI/UX requirements are appended to `DEPLOY.md` under “Product Spec: B2B Procurement Webapp”.
-
-
+Catatan
+- Dokumentasi ini fokus pada alur operasional end‑to‑end dari perspektif klien dan pemasok di frontend yang ada. Integrasi backend/eksternal akan mengubah beberapa langkah dan tanggung jawab sistem.

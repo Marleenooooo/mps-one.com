@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 
-export function LoadingButton({ onClick, children }: { onClick: () => Promise<void> | void, children: React.ReactNode }) {
+type LoadingButtonProps = {
+  onClick: () => Promise<void> | void;
+  children: React.ReactNode;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+export function LoadingButton({ onClick, children, className, disabled, ...rest }: LoadingButtonProps) {
   const [loading, setLoading] = useState(false);
   async function handle() {
     try {
@@ -11,7 +16,13 @@ export function LoadingButton({ onClick, children }: { onClick: () => Promise<vo
     }
   }
   return (
-    <button className="btn primary" onClick={handle} disabled={loading} aria-busy={loading}>
+    <button
+      {...rest}
+      className={`btn primary ${className ?? ''}`}
+      onClick={handle}
+      disabled={loading || disabled}
+      aria-busy={loading}
+    >
       {loading && <Spinner />} {children}
     </button>
   );

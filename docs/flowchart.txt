@@ -1,0 +1,151 @@
+================================================================
+MPSOne B2B Procurement Webapp – High‑Level Flowchart (Text/ASCII)
+================================================================
+
+Legend:
+- [Start]/[End]   : Flow termini
+- (Process)       : Action or operation
+- {Decision}      : Branching yes/no
+- [Data]          : Data store or artifact
+- ->              : Flow arrow
+- ||              : Parallel activities
+
+Modules: [PROCUREMENT], [FINANCE], [INVENTORY], [REPORTS], [ALERTS]
+
+----------------------------------------------------------------
+1) Multi‑User Corporate Onboarding
+----------------------------------------------------------------
+[Start]
+  -> (Open Onboarding Wizard)
+  -> (Company Registration: name, domain, contact)
+  -> (Hierarchy Setup: divisions/departments)
+  -> (Role Assignment: Admin, PIC Operational, PIC Procurement, PIC Finance)
+  -> (Permissions & Budget Allocation per Department)
+  -> {Validation OK?}
+       ->Yes: (Create Company & Users) -> (Invite Emails Sent)
+       ->No : (Inline Error Messages + Fix Inputs) -> back to previous step
+  -> (Autosave Draft at each step)
+  -> (Confirm & Finish)
+  -> [End: Corporate Account Ready]
+
+Artifacts: [Data] Company, Departments, Roles, Permissions, Budgets, User Invites
+
+----------------------------------------------------------------
+2) Procurement Workflow (PR → Quote → PO → Processing → Shipped → Delivered → Invoiced → Paid)
+----------------------------------------------------------------
+[Start]
+  -> (Create Purchase Request [PROCUREMENT])
+  -> (Attach specs, quantities, required date)
+  -> {Budget available? [FINANCE]}
+       ->Yes: (Approve PR)
+       ->No : (Route to PIC Finance) -> {Approved?}
+                 ->Yes: continue
+                 ->No : (Reject PR) -> [End]
+  -> (Generate RFQ / Request Quotes to Vendors)
+  -> (Receive Vendor Quotes) || (Email Threads sync [Communication])
+  -> (Quote Review: price, terms, lead time)
+  -> {Select winning quote?}
+       ->Yes: (Convert to PO)
+       ->No : (Request Revisions / Negotiate) -> back to Quote Review
+  -> (PO Issued to Vendor) -> (Vendor Confirms)
+  -> (Order Processing) -> (Logistics Coordination [INVENTORY])
+  -> (Shipped) -> (Delivered)
+  -> (Goods Receipt & Delivery Proof Upload)
+  -> (Invoice Received [FINANCE]) -> (Finance Review)
+  -> {Invoice OK?}
+       ->Yes: (Payment Executed) -> [End: Paid]
+       ->No : (Dispute / Request Correction) -> back to Finance Review
+
+Artifacts: [Data] PR, Quotes, PO, Shipment Docs, Delivery Proof, Invoice, Payment
+
+----------------------------------------------------------------
+3) Email Integration Dashboard (Two‑way Sync & Threads)
+----------------------------------------------------------------
+[Start]
+  -> (Fetch threads & messages)
+  -> (Threaded Communication View: list + detail)
+  -> (Apply Template [PROCUREMENT/FINANCE])
+  -> (Configure CC/BCC by Client Type)
+  -> (Compose/Reply)
+  -> (Send -> Email Provider)
+  -> (Sync Read Receipts, Delivery States)
+  -> (Archive or Pin Thread)
+  -> [End]
+
+Artifacts: [Data] Templates, CC/BCC Rules, Threads, Attachments
+
+----------------------------------------------------------------
+4) Supply Chain Tracking (Order Tracker)
+----------------------------------------------------------------
+[Start]
+  -> (Status Pipeline: PR → Quote → PO → Processing → Shipped → Delivered → Invoiced → Paid)
+  -> (Real‑time Timeline with events)
+  -> (Shipping Info: carrier, tracking, ETA)
+  -> (Delivery Proof Upload)
+  -> {Emergency / Delay?}
+       ->Yes: (Priority Tag + Alert [ALERTS]) -> (Notify Stakeholders)
+       ->No : continue timeline
+  -> [End]
+
+Artifacts: [Data] Status Events, Shipping Details, Proofs, Alerts
+
+----------------------------------------------------------------
+5) Document Manager (Quotes, POs, Invoices, Proofs)
+----------------------------------------------------------------
+[Start]
+  -> (Load documents with Skeleton Thumbnails)
+  -> (List: name, version, access badge)
+  -> (Toggle Access Permission per document)
+  -> (Expand Version History)
+  -> (Select multiple)
+  -> (Bulk Download with Progress Bar)
+  -> (Bulk Delete or Archive)
+  -> [End]
+
+Artifacts: [Data] Files, Versions, Access Controls, Audit Trail
+
+----------------------------------------------------------------
+6) Reporting Module (Analytics & Exports)
+----------------------------------------------------------------
+[Start]
+  -> (Aggregate Data: spending, vendor performance, budget utilization, monthly PR)
+  -> (Render Charts & Tables)
+  -> (Export CSV or PDF)
+  -> (Share/Download Reports)
+  -> [End]
+
+Artifacts: [Data] Analytics Datasets, CSV/PDF Reports
+
+----------------------------------------------------------------
+7) Navigation, UX & Accessibility
+----------------------------------------------------------------
+[Start]
+  -> (Fixed Sidebar with collapsible menu)
+  -> (Breadcrumbs for deep workflows)
+  -> (Quick Search across modules)
+  -> (Notification bell with unread counts)
+  -> (Theme Switch: Dark/Light + persistence)
+  -> (Micro‑interactions: hover, glow, skeletons, toasts)
+  -> (WCAG AA: contrast, focus outlines, aria labels)
+  -> [End]
+
+----------------------------------------------------------------
+Cross‑Module Data & States
+----------------------------------------------------------------
+- [Data] Company, Users, Roles, Permissions
+- [Data] Budgets, PRs, Quotes, POs, Invoices
+- [Data] Logistics & Inventory details
+- [Data] Documents & Version history
+- [Data] Email threads, Templates, CC/BCC Rules
+- [Data] Analytics snapshots for reporting
+
+----------------------------------------------------------------
+End‑to‑End Lifecycle (Condensed)
+----------------------------------------------------------------
+[Start]
+  -> (Onboarding) -> (PR) -> (Quotes) -> (PO) -> (Processing)
+  -> (Shipped) -> (Delivered + Proof) -> (Invoice) -> (Finance Review)
+  -> {OK?}
+       ->Yes: (Payment) -> (Reports & Archival) -> [End]
+       ->No : (Dispute/Correction) -> back to Finance Review
+

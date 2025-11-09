@@ -1,14 +1,23 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { uniqueId } from '../utils/uniqueId';
 
-type Toast = { id: number; message: string; type?: 'info' | 'success' | 'error' };
+type Toast = { id: string; message: string; type?: 'info' | 'success' | 'error', tag?: string };
 type ToastContextValue = { push: (t: Omit<Toast, 'id'>) => void };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const lastByTagRef = useRef<Record<string, number>>({});
   function push(t: Omit<Toast, 'id'>) {
-    setToasts(prev => [...prev, { id: Date.now(), ...t }]);
+    // Throttle autosave toasts across the app to reduce noise
+    if (t.tag === 'autosave') {
+      const now = Date.now();
+      const last = lastByTagRef.current['autosave'] || 0;
+      if (now - last < 10000) return; // 10s throttle window
+      lastByTagRef.current['autosave'] = now;
+    }
+    setToasts(prev => [...prev, { id: uniqueId('toast'), ...t }]);
   }
   useEffect(() => {
     const tid = setInterval(() => {

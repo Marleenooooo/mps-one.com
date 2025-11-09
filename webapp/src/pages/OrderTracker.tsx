@@ -1,52 +1,170 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useModule } from '../components/useModule';
+import { useI18n } from '../components/I18nProvider';
+import { StatusPipeline } from '../components/UI/StatusPipeline';
+import { uniqueId } from '../components/utils/uniqueId';
 
-const statuses = ['PR', 'Quote', 'PO', 'Processing', 'Shipped', 'Delivered', 'Invoiced', 'Paid'] as const;
+const pipeline: ('pr'|'quote'|'po'|'processing'|'shipped'|'delivered'|'invoiced'|'paid')[] = ['pr','quote','po','processing','shipped','delivered','invoiced','paid'];
 
 export default function OrderTracker() {
   useModule('inventory');
-  const [current, setCurrent] = useState<typeof statuses[number]>('Processing');
-  const eta = useMemo(() => new Date(Date.now() + 1000 * 60 * 60 * 24 * 4), []); // 4 days
+  const { t } = useI18n();
+  const [activeIndex, setActiveIndex] = useState<number>(pipeline.indexOf('processing'));
+  const eta = useMemo(() => new Date(Date.now() + 1000 * 60 * 60 * 24 * 4 + 1000 * 60 * 45), []); // 4 days 45 mins
+  const [remainingMs, setRemainingMs] = useState<number>(eta.getTime() - Date.now());
+
+  function advance() {
+    setActiveIndex((prev) => Math.min(prev + 1, pipeline.length - 1));
+  }
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setRemainingMs(Math.max(0, eta.getTime() - Date.now()));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [eta]);
+
+  const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  const [uploads, setUploads] = useState<{ id: string; name: string; progress: number; done: boolean }[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleFiles(files: FileList) {
+    const allowedExt = ['pdf','jpg','jpeg','png'];
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    const valid = Array.from(files).filter((f) => {
+      const ext = f.name.split('.').pop()?.toLowerCase() || '';
+      if (!allowedExt.includes(ext) || f.size > maxSize) {
+        alert(`File rejected: ${f.name} (type/size)`);
+        return false;
+      }
+      return true;
+    });
+    const items = valid.map((f) => ({ id: uniqueId('upload'), name: f.name, progress: 0, done: false }));
+    setUploads((prev) => [...prev, ...items]);
+    items.forEach((item) => {
+      let p = 0;
+      const timer = setInterval(() => {
+        p = Math.min(100, p + 8 + Math.round(Math.random() * 6));
+        setUploads((prev) => prev.map((u) => (u.id === item.id ? { ...u, progress: p, done: p >= 100 } : u)));
+        if (p >= 100) clearInterval(timer);
+      }, 200);
+    });
+  }
 
   return (
     <div className="main">
       <div className="page-header inventory">
-        <h1 style={{ margin: 0 }}>Order Tracker</h1>
+        <h1 style={{ margin: 0 }}>{t('order_tracker.title')}</h1>
       </div>
       <div className="card" style={{ padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          {statuses.map(s => (
-            <div key={s} className="tooltip" data-tip={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 12, height: 12, borderRadius: 999, background: s === current ? 'var(--accent)' : 'var(--border)' }}></div>
-              <span style={{ color: s === current ? 'var(--accent)' : 'var(--text-secondary)' }}>{s}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 16 }}>
-          Estimated delivery: <strong>{eta.toLocaleDateString()}</strong> ({Math.ceil((eta.getTime() - Date.now()) / (1000*60*60*24))} days)
+        <StatusPipeline statuses={pipeline} activeIndex={activeIndex} onAdvance={advance} />
+        <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div>
+            {t('order_tracker.estimated_delivery')}: <strong>{eta.toLocaleDateString()}</strong>
+          </div>
+          <div className="status-badge info" aria-live="polite">
+            {days} {t('time.days')} • {hours} {t('time.hours') || 'hours'} • {minutes} {t('time.minutes') || 'minutes'}
+          </div>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
         <div className="card" style={{ padding: 16 }}>
-          <h2 style={{ marginTop: 0 }}>Shipping Information</h2>
+          <h2 style={{ marginTop: 0 }}>{t('order_tracker.shipping_info')}</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>
-              <div style={{ color: 'var(--text-secondary)' }}>Courier</div>
+              <div style={{ color: 'var(--text-secondary)' }}>{t('order_tracker.courier')}</div>
               <div>PT Nusantara Logistics</div>
             </div>
             <div>
-              <div style={{ color: 'var(--text-secondary)' }}>Tracking No</div>
-              <div>NL-2024-9821</div>
+              <div style={{ color: 'var(--text-secondary)' }}>{t('order_tracker.tracking_no')}</div>
+              <div>
+                NL-2024-9821
+                <a
+                  href="#"
+                  className="btn ghost"
+                  style={{ marginLeft: 8 }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alert('Open courier tracking portal');
+                  }}
+                >
+                  {t('order_tracker.view_tracking') || 'View tracking'}
+                </a>
+              </div>
             </div>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <li style={{ padding: '6px 0' }}>
+                <span className="status-badge info">{t('status.processing')}</span>
+                <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>Warehouse sorting • 2h ago</span>
+              </li>
+              <li style={{ padding: '6px 0' }}>
+                <span className="status-badge info">{t('status.shipped')}</span>
+                <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>Departed Balikpapan • 1h ago</span>
+              </li>
+              <li style={{ padding: '6px 0' }}>
+                <span className="status-badge info">{t('status.delivered')}</span>
+                <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>ETA {eta.toLocaleDateString()}</span>
+              </li>
+            </ul>
           </div>
         </div>
         <div className="card" style={{ padding: 16 }}>
-          <h2 style={{ marginTop: 0 }}>Delivery Proof</h2>
-          <div onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); alert(`${e.dataTransfer.files.length} file(s) attached`); }}
-               style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
-            Drag & drop files here or <button className="btn">Upload</button>
+          <h2 style={{ marginTop: 0 }}>{t('order_tracker.delivery_proof')}</h2>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+              }
+            }}
+            style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: 24, textAlign: 'center' }}
+          >
+            {t('order_tracker.drop_hint')} <button className="btn" onClick={() => inputRef.current?.click()}>{t('action.upload')}</button>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                if (e.target.files) handleFiles(e.target.files);
+              }}
+            />
           </div>
+          {uploads.length > 0 && (
+            <div className="card" style={{ padding: 12, marginTop: 12 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('order_tracker.uploading') || 'Uploading...'}</div>
+              <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                {uploads.map((u) => (
+                  <div key={u.id}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{u.name}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>{Math.min(100, Math.round(u.progress))}%</span>
+                        <button className="btn ghost" onClick={() => setUploads((prev) => prev.filter((x) => x.id !== u.id))}>
+                          {t('order_tracker.remove') || 'Remove'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="progress-bar" aria-label={`Upload ${u.name}`}>
+                      <div className="value" style={{ width: `${Math.min(100, u.progress)}%` }}></div>
+                    </div>
+                    {u.done && (
+                      <div className="status-badge success" style={{ marginTop: 6 }}>
+                        ✅ {t('order_tracker.upload_complete') || 'Upload complete'}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

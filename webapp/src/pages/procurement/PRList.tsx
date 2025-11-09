@@ -1,0 +1,78 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useModule } from '../../components/useModule';
+import { DataTable } from '../../components/UI/DataTable';
+import { useI18n } from '../../components/I18nProvider';
+import { uniqueId } from '../../components/utils/uniqueId';
+
+type PRRow = { id: string; title: string; department: string; status: 'Draft' | 'Submitted' | 'Approved' | 'PO'; createdAt: string };
+
+export default function PRList() {
+  useModule('procurement');
+  const { t } = useI18n();
+  const [rows, setRows] = useState<PRRow[]>(() => {
+    const now = new Date().toISOString();
+    return [
+      { id: 'PR-443', title: 'Hydraulic Hoses', department: 'Mining Ops', status: 'PO', createdAt: now },
+      { id: 'PR-444', title: 'Excavator Bucket', department: 'Maintenance', status: 'Approved', createdAt: now },
+      { id: 'PR-445', title: 'Safety Helmets', department: 'Logistics', status: 'Submitted', createdAt: now },
+    ];
+  });
+
+  const insertedDraftRef = useRef(false);
+  useEffect(() => {
+    if (insertedDraftRef.current) return; // Guard against React StrictMode double-invoke
+    insertedDraftRef.current = true;
+    try {
+      const draft = localStorage.getItem('mpsone_pr_draft');
+      if (draft) {
+        const d = JSON.parse(draft);
+        const id = uniqueId('PR');
+        setRows(prev => [{ id, title: d.title || 'Draft PR', department: d.department || 'Unknown', status: 'Draft', createdAt: new Date().toISOString() }, ...prev]);
+      }
+    } catch {}
+  }, []);
+
+  return (
+    <div className="main" role="main" aria-label={t('pr.header')}>
+      <div className="page-header procurement">
+        <h1 style={{ margin: 0 }}>{t('pr.header')}</h1>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+        <div className="status-badge info">{rows.length} {t('pr.total')}</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <a href="/procurement/pr/new" className="btn primary">{t('pr.new_pr')}</a>
+          <button className="btn" onClick={() => exportCSV(rows)} aria-label={t('action.export_csv') || 'Export CSV'}>{t('action.export_csv') || 'Export CSV'}</button>
+        </div>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <DataTable
+          data={rows}
+          columns={[
+            { key: 'id', header: t('pr.id') },
+            { key: 'title', header: t('pr.title_label') },
+            { key: 'department', header: t('pr.department') },
+            { key: 'status', header: t('pr.status'), render: v => <span className="status-badge info">{v}</span> },
+            { key: 'createdAt', header: t('pr.created') },
+          ]}
+          pageSize={5}
+        />
+      </div>
+    </div>
+  );
+}
+
+function exportCSV(rows: { id: string; title: string; department: string; status: string; createdAt: string }[]) {
+  const headers = ['ID','Title','Department','Status','CreatedAt'];
+  const escape = (val: string) => '"' + String(val).replace(/"/g, '""') + '"';
+  const body = rows.map(r => [r.id, r.title, r.department, r.status, r.createdAt].map(escape).join(',')).join('\n');
+  const csv = headers.join(',') + '\n' + body;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'purchase_requests.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
