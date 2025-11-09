@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './components/ThemeProvider';
 import { ToastProvider } from './components/UI/Toast';
@@ -11,6 +11,8 @@ const AdminDashboard = lazy(() => import('./pages/supplier/AdminDashboard'));
 const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard'));
 const Onboarding = lazy(() => import('./pages/client/Onboarding'));
 const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const CodeLogin = lazy(() => import('./pages/CodeLogin'));
 const QuoteBuilder = lazy(() => import('./pages/QuoteBuilder'));
 const OrderTracker = lazy(() => import('./pages/OrderTracker'));
 const DocumentManager = lazy(() => import('./pages/DocumentManager'));
@@ -19,6 +21,30 @@ const Reporting = lazy(() => import('./pages/supplier/Reporting'));
 const PRList = lazy(() => import('./pages/procurement/PRList'));
 const PRCreate = lazy(() => import('./pages/procurement/PRCreate'));
 const EmailDashboard = lazy(() => import('./pages/supplier/EmailDashboard'));
+
+function StartRedirect() {
+  const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+  if (userType === 'supplier') return <Navigate to="/supplier/admin" replace />;
+  if (userType === 'client') return <Navigate to="/client" replace />;
+  // In development, route unknown users to client login for smoother testing
+  if (import.meta.env && (import.meta.env as any).DEV) {
+    return <Navigate to="/login/client" replace />;
+  }
+  useEffect(() => {
+    // Fallback to corporate landing page when user type is unknown
+    // Guard against React StrictMode double-invoke in development
+    try {
+      const KEY = 'mpsone_redirect_once';
+      if (!sessionStorage.getItem(KEY)) {
+        sessionStorage.setItem(KEY, '1');
+        window.location.replace('https://mps-one.com');
+      }
+    } catch {
+      window.location.replace('https://mps-one.com');
+    }
+  }, []);
+  return null;
+}
 
 export default function App() {
   return (
@@ -35,8 +61,16 @@ export default function App() {
                 </Topbar>
                 <Suspense fallback={<div className="main"><div className="skeleton" style={{ height: 160, borderRadius: 8 }}></div></div>}>
                   <Routes>
+                    {/* Auth routes */}
                     <Route path="/login" element={<Login />} />
-                    <Route path="/" element={<Navigate to={(localStorage.getItem('mpsone_role') === 'Admin') ? '/supplier/admin' : '/client'} replace />} />
+                    <Route path="/login/supplier" element={<Login />} />
+                    <Route path="/login/client" element={<Login />} />
+                    <Route path="/login/code" element={<CodeLogin />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/signup/supplier" element={<Signup />} />
+                    <Route path="/signup/client" element={<Signup />} />
+                    {/* Home: redirect based on stored user type, otherwise external */}
+                    <Route path="/" element={<StartRedirect />} />
                     {/* Client routes */}
                     <Route path="/client" element={<ClientDashboard />} />
                     <Route path="/client/onboarding" element={<Onboarding />} />

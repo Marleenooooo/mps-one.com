@@ -105,3 +105,11 @@ Lokasi Berkas Penting
 
 Catatan
 - Dokumentasi ini fokus pada alur operasional end‑to‑end dari perspektif klien dan pemasok di frontend yang ada. Integrasi backend/eksternal akan mengubah beberapa langkah dan tanggung jawab sistem.
+
+Wishlist (UI/UX & Integrasi)
+- Tooltip peran di halaman login klien: tambahkan trigger ramah mobile (ikon info) dan opsi chip bantuan yang dapat di‑toggle.
+- Aksesibilitas tooltip: tautkan `aria-describedby` ke dropdown peran, dukungan keyboard fokus/blur, dan pengumuman ARIA yang jelas.
+- Kurangi “flicker”: debounce/hysteresis saat tooltip disembunyikan pada hover out.
+- Panel “Invite User”: sambungkan ke endpoint nyata (POST `/admin/invites/create`, GET `/admin/invites`, POST `/admin/invites/:id/revoke`).
+- Code Login: validasi via API (POST `/auth/provision/validate`), konsumsi single‑use (POST `/auth/provision/consume`), simpan JWT secara aman.
+- Manage Invites: pagination, filter status (active/revoked/used), indikator waktu kedaluwarsa, dan aksi salin kode yang aksesibel.

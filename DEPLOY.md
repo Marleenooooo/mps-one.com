@@ -398,6 +398,6 @@ The final webapp must feel like an enterprise SaaS product, not a simple prototy
  - Polished interactions that delight users
  - Scalable architecture that can grow with business needs
  
-Build this with attention to detail that makes it production-ready. Focus on creating a superior user experience that mining companies will adopt willingly because it genuinely improves their procurement process.
+Build this with attention to detail that makes it production-ready. Focus on creating a superior user experience for both Client and Suplier that mining companies and Suplier companies will adopt willingly because it genuinely improves their procurement process.
  
 Remember: This is for corporate users who expect professional, reliable tools. The design should reflect that expectation in every pixel and interaction.

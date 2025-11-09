@@ -29,6 +29,35 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.login_success': 'Welcome {email}',
     'auth.error_email': 'Please enter a valid email address',
     'auth.error_password': 'Password must be at least 6 characters',
+    'auth.choose_who': 'Who are you?',
+    'auth.i_am_supplier': 'I am a Supplier',
+    'auth.i_am_client': 'I am a Client',
+    'auth.role_explain': 'Suppliers sign in as Admin. Clients choose a PIC role.',
+    'auth.mode_supplier': 'Supplier mode selected',
+    'auth.mode_client': 'Client mode selected',
+    'auth.supplier_admin_assumed': 'Supplier Admin access assumed for this environment',
+    'auth.use_code': 'Sign in with Code',
+    'auth.join_with_code_hint': 'Enter the access code provided by your admin to auto-configure your account.',
+    'auth.code_invalid': 'Invalid code',
+    'auth.code_success': 'Access granted',
+    'auth.code_number': 'Code number',
+    'auth.continue': 'Continue',
+    'department.name': 'Department',
+    'clipboard.copied': 'Copied',
+
+    // Role descriptions
+    'roles.pic_operational_desc': 'Daily receiving, delivery confirmation, delivery letter corrections.',
+    'roles.pic_procurement_desc': 'PR creation, supplier quotes, PO generation, vendor coordination.',
+    'roles.pic_finance_desc': 'Invoice verification, payment scheduling, payment status tracking.',
+
+    // Admin invites
+    'admin.invite_user': 'Invite User',
+    'admin.invites.title': 'Manage Invites',
+    'admin.invites.none': 'No invites yet.',
+    'admin.invites.code': 'Code',
+    'admin.invites.expires_at': 'Expires At',
+    'admin.invites.status': 'Status',
+    'admin.invites.revoke': 'Revoke',
     // General
     'general.home': 'Home',
 
@@ -307,6 +336,35 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.login_success': 'Selamat datang {email}',
     'auth.error_email': 'Harap masukkan alamat email yang valid',
     'auth.error_password': 'Kata sandi minimal 6 karakter',
+    'auth.choose_who': 'Anda siapa?',
+    'auth.i_am_supplier': 'Saya Supplier',
+    'auth.i_am_client': 'Saya Klien',
+    'auth.role_explain': 'Supplier masuk sebagai Admin. Klien memilih peran PIC.',
+    'auth.mode_supplier': 'Mode Supplier dipilih',
+    'auth.mode_client': 'Mode Klien dipilih',
+    'auth.supplier_admin_assumed': 'Akses Admin Supplier diasumsikan untuk lingkungan ini',
+    'auth.use_code': 'Masuk dengan Kode',
+    'auth.join_with_code_hint': 'Masukkan kode akses dari admin untuk konfigurasi otomatis akun Anda.',
+    'auth.code_invalid': 'Kode tidak valid',
+    'auth.code_success': 'Akses diberikan',
+    'auth.code_number': 'Nomor kode',
+    'auth.continue': 'Lanjut',
+    'department.name': 'Departemen',
+    'clipboard.copied': 'Disalin',
+
+    // Role descriptions
+    'roles.pic_operational_desc': 'Penerimaan harian, konfirmasi pengiriman, koreksi surat jalan.',
+    'roles.pic_procurement_desc': 'Pembuatan PR, penawaran pemasok, pembuatan PO, koordinasi vendor.',
+    'roles.pic_finance_desc': 'Verifikasi tagihan, penjadwalan pembayaran, pelacakan status pembayaran.',
+
+    // Admin invites
+    'admin.invite_user': 'Undang Pengguna',
+    'admin.invites.title': 'Kelola Undangan',
+    'admin.invites.none': 'Belum ada undangan.',
+    'admin.invites.code': 'Kode',
+    'admin.invites.expires_at': 'Kedaluwarsa',
+    'admin.invites.status': 'Status',
+    'admin.invites.revoke': 'Batalkan',
     // General
     'general.home': 'Beranda',
 

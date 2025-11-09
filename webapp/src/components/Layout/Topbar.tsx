@@ -1,10 +1,21 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeProvider';
 import { useI18n } from '../I18nProvider';
 
 export function Topbar({ children }: { children?: React.ReactNode }) {
   const { theme, toggle } = useTheme();
   const { language, setLanguage, t } = useI18n();
+  const navigate = useNavigate();
+
+  function clearSession() {
+    try {
+      localStorage.removeItem('mpsone_role');
+      localStorage.removeItem('mpsone_user_type');
+      localStorage.removeItem('mpsone_jwt');
+    } catch { /* noop */ }
+    navigate('/login/client', { replace: true });
+  }
   return (
     <header className="topbar" role="banner">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -17,6 +28,9 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
           <option value="en">{t('topbar.lang.en')}</option>
           <option value="id">{t('topbar.lang.id')}</option>
         </select>
+        <button className="btn ghost" onClick={clearSession} aria-label={t('topbar.logout') || 'Logout'}>
+          {t('topbar.logout') || 'Logout'}
+        </button>
         <button className="btn" onClick={toggle} aria-label="Toggle dark/light">
           {theme === 'dark' ? t('topbar.dark') : t('topbar.light')}
         </button>
