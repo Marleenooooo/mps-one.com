@@ -113,3 +113,5 @@ Wishlist (UI/UX & Integrasi)
 - Panel “Invite User”: sambungkan ke endpoint nyata (POST `/admin/invites/create`, GET `/admin/invites`, POST `/admin/invites/:id/revoke`).
 - Code Login: validasi via API (POST `/auth/provision/validate`), konsumsi single‑use (POST `/auth/provision/consume`), simpan JWT secara aman.
 - Manage Invites: pagination, filter status (active/revoked/used), indikator waktu kedaluwarsa, dan aksi salin kode yang aksesibel.
+ - Tampilkan pesan ramah di `/login/client` dengan tautan ke `mps-one.com` bagi pengguna yang belum memastikan perannya.
+ - Catat redirect tidak dikenal untuk analitik guna mengukur minat dari non-pengguna.
