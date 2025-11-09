@@ -201,3 +201,39 @@ Contoh Implementasi Bahasa (Free‑First)
 - `i18next` + `react-i18next` dengan lazy load bundle `id`/`en`.
 - Deteksi via `franc`, default `id` untuk IP Indonesia, toggle manual, simpan di `localStorage`.
 - Opsional: seeding terjemahan dengan `LibreTranslate`, review manusia untuk kualitas.
+
+## Dokumentasi Pengguna (User Documentation)
+
+Dokumentasi end-user tersedia di folder `docs/`:
+
+- `docs/USER_GUIDE.md`: Panduan menggunakan aplikasi dari awal hingga akhir.
+- `docs/WORKFLOWS.md`: Alur kerja detail dengan guard dan invariant.
+- `docs/ROLES_PERMISSIONS.md`: Peran dan matriks akses.
+- `docs/UI_THEME_I18N.md`: Pengaturan tema dan preferensi bahasa.
+- `docs/FAQ.md`: Tanya jawab umum dan troubleshooting.
+- `docs/GLOSSARY.md`: Definisi istilah pengadaan.
+- `docs/EMAIL.md`: Ringkasan CommunicationHub & template email.
+- `docs/REPORTING.md`: Fitur pelaporan dan ekspor.
+- `docs/DB_SETUP.md`: Catatan setup Backend API & MySQL.
+
+Dokumen‑dokumen ini selaras dengan lifecycle pengadaan dan siap untuk integrasi backend di masa depan.
+
+### Versi Bahasa Indonesia
+
+Salinan berbahasa Indonesia tersedia di folder `docs/id/`:
+
+- `docs/id/USER_GUIDE.md`
+- `docs/id/WORKFLOWS.md`
+- `docs/id/ROLES_PERMISSIONS.md`
+- `docs/id/UI_THEME_I18N.md`
+- `docs/id/FAQ.md`
+- `docs/id/GLOSSARY.md`
+- `docs/id/EMAIL.md`
+- `docs/id/REPORTING.md`
+- `docs/id/DB_SETUP.md`
+
+### Pusat Bantuan & Penampil Dokumen (In‑App)
+
+- Buka rute `/help` di aplikasi untuk akses cepat ke dokumentasi.
+- Dokumen `.md` dicerminkan ke `webapp/public/docs` dan dapat dibaca langsung via Doc Viewer.
+- Setiap dokumen memiliki toggle bahasa: "English" / "Bahasa Indonesia" di bagian atas.

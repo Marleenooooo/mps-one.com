@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.1.2 (2025-11-09)
+
+### Highlights
+- Added in-app Help Center (`/help`) and Markdown Doc Viewer.
+- Mirrored user documentation to `webapp/public/docs` for in-app viewing.
+- Implemented bilingual toggles across docs; added `docs/DB_SETUP.md` and `docs/id/DB_SETUP.md`.
+- Inserted Help link into sidebar navigation for supplier and client.
+
+### Affected Files
+- `webapp/src/pages/HelpCenter.tsx`
+- `webapp/src/pages/DocViewer.tsx`
+- `webapp/src/App.tsx`
+- `webapp/src/components/Layout/Sidebar.tsx`
+- `docs/DB_SETUP.md`, `docs/id/DB_SETUP.md`
+- `webapp/public/docs/DB_SETUP.md`, `webapp/public/docs/id/DB_SETUP.md`
+
+### Deployment Notes
+- Docs are served from `public/docs` and included in the build.
+- Ensure deep links like `/help` render via SPA routing (`.htaccess`).
+
+### Post-Deploy Checks
+- Open `/help` and verify Help Center loads.
+- From Help, open a doc (e.g., DB Setup) and confirm bilingual toggle works.
+- Validate no 404s for `assets/*` and that `public/docs/*.md` are accessible.
+
 ## v0.1.1 (2025-11-09)
 
 ### Highlights
