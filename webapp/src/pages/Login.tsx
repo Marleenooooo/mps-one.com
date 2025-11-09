@@ -50,11 +50,7 @@ export default function Login() {
     else localStorage.removeItem('remember_email');
   }, [email, remember]);
 
-  const headerGradient = useMemo(() => (
-    theme === 'dark'
-      ? 'linear-gradient(90deg, #0A1F4D 0%, #0A0F2D 100%)'
-      : 'linear-gradient(90deg, #E3F2FD 0%, #F8FAFF 100%)'
-  ), [theme]);
+  const headerGradient = 'linear-gradient(90deg, color-mix(in srgb, var(--module-color) 15%, var(--surface)) 0%, var(--surface) 100%)';
 
   function validate() {
     const errs: { email?: string; password?: string } = {};
@@ -115,25 +111,17 @@ export default function Login() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <button
                     type="button"
-                    className="btn"
+                    className="btn primary"
                     aria-label={t('auth.i_am_supplier')}
                     onClick={() => chooseUserType('supplier')}
-                    style={{
-                      background: 'linear-gradient(135deg, #00F0FF 0%, #0077FF 100%)',
-                      boxShadow: '0 0 10px #00F0FF',
-                    }}
                   >
                     {t('auth.i_am_supplier')}
                   </button>
                   <button
                     type="button"
-                    className="btn"
+                    className="btn secondary"
                     aria-label={t('auth.i_am_client')}
                     onClick={() => chooseUserType('client')}
-                    style={{
-                      background: 'linear-gradient(135deg, #B84DB8 0%, #7A2A7A 100%)',
-                      boxShadow: '0 0 10px #FF00E5',
-                    }}
                   >
                     {t('auth.i_am_client')}
                   </button>

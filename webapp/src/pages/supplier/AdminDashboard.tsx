@@ -169,9 +169,7 @@ export default function AdminDashboard() {
             <input className="input" type="text" placeholder="e.g. Procurement" value={inviteDept} onChange={e => setInviteDept(e.target.value)} />
           </label>
           <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button className="btn" onClick={generateCode} aria-label="Generate Code" style={{
-              background: 'linear-gradient(135deg, #00F0FF 0%, #0077FF 100%)', boxShadow: '0 0 10px #00F0FF'
-            }}>Generate</button>
+            <button className="btn primary" onClick={generateCode} aria-label="Generate Code">Generate</button>
           </div>
         </div>
         {generatedCode && (

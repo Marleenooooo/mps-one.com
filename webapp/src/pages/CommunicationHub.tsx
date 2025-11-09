@@ -98,7 +98,7 @@ export default function CommunicationHub() {
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                <span className="status-badge" style={{ background: m.status === 'read' ? 'linear-gradient(135deg,#39FF14 0%,#00CC66 100%)' : m.status === 'delivered' ? 'linear-gradient(135deg,#FFB800 0%,#FF5E00 100%)' : 'linear-gradient(135deg,#0077FF 0%, #0055CC 100%)', color: '#0A0F2D' }}>
+                <span className={`status-badge ${m.status === 'read' ? 'success' : m.status === 'delivered' ? 'warn' : 'info'}`}>
                   {m.status === 'read' ? `✓✓ ${t('comms.status.read')}` : m.status === 'delivered' ? `✓ ${t('comms.status.delivered')}` : t('comms.status.sent')}
                 </span>
               </div>
@@ -125,8 +125,8 @@ export default function CommunicationHub() {
                     <span>{f.name}</span>
                     <span>{Math.min(100, progress[f.name] ?? 0)}%</span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 6, background: 'var(--border)' }}>
-                    <div style={{ width: `${Math.min(100, progress[f.name] ?? 0)}%`, height: '100%', borderRadius: 6, background: 'linear-gradient(90deg,#00F0FF 0%,#0077FF 100%)' }}></div>
+                  <div className="progress-bar">
+                    <div className="value" style={{ width: `${Math.min(100, progress[f.name] ?? 0)}%` }}></div>
                   </div>
                 </div>
               ))}

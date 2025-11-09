@@ -32,11 +32,7 @@ export default function CodeLogin() {
   const [error, setError] = useState<string | null>(null);
   const [liveText, setLiveText] = useState('');
 
-  const headerGradient = useMemo(() => (
-    theme === 'dark'
-      ? 'linear-gradient(90deg, #0A1F4D 0%, #0A0F2D 100%)'
-      : 'linear-gradient(90deg, #E3F2FD 0%, #F8FAFF 100%)'
-  ), [theme]);
+  const headerGradient = 'linear-gradient(90deg, color-mix(in srgb, var(--module-color) 15%, var(--surface)) 0%, var(--surface) 100%)';
 
   async function onSubmit(e?: React.FormEvent) {
     e?.preventDefault();

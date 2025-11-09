@@ -144,7 +144,7 @@ export default function PRCreate() {
 
   return (
     <div className="main">
-      <div className="page-header procurement" style={{ borderImage: 'linear-gradient(90deg, #00F0FF, #0077FF) 1' }}>
+      <div className="page-header procurement" style={{ borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1' }}>
         <h1 style={{ margin: 0 }}>{t('admin.new_pr')}</h1>
         <div aria-label="Status pipeline" style={{ display: 'flex', gap: 12, marginTop: 8, alignItems: 'center' }}>
           {(['pr','quote','po','processing','shipped','delivered','invoiced','paid'] as const).map((key, i) => (
@@ -155,11 +155,11 @@ export default function PRCreate() {
                   width: 10,
                   height: 10,
                   borderRadius: 999,
-                  background: i === pipelineActive ? 'linear-gradient(135deg, #00F0FF 0%, #0077FF 100%)' : '#2D3250',
+                  background: i === pipelineActive ? 'linear-gradient(135deg, var(--module-color) 0%, var(--module-gradient-end) 100%)' : 'var(--border)',
                   boxShadow: i === pipelineActive ? '0 0 10px var(--accent), 0 0 20px var(--accent)' : 'none',
                 }}
               ></div>
-              {i < 7 && <div style={{ width: 24, height: 2, background: '#2D3250' }}></div>}
+              {i < 7 && <div style={{ width: 24, height: 2, background: 'var(--border)' }}></div>}
             </div>
           ))}
         </div>
@@ -244,8 +244,8 @@ export default function PRCreate() {
                 {uploads.map((u, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <span style={{ flex: 1 }}>{u.name}</span>
-                    <div style={{ width: 120, height: 6, background: '#2D3250', borderRadius: 999, overflow: 'hidden' }}>
-                      <div style={{ width: `${u.progress}%`, height: '100%', background: 'linear-gradient(90deg, #00F0FF 0%, #0077FF 100%)' }}></div>
+                    <div className="progress-bar" style={{ width: 120 }}>
+                      <div className="value" style={{ width: `${u.progress}%` }}></div>
                     </div>
                     <span className="status-badge info">{u.status === 'uploading' ? t('pr.uploading') : t('pr.done')}</span>
                   </div>

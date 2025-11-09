@@ -83,7 +83,7 @@ export default function DocumentManager() {
 
   return (
     <div className="main">
-      <div className="page-header finance" style={{ borderImage: 'linear-gradient(90deg, #2D0A4D, #0A0F2D) 1' }}>
+      <div className="page-header finance" style={{ borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1' }}>
         <h1 style={{ margin: 0 }}>{t('docs.title')}</h1>
       </div>
       <div className="card" style={{ padding: 16 }}>
@@ -122,13 +122,13 @@ export default function DocumentManager() {
           ) : (
           docs.map(d => (
             <div key={d.id} className="card" style={{ padding: 12, transition: 'all 0.2s ease' }}
-                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 10px #FF00E5, 0 0 20px #FF00E5')}
+                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 10px var(--module-color), 0 0 20px var(--module-color)')}
                  onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input type="checkbox" checked={!!selected[d.id]} onChange={() => toggleSelect(d.id)} aria-label={`Select ${d.name}`} />
                 <span style={{ fontWeight: 600 }}>{d.name}</span>
               </label>
-              <div aria-label={t('docs.thumbnail')} style={{ height: 100, borderRadius: 8, position: 'relative', background: 'linear-gradient(135deg, #F3E5F5, #F8FAFF)' }}>
+              <div aria-label={t('docs.thumbnail')} style={{ height: 100, borderRadius: 8, position: 'relative', background: 'linear-gradient(135deg, var(--surface2), var(--surface))' }}>
                 <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.1)', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}>
                   {d.name.split('.').pop()?.toUpperCase()}
                 </div>

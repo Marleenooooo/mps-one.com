@@ -35,7 +35,7 @@ export default function QuoteBuilder() {
 
   return (
     <div className="main">
-      <div className="page-header procurement" style={{ borderImage: 'linear-gradient(90deg, #0077FF, #0055CC) 1' }}>
+      <div className="page-header procurement" style={{ borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1' }}>
         <h1 style={{ margin: 0 }}>{t('nav.quote_builder')}</h1>
       </div>
       <div className="card" style={{ padding: 16 }}>
@@ -94,7 +94,7 @@ export default function QuoteBuilder() {
           </div>
         </div>
         {preview && (
-          <div className="card" style={{ padding: 16, marginTop: 16, borderImage: 'linear-gradient(90deg, #0A1F4D, #0A0F2D) 1', borderWidth: 2, borderStyle: 'solid' }}>
+          <div className="card" style={{ padding: 16, marginTop: 16, borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1', borderWidth: 2, borderStyle: 'solid' }}>
             <h3>{t('action.preview')} ({template} template)</h3>
             <p style={{ color: 'var(--text-secondary)' }}>{t('quote.preview_hint')}</p>
             <div style={{ marginTop: 8, padding: 12, borderRadius: 8, background: 'var(--surface2)' }}>

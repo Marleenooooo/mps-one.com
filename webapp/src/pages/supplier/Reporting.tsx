@@ -125,9 +125,9 @@ export default function Reporting() {
                    style={{
                      width: 40,
                      height: Math.max(24, (d.amount / 200_000_000) * 140),
-                     background: 'linear-gradient(135deg, #0077FF 0%, #0055CC 100%)',
+                     background: 'linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%)',
                      borderRadius: 6,
-                     boxShadow: '0 4px 12px rgba(0,119,255,0.3)',
+                     boxShadow: '0 4px 12px color-mix(in srgb, var(--primary-gradient-start) 40%, transparent)',
                      transition: 'transform 0.2s ease',
                    }}
                    onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
@@ -173,12 +173,7 @@ export default function Reporting() {
                 <tr key={v.vendor}>
                   <td>{v.vendor}</td>
                   <td>
-                    <span style={{
-                      padding: '4px 8px',
-                      borderRadius: 999,
-                      background: v.score >= 85 ? 'linear-gradient(135deg, #39FF14 0%, #00CC66 100%)' : 'linear-gradient(135deg, #FFB800 0%, #FF5E00 100%)',
-                      color: '#0A0F2D'
-                    }}>{v.score}</span>
+                    <span className={`status-badge ${v.score >= 85 ? 'success' : 'warn'}`} style={{ padding: '4px 8px', borderRadius: 999 }}>{v.score}</span>
                   </td>
                   <td>{v.onTime}</td>
                 </tr>
@@ -217,13 +212,8 @@ export default function Reporting() {
                   <span>{b.dept}</span>
                   <span>{b.used}%</span>
                 </div>
-                <div style={{ height: 10, borderRadius: 6, background: '#E5E9F0' }}>
-                  <div style={{
-                    width: `${b.used}%`,
-                    height: '100%',
-                    borderRadius: 6,
-                    background: 'linear-gradient(90deg, #0077FF 0%, #0055CC 100%)',
-                  }}></div>
+                <div className="progress-bar">
+                  <div className="value" style={{ width: `${b.used}%` }}></div>
                 </div>
               </div>
             ))}
@@ -259,9 +249,9 @@ export default function Reporting() {
                    style={{
                      width: 40,
                      height: Math.max(24, (d.pr / 31) * 140),
-                     background: 'linear-gradient(135deg, #FF8A00 0%, #FF5E00 100%)',
+                     background: 'linear-gradient(135deg, var(--secondary-gradient-start) 0%, var(--secondary-gradient-end) 100%)',
                      borderRadius: 6,
-                     boxShadow: '0 4px 12px rgba(255,138,0,0.3)',
+                     boxShadow: '0 4px 12px color-mix(in srgb, var(--secondary-gradient-start) 40%, transparent)',
                      transition: 'transform 0.2s ease',
                    }}
                    onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}

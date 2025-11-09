@@ -60,7 +60,7 @@ export default function EmailDashboard() {
 
   return (
     <div className="main">
-      <div className="page-header procurement" style={{ borderImage: 'linear-gradient(90deg, #0A1F4D, #0A0F2D) 1' }}>
+      <div className="page-header procurement" style={{ borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1' }}>
         <h1 style={{ margin: 0 }}>{t('email.title')}</h1>
       </div>
       <div className="card" style={{ padding: 16 }}>

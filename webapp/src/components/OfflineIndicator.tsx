@@ -15,7 +15,21 @@ export function OfflineIndicator() {
 
   if (online) return null;
   return (
-    <div role="status" aria-live="assertive" style={{ position: 'fixed', top: 0, left: 0, right: 0, background: '#F59E0B', color: '#1f2937', padding: 8, textAlign: 'center', zIndex: 1000 }}>
+    <div
+      role="status"
+      aria-live="assertive"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        background: 'linear-gradient(135deg, var(--secondary-gradient-start) 0%, var(--secondary-gradient-end) 100%)',
+        color: 'var(--text-primary)',
+        padding: 8,
+        textAlign: 'center',
+        zIndex: 1000,
+      }}
+    >
       You are offline. Changes will be saved locally.
     </div>
   );

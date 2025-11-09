@@ -10,11 +10,7 @@ export default function Signup() {
   const { theme } = useTheme();
   const navigate = useNavigate();
 
-  const headerGradient = useMemo(() => (
-    theme === 'dark'
-      ? 'linear-gradient(90deg, #0A1F4D 0%, #0A0F2D 100%)'
-      : 'linear-gradient(90deg, #E3F2FD 0%, #F8FAFF 100%)'
-  ), [theme]);
+  const headerGradient = 'linear-gradient(90deg, color-mix(in srgb, var(--module-color) 15%, var(--surface)) 0%, var(--surface) 100%)';
 
   function chooseAdmin(type: 'supplier' | 'client') {
     try {
@@ -41,23 +37,15 @@ export default function Signup() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <button
                 type="button"
-                className="btn"
+                className="btn primary"
                 aria-label={t('auth.supplier_admin') || 'Supplier Admin'}
                 onClick={() => chooseAdmin('supplier')}
-                style={{
-                  background: 'linear-gradient(135deg, #00F0FF 0%, #0077FF 100%)',
-                  boxShadow: '0 0 10px #00F0FF',
-                }}
               >{t('auth.supplier_admin') || 'Supplier Admin'}</button>
               <button
                 type="button"
-                className="btn"
+                className="btn secondary"
                 aria-label={t('auth.client_admin') || 'Client Admin'}
                 onClick={() => chooseAdmin('client')}
-                style={{
-                  background: 'linear-gradient(135deg, #B84DB8 0%, #7A2A7A 100%)',
-                  boxShadow: '0 0 10px #FF00E5',
-                }}
               >{t('auth.client_admin') || 'Client Admin'}</button>
             </div>
             <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 12 }}>
@@ -85,4 +73,3 @@ export default function Signup() {
     </div>
   );
 }
-
