@@ -6,7 +6,7 @@ export function QRCode({ value, size = 96, ariaLabel = 'QR code' }: { value: str
   useEffect(() => {
     let mounted = true;
     QRCodeLib.toDataURL(value, { errorCorrectionLevel: 'M', width: size })
-      .then(u => { if (mounted) setUrl(u); })
+      .then((u: string) => { if (mounted) setUrl(u); })
       .catch(() => { if (mounted) setUrl(''); });
     return () => { mounted = false; };
   }, [value, size]);
@@ -16,4 +16,3 @@ export function QRCode({ value, size = 96, ariaLabel = 'QR code' }: { value: str
     <div style={{ width: size, height: size, display: 'grid', placeItems: 'center', fontSize: 10, color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>QR</div>
   );
 }
-

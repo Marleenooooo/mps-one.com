@@ -15,6 +15,7 @@ function getNavItems(role: Role) {
     { to: '/comms', key: 'nav.comms' },
     { to: '/supplier/email', key: 'nav.email_dashboard' },
     { to: '/supplier/reporting', key: 'nav.reporting' },
+    { to: '/help', key: 'nav.help' },
   ];
   const client = [
     { to: '/client', key: 'nav.client_dashboard' },
@@ -24,6 +25,7 @@ function getNavItems(role: Role) {
     { to: '/supply/order-tracker', key: 'nav.order_tracker' },
     { to: '/docs', key: 'nav.docs' },
     { to: '/comms', key: 'nav.comms' },
+    { to: '/help', key: 'nav.help' },
   ];
   return role === 'Admin' ? supplier : client;
 }

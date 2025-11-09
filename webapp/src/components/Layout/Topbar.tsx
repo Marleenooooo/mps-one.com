@@ -24,6 +24,9 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <QuickSearch />
         <NotificationBell count={3} />
+        <button className="btn ghost" onClick={() => navigate('/help')} aria-label={t('topbar.help') || 'Help'}>
+          {t('topbar.help') || 'Help'}
+        </button>
         <select aria-label={t('topbar.language')} className="select" value={language} onChange={e => setLanguage(e.target.value as any)}>
           <option value="en">{t('topbar.lang.en')}</option>
           <option value="id">{t('topbar.lang.id')}</option>
