@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 import { uniqueId } from '../components/utils/uniqueId';
@@ -8,6 +8,8 @@ type Message = { id: string; from: string; body: string; status: 'sent'|'deliver
 export default function CommunicationHub() {
   useModule('procurement');
   const { t } = useI18n();
+  const [liveText, setLiveText] = useState('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [thread, setThread] = useState<Message[]>([
     { id: uniqueId('msg'), from: 'PIC Procurement - Sari', body: 'Requesting updated quote for hydraulic hoses @PIC Finance - Damar', status: 'read', when: '09:20' },
     { id: uniqueId('msg'), from: 'PIC Finance - Damar', body: 'Approved budget, proceed to PO', status: 'delivered', when: '10:05' },
@@ -31,6 +33,8 @@ export default function CommunicationHub() {
     const newMsg: Message = { id: uniqueId('msg'), from: 'You', body: input, status: 'sent', when: now, attachments };
     setThread(t => [...t, newMsg]);
     setInput('');
+    setLiveText(t('action.sending') || 'Sending message');
+    inputRef.current?.focus();
     // simulate upload progress
     if (files.length) {
       const names = files.map(f => f.name);
@@ -49,6 +53,8 @@ export default function CommunicationHub() {
             // after upload completes, mark as delivered then read
             setTimeout(() => setThread(t => t.map(m => m.id === newMsg.id ? { ...m, status: 'delivered' } : m)), 400);
             setTimeout(() => setThread(t => t.map(m => m.id === newMsg.id ? { ...m, status: 'read' } : m)), 1500);
+            setLiveText(t('comms.status.delivered'));
+            setTimeout(() => setLiveText(t('comms.status.read')), 1200);
           }
           return next;
         });
@@ -57,6 +63,8 @@ export default function CommunicationHub() {
       // no attachments: still simulate receipt
       setTimeout(() => setThread(t => t.map(m => m.id === newMsg.id ? { ...m, status: 'delivered' } : m)), 300);
       setTimeout(() => setThread(t => t.map(m => m.id === newMsg.id ? { ...m, status: 'read' } : m)), 1200);
+      setLiveText(t('comms.status.delivered'));
+      setTimeout(() => setLiveText(t('comms.status.read')), 900);
     }
   }
 
@@ -70,6 +78,7 @@ export default function CommunicationHub() {
           <h2 style={{ marginTop: 0 }}>{t('comms.threads')}</h2>
           <div className="status-badge info">{t('comms.unread').replace('{n}', String(unread))}</div>
         </div>
+        <div aria-live="polite" style={{ position: 'absolute', left: -9999, width: 1, height: 1, overflow: 'hidden' }}>{liveText}</div>
         <div role="list" aria-label="Conversation" style={{ display: 'grid', gap: 8, marginTop: 12 }}>
           {thread.map(m => (
             <div role="listitem" key={m.id} className="card" style={{ padding: 12, borderLeft: `4px solid ${m.status === 'read' ? 'var(--border)' : 'var(--accent)'}` }}>
@@ -98,13 +107,13 @@ export default function CommunicationHub() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, marginTop: 12 }}>
           <div style={{ display: 'flex', gap: 8 }}>
-            <input className="input" placeholder={t('comms.input_placeholder')} value={input} onChange={e => setInput(e.target.value)} />
-            <label className="btn" style={{ cursor: 'pointer' }}>
+            <input ref={inputRef} className="input" placeholder={t('comms.input_placeholder')} value={input} onChange={e => setInput(e.target.value)} />
+            <label className="btn" aria-label={t('comms.add_attachments')} style={{ cursor: 'pointer' }}>
               {t('comms.add_attachments')}
               <input type="file" multiple onChange={onFileChange} style={{ display: 'none' }} />
             </label>
           </div>
-          <button className="btn primary" onClick={send} aria-busy={files.length > 0 && Object.values(progress).some(p => p < 100)}>{t('action.send') || 'Send'}</button>
+          <button className="btn primary" aria-label={t('action.send') || 'Send'} onClick={send} aria-busy={files.length > 0 && Object.values(progress).some(p => p < 100)}>{t('action.send') || 'Send'}</button>
         </div>
         {files.length > 0 && (
           <div className="card" style={{ padding: 12, marginTop: 12 }}>

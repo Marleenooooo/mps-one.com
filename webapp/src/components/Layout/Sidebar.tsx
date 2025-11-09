@@ -41,7 +41,7 @@ export function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === '/client'}
+            end={item.to === '/client' || item.to === '/supplier/admin'}
             className={({ isActive }) => `btn ghost` + (isActive ? ' active' : '')}
             style={{ display: 'block', margin: 8 }}
           >

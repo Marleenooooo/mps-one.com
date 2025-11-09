@@ -68,7 +68,7 @@ export default function AdminDashboard() {
         <div className="card" style={{ padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ margin: 0 }}>{t('admin.comm_center')}</h2>
-            <button className="btn">{t('admin.compose_email')}</button>
+            <button className="btn" aria-label={t('admin.compose_email')}>{t('admin.compose_email')}</button>
           </div>
           <DataTable
             data={clients}
@@ -96,9 +96,9 @@ export default function AdminDashboard() {
             ))}
           </ul>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button className="btn">{t('admin.new_pr')}</button>
-            <button className="btn">{t('admin.new_quote')}</button>
-            <button className="btn">{t('admin.new_po')}</button>
+            <button className="btn" aria-label={t('admin.new_pr')}>{t('admin.new_pr')}</button>
+            <button className="btn" aria-label={t('admin.new_quote')}>{t('admin.new_quote')}</button>
+            <button className="btn" aria-label={t('admin.new_po')}>{t('admin.new_po')}</button>
           </div>
         </div>
       </div>

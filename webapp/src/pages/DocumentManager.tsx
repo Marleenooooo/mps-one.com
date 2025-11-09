@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 
@@ -18,6 +18,8 @@ export default function DocumentManager() {
   const [banner, setBanner] = useState<string | null>(null);
   const [bulkTotal, setBulkTotal] = useState<number>(0);
   const [bulkDone, setBulkDone] = useState<number>(0);
+  const bulkDownloadBtnRef = useRef<HTMLButtonElement | null>(null);
+  const bulkDeleteBtnRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => { const tm = setTimeout(() => setMounting(false), 400); return () => clearTimeout(tm); }, []);
 
@@ -50,6 +52,7 @@ export default function DocumentManager() {
           setBanner(t('docs.download_complete'));
           setTimeout(() => { setBulkTotal(0); setBulkDone(0); }, 500);
           setTimeout(() => setBanner(null), 1500);
+          bulkDownloadBtnRef.current?.focus();
         }
       }, i * 150);
     });
@@ -60,6 +63,9 @@ export default function DocumentManager() {
     if (!ids.length) return alert('No documents selected');
     setDocs(d => d.filter(x => !ids.includes(x.id)));
     setSelected({});
+    setBanner(t('docs.deleted').replace('{n}', String(ids.length)));
+    setTimeout(() => setBanner(null), 1200);
+    bulkDeleteBtnRef.current?.focus();
   }
   function downloadDoc(d: Doc) {
     const blob = new Blob([`Dummy content for ${d.name} (v${d.version})`], { type: 'application/pdf' });
@@ -84,8 +90,8 @@ export default function DocumentManager() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>{t('docs.list')}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn" onClick={bulkDownload}>{t('docs.bulk_download')}</button>
-            <button className="btn" onClick={bulkDelete}>{t('docs.delete_selected')}</button>
+            <button ref={bulkDownloadBtnRef} className="btn" aria-label={t('docs.bulk_download')} onClick={bulkDownload}>{t('docs.bulk_download')}</button>
+            <button ref={bulkDeleteBtnRef} className="btn" aria-label={t('docs.delete_selected')} onClick={bulkDelete}>{t('docs.delete_selected')}</button>
             <button className="btn">{t('action.upload')}</button>
             <button className="btn" onClick={() => exportDocsCSV(docs)}>{t('action.export_csv') || 'Export CSV'}</button>
           </div>
