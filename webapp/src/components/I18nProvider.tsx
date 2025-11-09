@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { getGeoInfo } from '../services/geo';
+import { getPreferredLanguage, setPreferredLanguage } from '../services/i18n';
 
 export type Language = 'en' | 'id';
 
@@ -627,8 +629,10 @@ const translations: Record<Language, Record<string, string>> = {
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 function detectDefaultLanguage(): Language {
-  const stored = localStorage.getItem('lang') as Language | null;
-  if (stored === 'en' || stored === 'id') return stored;
+  const legacy = localStorage.getItem('lang') as Language | null;
+  const stored = localStorage.getItem('mpsone_lang') as Language | null;
+  const pref = stored ?? legacy;
+  if (pref === 'en' || pref === 'id') return pref;
   const nav = navigator?.language?.toLowerCase() ?? 'en';
   if (nav.startsWith('id')) return 'id';
   return 'en';
@@ -638,8 +642,25 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(detectDefaultLanguage());
 
   useEffect(() => {
+    // Persist both legacy and new keys
     localStorage.setItem('lang', language);
+    setPreferredLanguage(language);
   }, [language]);
+
+  // On first load, if no stored preference, hint language using IP geo (free, cached)
+  useEffect(() => {
+    const hasStored = !!(localStorage.getItem('mpsone_lang') || localStorage.getItem('lang'));
+    if (hasStored) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const geo = await getGeoInfo();
+        const next = getPreferredLanguage(geo.country);
+        if (!cancelled) setLanguage(next);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const t = useMemo(() => {
     return (key: string) => {

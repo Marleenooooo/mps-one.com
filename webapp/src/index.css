@@ -343,11 +343,13 @@ body {
   border-color: transparent;
   color: var(--text-primary);
   transition: all 0.2s ease;
+  text-decoration: none;
 }
 .sidebar .btn.ghost:hover,
 .sidebar .btn.ghost:focus-visible {
   background: color-mix(in srgb, var(--module-color) 8%, transparent);
   color: var(--module-color);
+  text-decoration: none;
 }
 
 [data-theme="dark"] .sidebar .btn.ghost:hover,
@@ -361,6 +363,7 @@ body {
   background: color-mix(in srgb, var(--module-color) 20%, transparent);
   border-left: 3px solid var(--module-color);
   color: var(--module-color);
+  text-decoration: none;
 }
 
 [data-theme="dark"] .sidebar .btn.ghost.active {

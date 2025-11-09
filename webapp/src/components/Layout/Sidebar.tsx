@@ -8,6 +8,7 @@ function getNavItems(role: Role) {
   const supplier = [
     { to: '/supplier/admin', key: 'nav.admin_dashboard' },
     { to: '/procurement/pr', key: 'nav.purchase_requests' },
+    { to: '/procurement/po/preview', key: 'nav.po_preview' },
     { to: '/procurement/quote-builder', key: 'nav.quote_builder' },
     { to: '/supply/order-tracker', key: 'nav.order_tracker' },
     { to: '/docs', key: 'nav.docs' },
@@ -19,6 +20,7 @@ function getNavItems(role: Role) {
     { to: '/client', key: 'nav.client_dashboard' },
     { to: '/client/onboarding', key: 'nav.onboarding' },
     { to: '/procurement/pr', key: 'nav.purchase_requests' },
+    { to: '/procurement/po/preview', key: 'nav.po_preview' },
     { to: '/supply/order-tracker', key: 'nav.order_tracker' },
     { to: '/docs', key: 'nav.docs' },
     { to: '/comms', key: 'nav.comms' },

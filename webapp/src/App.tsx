@@ -21,6 +21,7 @@ const Reporting = lazy(() => import('./pages/supplier/Reporting'));
 const PRList = lazy(() => import('./pages/procurement/PRList'));
 const PRCreate = lazy(() => import('./pages/procurement/PRCreate'));
 const EmailDashboard = lazy(() => import('./pages/supplier/EmailDashboard'));
+const POPreview = lazy(() => import('./pages/POPreview'));
 
 function StartRedirect() {
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
@@ -81,6 +82,7 @@ export default function App() {
                     <Route path="/supplier/email" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/client" replace />} />
                     <Route path="/procurement/pr" element={<PRList />} />
                     <Route path="/procurement/pr/new" element={<PRCreate />} />
+                    <Route path="/procurement/po/preview" element={<POPreview />} />
                     <Route path="/procurement/quote-builder" element={<QuoteBuilder />} />
                     <Route path="/supply/order-tracker" element={<OrderTracker />} />
                     <Route path="/docs" element={<DocumentManager />} />

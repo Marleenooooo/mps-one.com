@@ -115,3 +115,89 @@ Wishlist (UI/UX & Integrasi)
 - Manage Invites: pagination, filter status (active/revoked/used), indikator waktu kedaluwarsa, dan aksi salin kode yang aksesibel.
  - Tampilkan pesan ramah di `/login/client` dengan tautan ke `mps-one.com` bagi pengguna yang belum memastikan perannya.
  - Catat redirect tidak dikenal untuk analitik guna mengukur minat dari non-pengguna.
+
+## API Wishlist (Free‑First dengan Alternatif)
+
+Core Domain (Internal)
+- PR/Quote/PO/Delivery/Invoice API: `GET/POST /pr`, `/quotes`, `/po`, `/delivery-notes`, `/invoices`, `/payments`.
+- Audit Trail: catat `actor`, `timestamp`, `comment` untuk tiap transisi status.
+- RBAC/Permissions: role `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance` untuk gating PR approval, quote visibility, invoicing.
+
+Localization & Language
+- Free‑first: `i18next` + `react-i18next` (runtime i18n, pluralization, ICU); bundle JSON `id` dan `en`, lazy load.
+- Deteksi bahasa: `franc` (offline) + preferensi `localStorage`; fallback manual toggle.
+- Machine translation (opsional): `LibreTranslate` (public/self-host). Alternatif: `Microsoft Translator` (free tier), `DeepL`/`Google` (paid).
+
+Location & Personalization
+- IP Geolocation: `ipapi.co` atau `ipinfo.io` (free tier) untuk negara/zona waktu default.
+- Geocoding: `Nominatim` (OSM, free, rate‑limited) atau `LocationIQ` free tier; paid: `Google Geocoding`.
+- Maps: `Leaflet` + OSM tiles; routing: `openrouteservice` free tier.
+- Timezone/Calendar: `Luxon` atau `dayjs` + `Intl`; API cadangan: `worldtimeapi.org`.
+
+Payments (ID‑First)
+- Gateway: `Midtrans`, `Xendit`, `DOKU` (setup gratis, bayar per transaksi) — kartu, VA, e‑wallet (OVO/GoPay/DANA/ShopeePay), QRIS.
+- Disbursements: `Flip for Business` atau `Xendit` Payouts.
+- Invoice links: `Xendit Invoice` atau internal QRIS dynamic.
+- Webhooks: update status invoice (`paid`, `over‑due`) konsisten 30‑day calendar.
+
+Tax & Currency
+- PPN: internal kalkulasi (`ppn_rate`, inklusif/eksklusif), rounding konsisten; endpoint internal `/tax/calc`.
+- FX rates (free‑first): `exchangerate.host` atau `frankfurter.app`; paid: `Open Exchange Rates`.
+- Cache harian; kunci kurs saat invoice dibuat.
+
+Documents, Storage & Signatures
+- Storage: `Cloudflare R2` atau `Supabase Storage` free tier; opsi self‑host: `MinIO`.
+- Malware scan: `ClamAV` self‑host; spot check: `VirusTotal` API (free terbatas).
+- PDF: client `pdfmake`/`jsPDF` (awal), backend `Puppeteer` (nanti); paid: `DocRaptor`.
+- E‑Signature (ID): `PrivyID`, `DigiSign` (paid). Free‑first: QR JSON signatures + server validation.
+
+Email, Messaging & Notifications
+- Email transactional: `Brevo (Sendinblue)` free tier, `Resend`, `Mailjet`; murah: `AWS SES`.
+- Sync mail: `Gmail API` / `Microsoft Graph` (consent). Unified (paid): `Nylas`.
+- Push: `Firebase Cloud Messaging` (free). WhatsApp/SMS (nanti): `360dialog`, `Twilio`/`Vonage`.
+
+Shipping & Tracking
+- Aggregator: `AfterShip` atau `Ship24` free tier; lokal JNE/J&T/SiCepat jika tersedia.
+- Routing & ETA: `openrouteservice`.
+
+Search & Data
+- App search: `Meilisearch` atau `Typesense` (open‑source); paid: `Algolia`.
+- Vendor enrichment: `OpenCorporates` (free terbatas) — riset ID registry resmi (kontrak).
+
+Identity, Auth & Access
+- Auth: `Keycloak` self‑host atau `Auth.js`; paid: `Auth0`, `Clerk`.
+- RBAC/Policy: `Casbin` (open‑source).
+- MFA & audit untuk aksi finansial.
+
+Analytics & Monitoring
+- Product analytics: `PostHog` (free/self‑host).
+- Error monitoring: `Sentry` (free tier).
+- Tracing: `OpenTelemetry` + `Grafana`/`Jaeger`.
+- BI/Reporting: `Metabase` atau `Apache Superset`.
+
+Feature Flags & Config
+- `Unleash` atau `Flagsmith` (open‑source) untuk rollout bertahap.
+
+Queues, Webhooks & Scheduling
+- Queue: `BullMQ` (Redis) atau `RabbitMQ`.
+- Webhooks: verifikasi HMAC, retry dengan exponential backoff.
+- Scheduling: `node-cron` awal; `Temporal.io`/`Quartz` jika perlu orkestrasi.
+
+Security & Compliance
+- Secrets: `Doppler` free tier atau `Vault` self‑host; `.env` untuk dev.
+- DLP/PII: `gitleaks` di dev; `Semgrep` (policy) nanti.
+- TLS, audit immutable, konsistensi status pembayaran.
+
+Quick Integration Plan
+- Tahap 1: i18n (`i18next`), IP geo (`ipapi`), FX rates (`exchangerate.host`), email (`Brevo`), storage (`R2/Supabase`).
+- Tahap 2: Payments (`Midtrans`/`Xendit`) + webhooks; search (`Meilisearch`); monitoring (`Sentry`).
+- Abstraksi `services/` untuk klien API agar mudah migrasi ke backend.
+
+Implementasi Saat Ini (beban ringan, free)
+- Ditambahkan `src/services/`: `i18n` (preferensi bahasa via `localStorage` + `navigator`), `geo` (IP geolokasi via `ipapi` dengan timeout 2.5s dan cache 7 hari), `fx` (kurs via `exchangerate.host` dengan cache 24 jam).
+- Tanpa dependensi baru; pemanggilan dilakukan secara lazy dan hasil di-cache agar tidak menambah waktu muat.
+
+Contoh Implementasi Bahasa (Free‑First)
+- `i18next` + `react-i18next` dengan lazy load bundle `id`/`en`.
+- Deteksi via `franc`, default `id` untuk IP Indonesia, toggle manual, simpan di `localStorage`.
+- Opsional: seeding terjemahan dengan `LibreTranslate`, review manusia untuk kualitas.

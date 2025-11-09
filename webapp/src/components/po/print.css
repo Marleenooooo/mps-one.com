@@ -1,0 +1,8 @@
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  .po-layout table { page-break-inside: auto; }
+  .po-layout thead { display: table-header-group; }
+  .po-layout tr { page-break-inside: avoid; page-break-after: auto; }
+  .po-layout .btn, .page-header, .controls { display: none !important; }
+}
+
