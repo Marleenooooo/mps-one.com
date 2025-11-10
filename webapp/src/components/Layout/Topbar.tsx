@@ -13,8 +13,11 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
   const [highPerf, setHighPerf] = useState<boolean>(() => getHighPerformance());
   const role = (localStorage.getItem('mpsone_role') as string | null) || null;
   const userType = (localStorage.getItem('mpsone_user_type') as 'supplier' | 'client' | null) || null;
+  const displayName = (localStorage.getItem('mpsone_display_name') as string | null) || null;
+  const nickname = (localStorage.getItem('mpsone_nickname') as string | null) || null;
   const typeLabel = userType === 'supplier' ? (t('user.supplier') || 'Supplier') : userType === 'client' ? (t('user.client') || 'Client') : '';
-  const loginLabel = [typeLabel, role || ''].filter(Boolean).join(' ');
+  const identityLabel = [displayName || '', nickname ? `(${nickname})` : ''].filter(Boolean).join(' ');
+  const loginLabel = [identityLabel, [typeLabel, role || ''].filter(Boolean).join(' ')].filter(Boolean).join(' — ');
 
   function clearSession() {
     try {

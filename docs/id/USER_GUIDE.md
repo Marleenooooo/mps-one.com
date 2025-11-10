@@ -22,6 +22,13 @@ Panduan ini menjelaskan cara menggunakan Aplikasi B2B Procurement secara menyelu
 - PIC Finance: menyetujui PR, meninjau invoice, memproses pembayaran.
 - Admin Pemasok: akses halaman sisi pemasok (pengajuan quote, pengiriman, invoicing) sesuai PR yang disetujui.
 
+### Aturan Identitas & NPWP
+- Admin wajib mengirimkan dua nomor NPWP:
+  - NPWP Perusahaan: menjadi ID akun admin; mewakili entitas korporat.
+  - NPWP Pribadi: identitas tanggung jawab personal admin.
+- Pengguna non‑admin mengirim satu NPWP Pribadi; ini menjadi ID akun mereka.
+- Semua akun wajib memiliki display name dan nickname demi kolaborasi & audit yang jelas.
+
 ## Tema & Bahasa
 - Tema: Light & Dark; preferensi disimpan (persisten).
 - Bahasa: Inggris (`en`) atau Indonesia (`id`); preferensi disimpan di localStorage.

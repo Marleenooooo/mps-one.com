@@ -23,3 +23,8 @@ Roles: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 - PIC Operational: create PR, support receiving and delivery corrections.
 - PIC Finance: PR approvals, invoice review, payment processing.
 - Supplier side: receives approved PRs, submits quotes, processes shipments (Delivery Letters), issues invoices based on confirmed deliveries.
+
+### Identity Policy (NPWP & Names)
+- Admins: must provide 2 NPWP numbers — Company NPWP (account ID) and Personal NPWP (responsibility).
+- Non-admins: provide 1 Personal NPWP; it becomes the user’s account ID.
+- All accounts: must have a display name and nickname; used in the UI and audit trail.

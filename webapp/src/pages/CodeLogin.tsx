@@ -31,8 +31,26 @@ export default function CodeLogin() {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [liveText, setLiveText] = useState('');
+  const [stage, setStage] = useState<'code' | 'details'>('code');
+  const [prov, setProv] = useState<Provision | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [personalNpwp, setPersonalNpwp] = useState('');
+  const [companyNpwp, setCompanyNpwp] = useState('');
 
   const headerGradient = 'linear-gradient(90deg, color-mix(in srgb, var(--module-color) 15%, var(--surface)) 0%, var(--surface) 100%)';
+
+  function normalizeNpwp(input: string) {
+    const digits = (input || '').replace(/[^0-9]/g, '');
+    const isValid = digits.length === 15 || digits.length === 16;
+    let formatted = input.trim();
+    if (digits.length === 16) {
+      formatted = `${digits.slice(0,4)} ${digits.slice(4,8)} ${digits.slice(8,12)} ${digits.slice(12,16)}`;
+    } else if (digits.length === 15) {
+      formatted = `${digits.slice(0,2)}.${digits.slice(2,5)}.${digits.slice(5,8)}.${digits.slice(8,9)}-${digits.slice(9,12)}.${digits.slice(12,15)}`;
+    }
+    return { digits, isValid, formatted };
+  }
 
   async function onSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -61,7 +79,15 @@ export default function CodeLogin() {
           } catch {}
           setLiveText(t('auth.code_success') || 'Access granted');
           setError(null);
-          navigate(prov.type === 'supplier' ? '/supplier/admin' : '/client');
+          setProv({
+            code: normalized,
+            type: prov.type,
+            role: prov.role as Provision['role'],
+            company: prov.company,
+            department: prov.department,
+            signature: prov.signature,
+          });
+          setStage('details');
           return;
         }
       }
@@ -86,8 +112,43 @@ export default function CodeLogin() {
       } catch {}
       setLiveText(t('auth.code_success') || 'Access granted');
       setError(null);
-      navigate(prov.type === 'supplier' ? '/supplier/admin' : '/client');
+      setProv(prov);
+      setStage('details');
     }
+  }
+
+  function onComplete() {
+    if (!prov) return;
+    if (!displayName) {
+      setError('Please input display name.');
+      return;
+    }
+    const personalCheck = normalizeNpwp(personalNpwp);
+    if (!personalCheck.isValid) {
+      setError('Please input a valid Personal NPWP (15 or 16 digits).');
+      return;
+    }
+    try {
+      localStorage.setItem('mpsone_display_name', displayName);
+      localStorage.setItem('mpsone_nickname', nickname || '');
+      localStorage.setItem('mpsone_personal_npwp', personalCheck.formatted);
+      localStorage.setItem('mpsone_personal_npwp_digits', personalCheck.digits);
+      if (prov.role === 'Admin') {
+        const companyCheck = normalizeNpwp(companyNpwp);
+        if (!companyCheck.isValid) {
+          setError('Please input a valid Company NPWP (15 or 16 digits).');
+          return;
+        }
+        localStorage.setItem('mpsone_company_npwp', companyCheck.formatted);
+        localStorage.setItem('mpsone_company_npwp_digits', companyCheck.digits);
+        // Admin account ID = Company NPWP digits
+        localStorage.setItem('mpsone_user_id', companyCheck.digits);
+      } else {
+        // Non-admin account ID = Personal NPWP digits
+        localStorage.setItem('mpsone_user_id', personalCheck.digits);
+      }
+    } catch {}
+    navigate(prov.type === 'supplier' ? '/supplier/admin' : '/client');
   }
 
   return (
@@ -97,29 +158,54 @@ export default function CodeLogin() {
           <h1 style={{ margin: 0 }}>{t('auth.use_code') || 'Use Code'}</h1>
           <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{t('auth.join_with_code_hint') || 'Enter the access code provided by your admin to auto-configure your account.'}</p>
         </div>
-        <form onSubmit={onSubmit} style={{ padding: 16 }}>
-          <div style={{ display: 'grid', gap: 12 }}>
-            <label>
-              <div style={{ fontWeight: 600 }}>{t('auth.code_number') || 'Code number'}</div>
-              <input
-                ref={inputRef}
-                className="input"
-                type="text"
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? 'code-err' : undefined}
-                placeholder="e.g. CLI-PROC-9821"
-                value={code}
-                onChange={e => setCode(e.target.value)}
-              />
-              {error && (
-                <div id="code-err" role="alert" style={{ color: '#FF2A50', marginTop: 4 }}>{error}</div>
-              )}
-            </label>
-            <button type="submit" className="btn" style={{
-              background: 'linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%)'
-            }}>{t('auth.continue') || 'Continue'}</button>
+        {stage === 'code' && (
+          <form onSubmit={onSubmit} style={{ padding: 16 }}>
+            <div style={{ display: 'grid', gap: 12 }}>
+              <label>
+                <div style={{ fontWeight: 600 }}>{t('auth.code_number') || 'Code number'}</div>
+                <input
+                  ref={inputRef}
+                  className="input"
+                  type="text"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'code-err' : undefined}
+                  placeholder="e.g. CLI-PROC-9821"
+                  value={code}
+                  onChange={e => setCode(e.target.value)}
+                />
+                {error && (
+                  <div id="code-err" role="alert" style={{ color: '#FF2A50', marginTop: 4 }}>{error}</div>
+                )}
+              </label>
+              <button type="submit" className="btn" style={{
+                background: 'linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%)'
+              }}>{t('auth.continue') || 'Continue'}</button>
+            </div>
+          </form>
+        )}
+        {stage === 'details' && (
+          <div style={{ padding: 16 }}>
+            <div className="card" style={{ padding: 12 }}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('auth.identity_details') || 'Identity Details'}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <input className="input" placeholder={t('auth.display_name_placeholder') || 'Display Name'} value={displayName} onChange={e => setDisplayName(e.target.value)} />
+                <input className="input" placeholder={t('auth.nickname_placeholder') || 'Nickname (optional)'} value={nickname} onChange={e => setNickname(e.target.value)} />
+                {prov?.role === 'Admin' && (
+                  <input className="input" placeholder={t('auth.company_npwp_placeholder') || 'Company NPWP (15/16 digits)'} value={companyNpwp} onChange={e => setCompanyNpwp(e.target.value)} />
+                )}
+                <input className="input" placeholder={t('auth.personal_npwp_placeholder') || 'Personal NPWP (15/16 digits)'} value={personalNpwp} onChange={e => setPersonalNpwp(e.target.value)} />
+              </div>
+              <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 12 }}>
+                {prov?.role === 'Admin'
+                  ? (t('auth.company_identity_hint') || 'Admin must provide 2 NPWP numbers: Company NPWP (account ID) and Personal NPWP (responsibility).')
+                  : (t('auth.non_admin_identity_hint') || 'Non-admin must provide Personal NPWP; it becomes your account ID.')}
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <button type="button" className="btn primary" onClick={onComplete}>{t('auth.finish') || 'Finish'}</button>
+              </div>
+            </div>
           </div>
-        </form>
+        )}
         <div aria-live="polite" style={{ padding: 8, minHeight: 24, color: 'var(--text-secondary)' }}>{liveText}</div>
         <div style={{ padding: 12, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}>
           <span>{t('auth.security_notice')}</span>

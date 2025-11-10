@@ -22,6 +22,13 @@ This guide explains how to use the B2B Procurement Webapp end-to-end: initiating
 - PIC Finance: approve PRs, review invoices, process payments.
 - Supplier Admin: access supplier-side pages (quote submission, shipments, invoicing) per approved PRs.
 
+### Identity & NPWP Rules
+- Admin accounts must submit two NPWP numbers:
+  - Company NPWP: becomes the admin account ID; represents the corporate entity.
+  - Personal NPWP: the admin’s personal responsibility identifier.
+- Non-admin users submit one Personal NPWP; it becomes their account ID.
+- All accounts must provide a display name and a nickname for clearer collaboration and auditability.
+
 ## Themes & Language
 - Theme: switch between Light and Dark; preference persists.
 - Language: English or Indonesian; preference persists to local storage.

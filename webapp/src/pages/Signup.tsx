@@ -10,7 +10,10 @@ export default function Signup() {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [company, setCompany] = useState('');
-  const [npwp, setNpwp] = useState('');
+  const [companyNpwp, setCompanyNpwp] = useState('');
+  const [personalNpwp, setPersonalNpwp] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [nickname, setNickname] = useState('');
   const [err, setErr] = useState<string | null>(null);
 
   const headerGradient = 'linear-gradient(90deg, color-mix(in srgb, var(--module-color) 15%, var(--surface)) 0%, var(--surface) 100%)';
@@ -30,17 +33,34 @@ export default function Signup() {
   }
 
   function chooseAdmin(type: 'supplier' | 'client') {
-    const { digits, isValid, formatted } = normalizeNpwp(npwp);
-    if (!company || !isValid) {
-      setErr(!company ? 'Please input company name.' : 'Please input a valid NPWP (15 or 16 digits).');
+    const companyCheck = normalizeNpwp(companyNpwp);
+    const personalCheck = normalizeNpwp(personalNpwp);
+    if (!company) {
+      setErr('Please input company name.');
+      return;
+    }
+    if (!displayName) {
+      setErr('Please input display name.');
+      return;
+    }
+    if (!companyCheck.isValid) {
+      setErr('Please input a valid Company NPWP (15 or 16 digits).');
+      return;
+    }
+    if (!personalCheck.isValid) {
+      setErr('Please input a valid Personal NPWP (15 or 16 digits).');
       return;
     }
     try {
       localStorage.setItem('mpsone_company', company);
-      localStorage.setItem('mpsone_npwp', formatted);
-      localStorage.setItem('mpsone_npwp_digits', digits);
-      // Admin account represents company; use NPWP digits as admin user id
-      localStorage.setItem('mpsone_user_id', digits);
+      localStorage.setItem('mpsone_company_npwp', companyCheck.formatted);
+      localStorage.setItem('mpsone_company_npwp_digits', companyCheck.digits);
+      localStorage.setItem('mpsone_personal_npwp', personalCheck.formatted);
+      localStorage.setItem('mpsone_personal_npwp_digits', personalCheck.digits);
+      // Admin account ID = Company NPWP digits
+      localStorage.setItem('mpsone_user_id', companyCheck.digits);
+      localStorage.setItem('mpsone_display_name', displayName);
+      localStorage.setItem('mpsone_nickname', nickname || '');
       localStorage.setItem('mpsone_user_type', type);
       localStorage.setItem('mpsone_role', 'Admin');
     } catch {}
@@ -63,11 +83,14 @@ export default function Signup() {
             <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('auth.company_identity') || 'Company Identity (Admin)'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <input className="input" placeholder={t('onb.company_name') || 'Company Name'} value={company} onChange={e => setCompany(e.target.value)} />
-              <input className="input" placeholder={t('auth.npwp_placeholder') || 'NPWP (15/16 digits)'} value={npwp} onChange={e => setNpwp(e.target.value)} />
+              <input className="input" placeholder={t('auth.company_npwp_placeholder') || 'Company NPWP (15/16 digits)'} value={companyNpwp} onChange={e => setCompanyNpwp(e.target.value)} />
+              <input className="input" placeholder={t('auth.personal_npwp_placeholder') || 'Personal NPWP (15/16 digits)'} value={personalNpwp} onChange={e => setPersonalNpwp(e.target.value)} />
+              <input className="input" placeholder={t('auth.display_name_placeholder') || 'Display Name'} value={displayName} onChange={e => setDisplayName(e.target.value)} />
+              <input className="input" placeholder={t('auth.nickname_placeholder') || 'Nickname (optional)'} value={nickname} onChange={e => setNickname(e.target.value)} />
             </div>
             {err && <div role="alert" style={{ color: 'var(--secondary-gradient-start)', marginTop: 8, fontSize: 12 }}>{err}</div>}
             <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 12 }}>
-              {(t('auth.company_identity_hint') || 'Admin account represents the company account. NPWP is used as the admin user ID for credibility and auditability.')}
+              {(t('auth.company_identity_hint') || 'Admin must provide 2 NPWP numbers: Company NPWP (account ID) and Personal NPWP (responsibility). All accounts must have a display name and nickname.')}
             </div>
           </div>
           <div className="card" style={{ padding: 12 }}>

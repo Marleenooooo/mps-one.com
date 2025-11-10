@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.1.5 (2025-11-10)
+
+### Highlights
+- Identity policy enforced: Admin must submit 2 NPWPs (Company NPWP as account ID; Personal NPWP for responsibility). Non-admin users submit 1 Personal NPWP as their account ID.
+- All accounts now collect and persist Display Name and Nickname; Topbar displays identity next to role and user type.
+- Signup updated to collect Company NPWP, Personal NPWP, Display Name, and Nickname for admins.
+- CodeLogin converted to two-step flow: validate code then collect identity (NPWP and names) with admin-specific requirements.
+- Onboarding shows badges for Company NPWP and Personal NPWP for Admin.
+- Documentation updated (EN/ID) to reflect NPWP rules and name requirements under User Guide and Roles & Permissions.
+
+### Affected Files
+- `webapp/src/pages/Signup.tsx`
+- `webapp/src/pages/CodeLogin.tsx`
+- `webapp/src/pages/client/Onboarding.tsx`
+- `webapp/src/components/Layout/Topbar.tsx`
+- `docs/USER_GUIDE.md`, `docs/ROLES_PERMISSIONS.md`
+- `docs/id/USER_GUIDE.md`, `docs/id/ROLES_PERMISSIONS.md`
+
+### Notes
+- Admin account ID maps to Company NPWP digits; non-admin account ID maps to Personal NPWP digits.
+- Display Name and Nickname are required for all accounts to improve collaboration context and audit trails.
+
 ## v0.1.4 (2025-11-10)
 
 ### Highlights

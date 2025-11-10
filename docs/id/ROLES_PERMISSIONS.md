@@ -23,3 +23,8 @@ Peran: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 - PIC Operational: membuat PR, membantu penerimaan dan koreksi pengiriman.
 - PIC Finance: menyetujui PR, meninjau invoice, memproses pembayaran.
 - Sisi pemasok: menerima PR yang disetujui, mengirim quote, memproses pengiriman (Delivery Letter), dan menerbitkan invoice berdasarkan pengiriman yang dikonfirmasi.
+
+### Kebijakan Identitas (NPWP & Nama)
+- Admin: wajib menyediakan 2 NPWP — NPWP Perusahaan (ID akun) dan NPWP Pribadi (tanggung jawab).
+- Non‑admin: menyediakan 1 NPWP Pribadi; menjadi ID akun pengguna.
+- Semua akun: wajib memiliki display name dan nickname; digunakan di UI dan jejak audit.
