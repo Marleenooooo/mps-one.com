@@ -8,7 +8,7 @@ Dokumen ini merangkum langkah dasar menyiapkan MySQL di Hostinger dan menghubung
 - Nama Database: `mpsonedatabase`
 - Pengguna Database: `mpsone`
 - Kata Sandi: buat kata sandi kuat di hPanel
-- Host: dari hPanel Hostinger (mis. `srvXXXXXX.hstgr.cloud`)
+- Host: Hostname server MySQL kami adalah: `srv1631.hstgr.io` atau Anda bisa menggunakan IP ini sebagai hostname: `153.92.15.31`
 - Port: `3306`
 
 ## Buat Database & Pengguna

@@ -8,7 +8,7 @@ This project’s frontend is a React SPA. Database credentials must live on the 
 - Database Name: `mpsonedatabase`
 - Database User: `mpsone`
 - Database Password: set a strong password in hPanel
-- Host: from Hostinger hPanel (e.g., `srvXXXXXX.hstgr.cloud`)
+- Host: Our MySQL server hostname is `srv1631.hstgr.io` or use IP `153.92.15.31` as the hostname
 - Port: `3306`
 
 ## Create the Database/User
