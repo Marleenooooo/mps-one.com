@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useModule } from '../../components/useModule';
 import { DataTable } from '../../components/UI/DataTable';
+import { computeOverscan } from '../../config';
 import { useI18n } from '../../components/I18nProvider';
 import { uniqueId } from '../../components/utils/uniqueId';
 
@@ -9,6 +11,8 @@ type PRRow = { id: string; title: string; department: string; status: 'Draft' | 
 export default function PRList() {
   useModule('procurement');
   const { t } = useI18n();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<PRRow[]>(() => {
     const now = new Date().toISOString();
     return [
@@ -32,6 +36,20 @@ export default function PRList() {
     } catch {}
   }, []);
 
+  // Auto-export via routing: /procurement/pr?action=export
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') === 'export') {
+      setTimeout(() => {
+        try {
+          exportCSV(rows);
+          navigate('/procurement/pr', { replace: true });
+        } catch {}
+      }, 200);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
+
   return (
     <div className="main" role="main" aria-label={t('pr.header')}>
       <div className="page-header procurement">
@@ -54,7 +72,10 @@ export default function PRList() {
             { key: 'status', header: t('pr.status'), render: v => <span className="status-badge info">{v}</span> },
             { key: 'createdAt', header: t('pr.created') },
           ]}
-          pageSize={5}
+          virtualize
+          height={360}
+          rowHeight={48}
+          overscan={computeOverscan('prList')}
         />
       </div>
     </div>

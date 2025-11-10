@@ -13,10 +13,18 @@ export function DataTable<T extends { id: string | number }>({
   data,
   columns,
   pageSize = 5,
+  virtualize = false,
+  height = 360,
+  rowHeight = 44,
+  overscan = 5,
 }: {
   data: T[];
   columns: Column<T>[];
   pageSize?: number;
+  virtualize?: boolean;
+  height?: number; // only used when virtualize=true
+  rowHeight?: number; // approximate row height in px
+  overscan?: number; // number of extra rows to render above/below
 }) {
   const { t } = useI18n();
   const tableRef = useRef<HTMLDivElement | null>(null);
@@ -28,6 +36,8 @@ export function DataTable<T extends { id: string | number }>({
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -47,9 +57,16 @@ export function DataTable<T extends { id: string | number }>({
   }, [data, query, sortKey, sortDir]);
 
   const paged = useMemo(() => {
+    if (virtualize) return filtered; // use full list for virtualization
     const start = page * pageSize;
     return filtered.slice(start, start + pageSize);
-  }, [filtered, page, pageSize]);
+  }, [filtered, page, pageSize, virtualize]);
+
+  const totalRows = paged.length;
+  const visibleCount = virtualize ? Math.ceil(height / rowHeight) + overscan * 2 : paged.length;
+  const startIndex = virtualize ? Math.max(0, Math.floor(scrollTop / rowHeight) - overscan) : 0;
+  const endIndex = virtualize ? Math.min(totalRows, startIndex + visibleCount) : totalRows;
+  const visibleRows = useMemo(() => paged.slice(startIndex, endIndex), [paged, startIndex, endIndex]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -89,7 +106,7 @@ export function DataTable<T extends { id: string | number }>({
 
   function toggleAll()
   {
-    const ids = paged.map(r => r.id);
+    const ids = (virtualize ? visibleRows : paged).map(r => r.id);
     const allSelected = ids.every(id => selected.has(id));
     setSelected(prev => {
       const next = new Set(prev);
@@ -187,24 +204,66 @@ export function DataTable<T extends { id: string | number }>({
             </button>
           ))}
         </div>
-        {paged.map(row => (
-          <div key={String(row.id)} role="row" style={{ display: 'grid', gridTemplateColumns: `48px repeat(${columns.length}, 1fr)`, gap: 0, borderBottom: '1px solid var(--border)' }}>
-            <div role="cell" style={{ padding: 12 }}>
-              <input aria-label={`Select row ${row.id}`} type="checkbox" checked={selected.has(row.id)} onChange={() => toggleRow(row.id)} />
+        {virtualize ? (
+          <div
+            ref={scrollRef}
+            onScroll={e => setScrollTop((e.target as HTMLDivElement).scrollTop)}
+            style={{ height, overflowY: 'auto', position: 'relative' }}
+            aria-label="Virtualized rows"
+          >
+            <div style={{ height: totalRows * rowHeight, position: 'relative' }}>
+              {visibleRows.map((row, i) => {
+                const idx = startIndex + i;
+                return (
+                  <div
+                    key={String(row.id)}
+                    role="row"
+                    style={{
+                      position: 'absolute',
+                      top: idx * rowHeight,
+                      left: 0,
+                      right: 0,
+                      height: rowHeight,
+                      display: 'grid',
+                      gridTemplateColumns: `48px repeat(${columns.length}, 1fr)`,
+                      borderBottom: '1px solid var(--border)'
+                    }}
+                  >
+                    <div role="cell" style={{ padding: 12 }}>
+                      <input aria-label={`Select row ${row.id}`} type="checkbox" checked={selected.has(row.id)} onChange={() => toggleRow(row.id)} />
+                    </div>
+                    {columns.map(col => (
+                      <div key={String(col.key)} role="cell" style={{ padding: 12 }}>
+                        {col.render ? col.render(row[col.key], row) : String(row[col.key])}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
-            {columns.map(col => (
-              <div key={String(col.key)} role="cell" style={{ padding: 12 }}>
-                {col.render ? col.render(row[col.key], row) : String(row[col.key])}
-              </div>
-            ))}
           </div>
-        ))}
+        ) : (
+          paged.map(row => (
+            <div key={String(row.id)} role="row" style={{ display: 'grid', gridTemplateColumns: `48px repeat(${columns.length}, 1fr)`, gap: 0, borderBottom: '1px solid var(--border)' }}>
+              <div role="cell" style={{ padding: 12 }}>
+                <input aria-label={`Select row ${row.id}`} type="checkbox" checked={selected.has(row.id)} onChange={() => toggleRow(row.id)} />
+              </div>
+              {columns.map(col => (
+                <div key={String(col.key)} role="cell" style={{ padding: 12 }}>
+                  {col.render ? col.render(row[col.key], row) : String(row[col.key])}
+                </div>
+              ))}
+            </div>
+          ))
+        )}
       </div>
-      <div style={{ display: 'flex', gap: 8, padding: 12, justifyContent: 'flex-end' }}>
-        <button className="btn" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>{t('datatable.prev')}</button>
-        <div aria-live="polite" style={{ alignSelf: 'center' }}>{t('datatable.page')} {page + 1} / {Math.max(1, Math.ceil(filtered.length / pageSize))}</div>
-        <button className="btn" onClick={() => setPage(p => (p + 1 < Math.ceil(filtered.length / pageSize)) ? p + 1 : p)} disabled={page + 1 >= Math.ceil(filtered.length / pageSize)}>{t('datatable.next')}</button>
-      </div>
+      {!virtualize && (
+        <div style={{ display: 'flex', gap: 8, padding: 12, justifyContent: 'flex-end' }}>
+          <button className="btn" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>{t('datatable.prev')}</button>
+          <div aria-live="polite" style={{ alignSelf: 'center' }}>{t('datatable.page')} {page + 1} / {Math.max(1, Math.ceil(filtered.length / pageSize))}</div>
+          <button className="btn" onClick={() => setPage(p => (p + 1 < Math.ceil(filtered.length / pageSize)) ? p + 1 : p)} disabled={page + 1 >= Math.ceil(filtered.length / pageSize)}>{t('datatable.next')}</button>
+        </div>
+      )}
     </div>
   );
 }

@@ -124,6 +124,8 @@ Kenyamanan Pengguna
 - Template PR/Quote/PO untuk kurangi input berulang; prefill dari departemen/anggaran.
 - ID, nomor lacak, dan deep link yang dapat disalin; ekspor QR untuk pengiriman.
 - Tautan Help kontekstual dari halaman ke bagian relevan di Doc Viewer (buka di aplikasi).
+ - Dropdown Settings ringkas di Topbar: tema, bahasa, overscan, dan tips shortcut keyboard.
+ - Tombol “Reset ke default” satu klik: kembalikan tema, bahasa, overscan, dan preferensi performa.
 
 Efektivitas Alur Kerja
 - Gating approval penuh di UI: blok konversi PR yang belum disetujui ke Quote; cek role untuk approval.
@@ -138,6 +140,8 @@ Performa & Kecepatan
 - Code splitting per rute; lazy load halaman berat (QuoteBuilder, Reporting) dan aset.
 - Optimasi gambar/berkas: kompres preview; kurangi efek glow pada daftar panjang.
 - Cache di klien untuk dokumen dan data statis; prefetch rute yang mungkin dibuka berikutnya.
+ - Mode Performa Tinggi (High Performance): tingkatkan overscan di PRList/Docs dan debounce pencarian agar UI stabil.
+ - Pengatur overscan per‑modul langsung di Settings (Dokumen vs Daftar PR) untuk tuning halus.
 
 Aksesibilitas
 - Audit WCAG AA komprehensif: cakupan navigasi keyboard, label ARIA untuk tabel/form kompleks.

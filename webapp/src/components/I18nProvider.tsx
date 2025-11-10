@@ -279,9 +279,9 @@ const translations: Record<Language, Record<string, string>> = {
     'help.toggleLanguage': 'Toggle Language',
     'help.openAlternate': 'Open Alternate Language',
     'help.viewing': 'Viewing',
-    'help.loading': 'Loading...'
+    'help.loading': 'Loading...',
 
-    // Order Tracker
+    
     'order_tracker.title': 'Order Tracker',
     'order_tracker.estimated_delivery': 'Estimated delivery',
     'order_tracker.shipping_info': 'Shipping Information',
@@ -629,9 +629,9 @@ const translations: Record<Language, Record<string, string>> = {
     'help.toggleLanguage': 'Ganti Bahasa',
     'help.openAlternate': 'Buka Bahasa Alternatif',
     'help.viewing': 'Melihat',
-    'help.loading': 'Memuat...'
+    'help.loading': 'Memuat...',
 
-    // Order Tracker
+    
     'order_tracker.title': 'Pelacak Pesanan',
     'order_tracker.estimated_delivery': 'Perkiraan pengiriman',
     'order_tracker.shipping_info': 'Informasi Pengiriman',

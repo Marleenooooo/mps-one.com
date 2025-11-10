@@ -4,7 +4,7 @@ import { useI18n } from '../components/I18nProvider';
 
 type Doc = { id: number; name: string; version: number; canAccess: boolean; versions?: { v: number; when: string }[] };
 
-export default function DocumentManager() {
+export default function DocumentManager({ overscan = 3 }: { overscan?: number }) {
   useModule('finance');
   const { t } = useI18n();
   const [mounting, setMounting] = useState(true);
@@ -20,6 +20,19 @@ export default function DocumentManager() {
   const [bulkDone, setBulkDone] = useState<number>(0);
   const bulkDownloadBtnRef = useRef<HTMLButtonElement | null>(null);
   const bulkDeleteBtnRef = useRef<HTMLButtonElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const height = 420; // viewport height for virtualization
+  const rowHeight = 220; // approximate card height + gap
+  const columns = 3;
+const overscanRows = overscan;
+  const totalRows = Math.ceil(docs.length / columns);
+  const startRow = Math.max(0, Math.floor(scrollTop / rowHeight) - overscanRows);
+  const visibleRowCount = Math.ceil(height / rowHeight) + overscanRows * 2;
+  const endRow = Math.min(totalRows, startRow + visibleRowCount);
+  const startIndex = startRow * columns;
+  const endIndex = Math.min(docs.length, endRow * columns);
+  const visibleDocs = docs.slice(startIndex, endIndex);
 
   useEffect(() => { const tm = setTimeout(() => setMounting(false), 400); return () => clearTimeout(tm); }, []);
 
@@ -110,7 +123,7 @@ export default function DocumentManager() {
             t('docs.selected').replace('{n}', String(selectedCount))
           )}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 12 }}>
+        <div ref={scrollRef} onScroll={e => setScrollTop((e.target as HTMLDivElement).scrollTop)} style={{ marginTop: 12, height, overflowY: 'auto' }}>
           {mounting ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="card" style={{ padding: 12 }}>
@@ -120,47 +133,51 @@ export default function DocumentManager() {
               </div>
             ))
           ) : (
-          docs.map(d => (
-            <div key={d.id} className="card" style={{ padding: 12, transition: 'all 0.2s ease' }}
-                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 10px var(--module-color), 0 0 20px var(--module-color)')}
-                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input type="checkbox" checked={!!selected[d.id]} onChange={() => toggleSelect(d.id)} aria-label={`Select ${d.name}`} />
-                <span style={{ fontWeight: 600 }}>{d.name}</span>
-              </label>
-              <div aria-label={t('docs.thumbnail')} style={{ height: 100, borderRadius: 8, position: 'relative', background: 'linear-gradient(135deg, var(--surface2), var(--surface))' }}>
-                <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.1)', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}>
-                  {d.name.split('.').pop()?.toUpperCase()}
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 12 }}>
+              <div style={{ gridColumn: `1 / span ${columns}`, height: startRow * rowHeight }} />
+              {visibleDocs.map(d => (
+                <div key={d.id} className="card" style={{ padding: 12, transition: 'all 0.2s ease' }}
+                     onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 10px var(--module-color), 0 0 20px var(--module-color)')}
+                     onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" checked={!!selected[d.id]} onChange={() => toggleSelect(d.id)} aria-label={`Select ${d.name}`} />
+                    <span style={{ fontWeight: 600 }}>{d.name}</span>
+                  </label>
+                  <div aria-label={t('docs.thumbnail')} style={{ height: 100, borderRadius: 8, position: 'relative', background: 'linear-gradient(135deg, var(--surface2), var(--surface))' }}>
+                    <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.1)', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}>
+                      {d.name.split('.').pop()?.toUpperCase()}
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
+                  </div>
+                  <div style={{ marginTop: 6 }}>
+                    <span className={`status-badge ${d.canAccess ? 'success' : ''}`}>{t('docs.access')}: {d.canAccess ? 'Allowed' : 'Denied'}</span>
+                  </div>
+                  <div style={{ color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
+                  <label className="btn" style={{ justifyContent: 'space-between', marginTop: 8 }}>
+                    {t('docs.access')}
+                    <input type="checkbox" checked={d.canAccess} onChange={() => toggleAccess(d.id)} />
+                  </label>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <button className="btn" onClick={() => downloadDoc(d)}>{t('docs.download')}</button>
+                    <button className="btn" onClick={() => toggleExpanded(d.id)}>{expanded[d.id] ? t('docs.hide_history') : t('docs.show_history')}</button>
+                  </div>
+                  {expanded[d.id] && (
+                    <div className="card" style={{ padding: 8, marginTop: 8 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version_history')}</div>
+                      <ul style={{ margin: 0, paddingLeft: 16 }}>
+                        {(d.versions ?? ([] as { v: number; when: string }[])).map((v: { v: number; when: string }) => (
+                          <li key={v.v}>
+                            {t('docs.version').replace('{n}', String(v.v))}
+                            <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>{v.when}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
-              </div>
-              <div style={{ marginTop: 6 }}>
-                <span className={`status-badge ${d.canAccess ? 'success' : ''}`}>{t('docs.access')}: {d.canAccess ? 'Allowed' : 'Denied'}</span>
-              </div>
-              <div style={{ color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
-              <label className="btn" style={{ justifyContent: 'space-between', marginTop: 8 }}>
-                {t('docs.access')}
-                <input type="checkbox" checked={d.canAccess} onChange={() => toggleAccess(d.id)} />
-              </label>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button className="btn" onClick={() => downloadDoc(d)}>{t('docs.download')}</button>
-                <button className="btn" onClick={() => toggleExpanded(d.id)}>{expanded[d.id] ? t('docs.hide_history') : t('docs.show_history')}</button>
-              </div>
-              {expanded[d.id] && (
-                <div className="card" style={{ padding: 8, marginTop: 8 }}>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version_history')}</div>
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
-                    {(d.versions ?? ([] as { v: number; when: string }[])).map((v: { v: number; when: string }) => (
-                      <li key={v.v}>
-                        {t('docs.version').replace('{n}', String(v.v))}
-                        <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>{v.when}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              ))}
+              <div style={{ gridColumn: `1 / span ${columns}`, height: Math.max(0, (totalRows - endRow)) * rowHeight }} />
             </div>
-          ))
           )}
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
+import { computeOverscan } from './config';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './components/ThemeProvider';
 import { ToastProvider } from './components/UI/Toast';
@@ -64,6 +65,11 @@ export default function App() {
                 </Topbar>
                 <Suspense fallback={<div className="main"><div className="skeleton" style={{ height: 160, borderRadius: 8 }}></div></div>}>
                   <Routes>
+                    {/** Device-aware overscan for DocumentManager */}
+                    {/** On mobile widths, preload a bit more rows to reduce pop-in */}
+                    {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+                    {/* @ts-ignore window exists in browser */}
+                    {(() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1024; (w); return null; })()}
                     {/* Auth routes */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/login/supplier" element={<Login />} />
@@ -87,7 +93,7 @@ export default function App() {
                     <Route path="/procurement/po/preview" element={<POPreview />} />
                     <Route path="/procurement/quote-builder" element={<QuoteBuilder />} />
                     <Route path="/supply/order-tracker" element={<OrderTracker />} />
-                    <Route path="/docs" element={<DocumentManager />} />
+                    <Route path="/docs" element={<DocumentManager overscan={computeOverscan('documents')} />} />
                     <Route path="/comms" element={<CommunicationHub />} />
                     <Route path="/help" element={<HelpCenter />} />
                     <Route path="/help/docs" element={<DocViewer />} />
