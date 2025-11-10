@@ -25,6 +25,7 @@ const EmailDashboard = lazy(() => import('./pages/supplier/EmailDashboard'));
 const POPreview = lazy(() => import('./pages/POPreview'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const DocViewer = lazy(() => import('./pages/DocViewer'));
+const DBStatus = lazy(() => import('./pages/DBStatus'));
 
 function StartRedirect() {
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
@@ -91,8 +92,10 @@ export default function App() {
                     <Route path="/procurement/pr" element={<PRList />} />
                     <Route path="/procurement/pr/new" element={<PRCreate />} />
                     <Route path="/procurement/po/preview" element={<POPreview />} />
-                    <Route path="/procurement/quote-builder" element={<QuoteBuilder />} />
-                    <Route path="/supply/order-tracker" element={<OrderTracker />} />
+                  <Route path="/procurement/quote-builder" element={<QuoteBuilder />} />
+                  <Route path="/supply/order-tracker" element={<OrderTracker />} />
+                  {/* Dev: DB connectivity status page */}
+                  <Route path="/dev/db-status" element={<DBStatus />} />
                     <Route path="/docs" element={<DocumentManager overscan={computeOverscan('documents')} />} />
                     <Route path="/comms" element={<CommunicationHub />} />
                     <Route path="/help" element={<HelpCenter />} />
