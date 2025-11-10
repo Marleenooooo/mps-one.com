@@ -28,3 +28,18 @@ Peran: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 - Admin: wajib menyediakan 2 NPWP — NPWP Perusahaan (ID akun) dan NPWP Pribadi (tanggung jawab).
 - Non‑admin: menyediakan 1 NPWP Pribadi; menjadi ID akun pengguna.
 - Semua akun: wajib memiliki display name dan nickname; digunakan di UI dan jejak audit.
+
+### Matriks Persyaratan Identitas
+
+| Peran                 | NPWP Perusahaan (ID Akun) | NPWP Pribadi | Display Name | Nickname |
+|-----------------------|---------------------------|--------------|--------------|----------|
+| Admin                 | Wajib                      | Wajib        | Wajib        | Wajib    |
+| PIC Operational       | Tidak wajib                | Wajib        | Wajib        | Wajib    |
+| PIC Procurement       | Tidak wajib                | Wajib        | Wajib        | Wajib    |
+| PIC Finance           | Tidak wajib                | Wajib        | Wajib        | Wajib    |
+| Pemasok (non-admin)   | Tidak wajib                | Wajib        | Wajib        | Wajib    |
+
+Catatan:
+- NPWP Perusahaan hanya berlaku untuk akun Admin dan disimpan sebagai pengenal akun tingkat perusahaan.
+- NPWP Pribadi wajib untuk semua pengguna untuk identitas pribadi dan penelusuran tanggung jawab.
+- Display Name dan Nickname ditampilkan di Topbar dan digunakan dalam log aktivitas untuk kejelasan.

@@ -28,3 +28,18 @@ Roles: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 - Admins: must provide 2 NPWP numbers — Company NPWP (account ID) and Personal NPWP (responsibility).
 - Non-admins: provide 1 Personal NPWP; it becomes the user’s account ID.
 - All accounts: must have a display name and nickname; used in the UI and audit trail.
+
+### Identity Requirements Matrix
+
+| Role                   | Company NPWP (Account ID) | Personal NPWP | Display Name | Nickname |
+|------------------------|----------------------------|---------------|--------------|----------|
+| Admin                  | Required                    | Required      | Required     | Required |
+| PIC Operational        | Not required                | Required      | Required     | Required |
+| PIC Procurement        | Not required                | Required      | Required     | Required |
+| PIC Finance            | Not required                | Required      | Required     | Required |
+| Supplier (non-admin)   | Not required                | Required      | Required     | Required |
+
+Notes:
+- Company NPWP applies only to Admin accounts and is stored as the company-level account identifier.
+- Personal NPWP is required for all users for personal identity and responsibility tracking.
+- Display Name and Nickname appear in the Topbar and activity logs for clarity.

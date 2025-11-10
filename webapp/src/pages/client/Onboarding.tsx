@@ -100,13 +100,13 @@ export default function Onboarding() {
     return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
   }, [company, domain, departments, roles, budget, deptAlloc, permissions, t, toast]);
   
-  function renderBadge(label: string, value: string) {
+  function renderBadge(label: string, value: string, kind: 'company' | 'personal' = 'company') {
     const digits = (value || '').replace(/[^0-9]/g, '');
     const is16 = digits.length === 16;
     const is15 = digits.length === 15;
     const type = is16 ? 'NPWP16' : (is15 ? 'NPWP' : 'NPWP');
     return (
-      <div className="status-badge info" aria-label={`${label} ${type}`} title={`${label} ${type}`}>
+      <div className={`status-badge ${kind === 'company' ? 'company-npwp' : 'personal-npwp'}`} aria-label={`${label} ${type}`} title={`${label} ${type}`}>
         {value || '—'}
       </div>
     );
@@ -154,11 +154,11 @@ export default function Onboarding() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('onb.company_id_label') || 'Company ID (Admin) = Company NPWP'}</label>
-                {renderBadge('Company', companyNpwp)}
+                {renderBadge('Company', companyNpwp, 'company')}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('onb.personal_npwp_label') || 'Admin Responsibility = Personal NPWP'}</label>
-                {renderBadge('Personal', personalNpwp)}
+                {renderBadge('Personal', personalNpwp, 'personal')}
               </div>
             </div>
             <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>

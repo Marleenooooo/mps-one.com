@@ -302,6 +302,18 @@ body {
   color: var(--primary-gradient-start); 
 }
 
+/* NPWP identity badges */
+.status-badge.company-npwp {
+  background: color-mix(in srgb, var(--module-reports) 12%, transparent);
+  border-color: var(--module-reports);
+  color: var(--module-reports);
+}
+.status-badge.personal-npwp {
+  background: color-mix(in srgb, var(--module-inventory) 12%, transparent);
+  border-color: var(--module-inventory);
+  color: var(--module-inventory);
+}
+
 [data-theme="dark"] .status-badge {
   box-shadow: 0 0 8px color-mix(in srgb, currentColor 30%, transparent);
 }
