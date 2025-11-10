@@ -175,6 +175,14 @@ Langkah Berdampak Tinggi Berikutnya
 - Sediakan template dan default cerdas untuk form PR/Quote/PO.
 - Integrasikan tautan Help per halaman ke Doc Viewer dengan topik yang disarankan.
 
+#### Checklist (Selesai)
+- ✅ Help Center (`/help`) tersedia dengan tautan cepat dan aksi.
+- ✅ Doc Viewer untuk `.md` terintegrasi; dokumen dicerminkan ke `webapp/public/docs`.
+- ✅ Toggle bilingual di dokumentasi (English ↔ Bahasa Indonesia) ditambahkan.
+- ✅ Link Help di Sidebar dan tombol Help di Topbar.
+- ✅ i18n dasar untuk Help Center dan `nav.help` sudah tersedia.
+- ✅ Perbaikan state aktif Sidebar untuk rute dasar (`/client`) telah diterapkan.
+
 ## API Wishlist (Free‑First dengan Alternatif)
 
 Core Domain (Internal)
