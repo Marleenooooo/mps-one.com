@@ -113,8 +113,67 @@ Wishlist (UI/UX & Integrasi)
 - Panel “Invite User”: sambungkan ke endpoint nyata (POST `/admin/invites/create`, GET `/admin/invites`, POST `/admin/invites/:id/revoke`).
 - Code Login: validasi via API (POST `/auth/provision/validate`), konsumsi single‑use (POST `/auth/provision/consume`), simpan JWT secara aman.
 - Manage Invites: pagination, filter status (active/revoked/used), indikator waktu kedaluwarsa, dan aksi salin kode yang aksesibel.
- - Tampilkan pesan ramah di `/login/client` dengan tautan ke `mps-one.com` bagi pengguna yang belum memastikan perannya.
- - Catat redirect tidak dikenal untuk analitik guna mengukur minat dari non-pengguna.
+- Tampilkan pesan ramah di `/login/client` dengan tautan ke `mps-one.com` bagi pengguna yang belum memastikan perannya.
+- Catat redirect tidak dikenal untuk analitik guna mengukur minat dari non-pengguna.
+
+### Wishlist Tambahan (Kenyamanan, Efektivitas, Performa)
+
+Kenyamanan Pengguna
+- Pencarian global lintas PR, Quote, PO, Delivery, Invoice; quick‑jump ke detail.
+- Command palette untuk aksi cepat (buat PR, bangun Quote, unggah Delivery) + shortcut keyboard.
+- Template PR/Quote/PO untuk kurangi input berulang; prefill dari departemen/anggaran.
+- ID, nomor lacak, dan deep link yang dapat disalin; ekspor QR untuk pengiriman.
+- Tautan Help kontekstual dari halaman ke bagian relevan di Doc Viewer (buka di aplikasi).
+
+Efektivitas Alur Kerja
+- Gating approval penuh di UI: blok konversi PR yang belum disetujui ke Quote; cek role untuk approval.
+- Audit trail di UI untuk tiap transisi (aktor, waktu, komentar) pada PR/PO/Delivery/Invoice.
+- UI multi‑delivery & partial invoicing: tampilkan jumlah yang tersedia untuk di‑invoice berdasar koreksi; cegah over‑invoice.
+- Konsistensi status pipeline `PR → Quote → PO → Processing → Shipped → Delivered → Invoiced → Paid` di seluruh dashboard.
+- Operasi bulk (approve PR, ekspor quote, aksi dokumen massal) dengan umpan balik jelas dan opsi undo.
+
+Performa & Kecepatan
+- Virtualisasi tabel pada daftar panjang (PRList, DocumentManager) agar scroll tetap mulus.
+- Memoization dan `useCallback` untuk komputasi berat; de‑bounce filter dan pencarian.
+- Code splitting per rute; lazy load halaman berat (QuoteBuilder, Reporting) dan aset.
+- Optimasi gambar/berkas: kompres preview; kurangi efek glow pada daftar panjang.
+- Cache di klien untuk dokumen dan data statis; prefetch rute yang mungkin dibuka berikutnya.
+
+Aksesibilitas
+- Audit WCAG AA komprehensif: cakupan navigasi keyboard, label ARIA untuk tabel/form kompleks.
+- Manajemen fokus di dialog/form; indikator fokus terlihat mengikuti aturan warna modul.
+- Skip links untuk konten utama dan tabel; pengumuman pembaca layar untuk perubahan status.
+
+Internasionalisasi
+- Perluas cakupan i18n: pastikan label UI, toast, error, dan tooltip diterjemahkan.
+- Formatting lokal untuk angka, mata uang, dan tanggal; default Indonesia bila sesuai.
+- Deteksi bahasa saat pertama kali, preferensi yang persisten; toggle bahasa per halaman konsisten dengan dokumen.
+
+Navigasi & Discoverability
+- Sidebar pengelompokan per modul dengan state aktif konsisten; hindari banyak item aktif.
+- Breadcrumb di halaman yang dalam; indikator progres di form multi‑langkah.
+- Topik Help yang dapat dicari; sarankan dokumen berdasarkan halaman aktif (misal PRCreate → USER_GUIDE).
+
+Keandalan & Penanganan Data
+- Validasi sisi klien yang kuat dengan pesan jelas; cegah submission tidak lengkap.
+- Manajemen konflik draft autosave; simpan manual dan pemulihan draft yang ditinggalkan.
+- Error boundary per rute; fallback yang baik untuk kegagalan jaringan/asset.
+
+Pelaporan & Analitik
+- Dashboard ringan: grafik utilisasi anggaran dan performa vendor (client‑side).
+- Ekspor CSV di daftar; PDF siap (staged) untuk PR/PO/Invoice dengan template konsisten.
+
+Deployment & Operasional
+- Panduan staging; arsip `dist.zip` versi dan langkah rollback.
+- Checklist pasca‑deploy: `/help`, deep links, rendering dokumen, cek 404 dan error di konsol.
+
+Langkah Berdampak Tinggi Berikutnya
+- Implementasikan virtualisasi tabel dan code splitting per rute.
+- Tambahkan pencarian global dengan navigasi cepat ke entitas dan topik Help.
+- Tegakkan gating approval dan audit trail di UI.
+- Perluas i18n untuk tooltips/toasts dan util formatting lokal.
+- Sediakan template dan default cerdas untuk form PR/Quote/PO.
+- Integrasikan tautan Help per halaman ke Doc Viewer dengan topik yang disarankan.
 
 ## API Wishlist (Free‑First dengan Alternatif)
 
