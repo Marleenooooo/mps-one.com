@@ -147,8 +147,10 @@ Steps:
   2. `db/migrations/0002_seed_basics.sql` (optional demo data)
   3. `db/migrations/0003_items_tables.sql` (item-level tables)
   4. `db/migrations/0004_views_status.sql` (aggregation views)
+   5. `db/migrations/0005_seed_workflow.sql` (one-click demo workflow) — optional
 - Verify tables and views are created under the Structure tab.
 
 Troubleshooting:
 - JSON column errors → ensure MySQL ≥ 5.7 or MariaDB ≥ 10.2; if needed I can provide a compatibility script using `TEXT`.
 - Import timeouts → enable partial import and retry; split files if necessary.
+ - Foreign key errors on `po.quote_id` → ensure you imported in order and do not insert a PO without a valid `quote_id` (use 0005 script if unsure).

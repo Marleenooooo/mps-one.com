@@ -147,8 +147,10 @@ Langkah:
   2. `db/migrations/0002_seed_basics.sql` (data demo, opsional)
   3. `db/migrations/0003_items_tables.sql` (tabel item-level)
   4. `db/migrations/0004_views_status.sql` (view agregasi)
+   5. `db/migrations/0005_seed_workflow.sql` (demo sekali klik) — opsional
 - Verifikasi tabel dan view muncul di tab Struktur.
 
 Troubleshooting:
 - Error kolom JSON → pastikan MySQL ≥ 5.7 atau MariaDB ≥ 10.2; jika perlu saya dapat menyiapkan skrip kompatibilitas menggunakan `TEXT`.
 - Timeout impor → aktifkan partial import dan coba lagi; pecah file jika perlu.
+ - Error foreign key pada `po.quote_id` → pastikan urutan impor benar dan jangan membuat PO tanpa `quote_id` yang valid (gunakan skrip 0005 jika ragu).

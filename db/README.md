@@ -37,6 +37,7 @@ Use the migration scripts directly on a remote phpMyAdmin:
    - `migrations/0002_seed_basics.sql` (demo company, departments, users) — optional
    - `migrations/0003_items_tables.sql` (item-level tables)
    - `migrations/0004_views_status.sql` (aggregation views and derived status)
+   - `migrations/0005_seed_workflow.sql` (one-click demo PR→Quote→PO→Delivery→Invoice) — optional
 
 Benefits:
 - Repeatable, reviewable, versioned changes.
@@ -45,6 +46,7 @@ Benefits:
 Rollback tips:
 - If a step fails, re-run only the failed migration after fixing the issue.
 - To remove demo data, delete inserted rows from `company`, `department`, and `user` where `name='MPS One Demo'`.
+ - To remove the demo workflow (0005), delete rows created in order: `invoice_item` → `invoice` → `delivery_item` → `delivery_note` → `po_item` → `po` → `quote` → `pr`.
 
 ## Schema Overview (Initial)
 - Tables: `company`, `department`, `user`, `pr`, `quote`, `po`, `delivery_note`, `invoice`, `payment`, `email_thread`, `document`.
