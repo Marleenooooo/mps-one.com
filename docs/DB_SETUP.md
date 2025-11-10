@@ -137,6 +137,40 @@ Use a full URL if you prefer: `https://api.your-domain.com`.
 - Use least-privilege DB users and rotate passwords regularly.
 - Enable TLS for API endpoints and enforce CORS to your frontend origin.
 
+## Quick Checks
+- Backend `.env` essentials:
+```
+DB_HOST=srv1631.hstgr.io   # or 153.92.15.31
+DB_PORT=3306
+```
+- Node: connectivity test
+```ts
+import mysql from 'mysql2/promise';
+
+async function main() {
+  const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'srv1631.hstgr.io',
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER || 'mpsone',
+    password: process.env.DB_PASSWORD || 'REPLACE',
+    database: process.env.DB_NAME || 'mpsonedatabase',
+  });
+  const [rows] = await pool.query('SELECT 1 AS ok');
+  console.log(rows);
+}
+main().catch(console.error);
+```
+- PHP (PDO): connectivity test
+```php
+$dsn = 'mysql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_NAME');
+$pdo = new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWORD'), [
+  PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+]);
+$stmt = $pdo->query('SELECT VERSION() AS version');
+print_r($stmt->fetch());
+```
+
 ## Option B — Scripted Migrations via phpMyAdmin
 Use the versioned SQL migrations provided in this repo.
 

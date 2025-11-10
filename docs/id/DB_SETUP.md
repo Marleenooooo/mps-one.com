@@ -137,6 +137,40 @@ Gunakan URL penuh jika perlu: `https://api.domain-anda.com`.
 - Gunakan user DB least-privilege dan rotasi password berkala.
 - Aktifkan TLS untuk endpoint API dan enforce CORS ke origin frontend Anda.
 
+## Quick Checks
+- `.env` backend (inti):
+```
+DB_HOST=srv1631.hstgr.io   # atau 153.92.15.31
+DB_PORT=3306
+```
+- Node: tes koneksi
+```ts
+import mysql from 'mysql2/promise';
+
+async function main() {
+  const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'srv1631.hstgr.io',
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER || 'mpsone',
+    password: process.env.DB_PASSWORD || 'GANTI',
+    database: process.env.DB_NAME || 'mpsonedatabase',
+  });
+  const [rows] = await pool.query('SELECT 1 AS ok');
+  console.log(rows);
+}
+main().catch(console.error);
+```
+- PHP (PDO): tes koneksi
+```php
+$dsn = 'mysql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_NAME');
+$pdo = new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWORD'), [
+  PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+]);
+$stmt = $pdo->query('SELECT VERSION() AS version');
+print_r($stmt->fetch());
+```
+
 ## Opsi B — Migrasi SQL via phpMyAdmin
 Gunakan file migrasi versi yang tersedia di repo ini.
 
