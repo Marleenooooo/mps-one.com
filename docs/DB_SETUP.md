@@ -136,3 +136,19 @@ Use a full URL if you prefer: `https://api.your-domain.com`.
 - Do NOT put `DB_HOST`, `DB_USER`, `DB_PASSWORD` in the frontend.
 - Use least-privilege DB users and rotate passwords regularly.
 - Enable TLS for API endpoints and enforce CORS to your frontend origin.
+
+## Option B — Scripted Migrations via phpMyAdmin
+Use the versioned SQL migrations provided in this repo.
+
+Steps:
+- Log in to phpMyAdmin and select your target database (e.g., `mpsone_dev`).
+- Import these files in order:
+  1. `db/migrations/0001_init.sql` (core tables)
+  2. `db/migrations/0002_seed_basics.sql` (optional demo data)
+  3. `db/migrations/0003_items_tables.sql` (item-level tables)
+  4. `db/migrations/0004_views_status.sql` (aggregation views)
+- Verify tables and views are created under the Structure tab.
+
+Troubleshooting:
+- JSON column errors → ensure MySQL ≥ 5.7 or MariaDB ≥ 10.2; if needed I can provide a compatibility script using `TEXT`.
+- Import timeouts → enable partial import and retry; split files if necessary.

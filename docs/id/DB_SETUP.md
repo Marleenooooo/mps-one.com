@@ -137,3 +137,18 @@ Gunakan URL penuh jika perlu: `https://api.domain-anda.com`.
 - Gunakan user DB least-privilege dan rotasi password berkala.
 - Aktifkan TLS untuk endpoint API dan enforce CORS ke origin frontend Anda.
 
+## Opsi B — Migrasi SQL via phpMyAdmin
+Gunakan file migrasi versi yang tersedia di repo ini.
+
+Langkah:
+- Masuk ke phpMyAdmin dan pilih database target (mis. `mpsone_dev`).
+- Import file berikut secara berurutan:
+  1. `db/migrations/0001_init.sql` (tabel inti)
+  2. `db/migrations/0002_seed_basics.sql` (data demo, opsional)
+  3. `db/migrations/0003_items_tables.sql` (tabel item-level)
+  4. `db/migrations/0004_views_status.sql` (view agregasi)
+- Verifikasi tabel dan view muncul di tab Struktur.
+
+Troubleshooting:
+- Error kolom JSON → pastikan MySQL ≥ 5.7 atau MariaDB ≥ 10.2; jika perlu saya dapat menyiapkan skrip kompatibilitas menggunakan `TEXT`.
+- Timeout impor → aktifkan partial import dan coba lagi; pecah file jika perlu.

@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  db:
+    image: mysql:8.0
+    container_name: mpsone-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: mpsone_dev
+      MYSQL_USER: mpsone_dev
+      MYSQL_PASSWORD: devpass
+      TZ: Asia/Jakarta
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./data:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: mpsone-phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_ABSOLUTE_URI: http://localhost:8080/
+      UPLOAD_LIMIT: 512M
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
