@@ -15,6 +15,13 @@ Panduan ini menjelaskan cara menggunakan Aplikasi B2B Procurement secara menyelu
 - Header halaman menggunakan warna modul untuk orientasi visual.
 - Topbar menyertakan toggle bahasa dan tema.
 
+### Akses Berbasis Peran & Penyelarasan Alur Kerja
+- Admin: Corporate Onboarding, undangan, dan dapat menerbitkan PO dari quote diterima.
+- PIC Procurement: mengelola PR, meninjau quote pemasok, mengonversi quote diterima menjadi PO.
+- PIC Operational: membuat PR dan mendukung penerimaan dengan koreksi.
+- PIC Finance: menyetujui PR, meninjau invoice, memproses pembayaran.
+- Admin Pemasok: akses halaman sisi pemasok (pengajuan quote, pengiriman, invoicing) sesuai PR yang disetujui.
+
 ## Tema & Bahasa
 - Tema: Light & Dark; preferensi disimpan (persisten).
 - Bahasa: Inggris (`en`) atau Indonesia (`id`); preferensi disimpan di localStorage.

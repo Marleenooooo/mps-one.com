@@ -9,6 +9,7 @@ Bahasa: [English](../REPORTING.md) | [Bahasa Indonesia](REPORTING.md)
 - Spending per departemen/vendor/periode.
 - Durasi lifecycle PO dan performa pengiriman.
 - Distribusi status pembayaran (paid, waiting, next, overdue).
+- Preview jadwal pembayaran berikutnya (hijau) dengan countdown di dashboard.
 
 ## Ekspor
 - Tabel dan grafik siap ekspor dengan filter.

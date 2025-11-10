@@ -15,3 +15,11 @@ Roles: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 ## Notes
 - Maintain audit trail for each transition: actor, timestamp, comment.
 - Enforce approval gating in UI and APIs: only approved PRs visible to suppliers and convertible to quotes.
+
+## Workflow Alignment Policy
+- Front-end enforces role-based access according to procurement lifecycle.
+- Admin: corporate configuration (Corporate Onboarding), invitations, PO generation from accepted quotes.
+- PIC Procurement: PR management, review supplier quotes, convert accepted quotes to PO.
+- PIC Operational: create PR, support receiving and delivery corrections.
+- PIC Finance: PR approvals, invoice review, payment processing.
+- Supplier side: receives approved PRs, submits quotes, processes shipments (Delivery Letters), issues invoices based on confirmed deliveries.

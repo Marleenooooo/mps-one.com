@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.1.4 (2025-11-10)
+
+### Highlights
+- Sidebar now adapts by user type: Supplier Admin sees supplier-side pages; Client Admin sees client-side pages (with Corporate Onboarding). Non-admin client users do not see onboarding.
+- Onboarding route gated to Admin only; directories keep add actions disabled for non-admin roles.
+- Signup/Onboarding: added Company + NPWP fields, NPWP validation (15/16 digits), persisted NPWP as admin user ID; NPWP displayed on Corporate Onboarding.
+- Documentation updated to emphasize role-based workflow alignment; removed temporary "development full access" notes.
+
+### Affected Files
+- `webapp/src/components/Layout/Sidebar.tsx`
+- `webapp/src/App.tsx`
+- `webapp/src/pages/Signup.tsx`
+- `webapp/src/pages/client/Onboarding.tsx`
+- `webapp/src/pages/SupplierDirectory.tsx`, `webapp/src/pages/ClientDirectory.tsx`
+- `docs/ROLES_PERMISSIONS.md`, `docs/USER_GUIDE.md`, `docs/WORKFLOWS.md`
+- `docs/id/ROLES_PERMISSIONS.md`, `docs/id/USER_GUIDE.md`, `docs/id/WORKFLOWS.md`
+
+### Notes
+- Front-end enforces the agreed procurement lifecycle and role gating. Admin owns corporate onboarding and invitations; Procurement manages PRs and PO conversion; Operational handles PR creation and receiving corrections; Finance approves PRs and processes payments. Suppliers operate quotes, deliveries, and invoicing based on approved PRs.
+
 ## v0.1.3 (2025-11-10)
 
 ### Highlights

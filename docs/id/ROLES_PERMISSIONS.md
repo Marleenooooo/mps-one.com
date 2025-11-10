@@ -15,3 +15,11 @@ Peran: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 ## Catatan
 - Pertahankan audit trail untuk tiap transisi: aktor, timestamp, komentar.
 - Terapkan approval gating di UI/API: hanya PR yang disetujui terlihat oleh pemasok dan dapat dikonversi ke quote.
+
+## Kebijakan Penyelarasan Alur Kerja
+- Front-end menegakkan akses berbasis peran sesuai siklus pengadaan.
+- Admin: konfigurasi korporat (Corporate Onboarding), undangan, menerbitkan PO dari quote yang diterima.
+- PIC Procurement: mengelola PR, meninjau quote pemasok, mengonversi quote diterima menjadi PO.
+- PIC Operational: membuat PR, membantu penerimaan dan koreksi pengiriman.
+- PIC Finance: menyetujui PR, meninjau invoice, memproses pembayaran.
+- Sisi pemasok: menerima PR yang disetujui, mengirim quote, memproses pengiriman (Delivery Letter), dan menerbitkan invoice berdasarkan pengiriman yang dikonfirmasi.

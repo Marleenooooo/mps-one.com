@@ -26,6 +26,11 @@ const POPreview = lazy(() => import('./pages/POPreview'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const DocViewer = lazy(() => import('./pages/DocViewer'));
 const DBStatus = lazy(() => import('./pages/DBStatus'));
+const ProcurementWorkflow = lazy(() => import('./pages/ProcurementWorkflow'));
+const SupplierDirectory = lazy(() => import('./pages/SupplierDirectory'));
+const ClientDirectory = lazy(() => import('./pages/ClientDirectory'));
+const QuoteComparison = lazy(() => import('./pages/client/QuoteComparison'));
+const AdminInvitations = lazy(() => import('./pages/AdminInvitations'));
 
 function StartRedirect() {
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
@@ -83,16 +88,25 @@ export default function App() {
                     <Route path="/" element={<StartRedirect />} />
                     {/* Client routes */}
                     <Route path="/client" element={<ClientDashboard />} />
-                    <Route path="/client/onboarding" element={<Onboarding />} />
+                    <Route path="/client/onboarding" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Onboarding /> : <Navigate to="/client" replace />} />
+                    <Route path="/client/quotes/:prId" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <QuoteComparison /> : <Navigate to="/procurement/workflow" replace />} />
+                    <Route path="/client/suppliers" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <SupplierDirectory /> : <Navigate to="/procurement/workflow" replace />} />
 
                     {/* Supplier routes */}
                     <Route path="/supplier/admin" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminDashboard /> : <Navigate to="/client" replace />} />
+                    <Route path="/admin/invitations" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminInvitations /> : <Navigate to="/client" replace />} />
                     <Route path="/supplier/reporting" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/client" replace />} />
                     <Route path="/supplier/email" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/client" replace />} />
-                    <Route path="/procurement/pr" element={<PRList />} />
-                    <Route path="/procurement/pr/new" element={<PRCreate />} />
-                    <Route path="/procurement/po/preview" element={<POPreview />} />
-                  <Route path="/procurement/quote-builder" element={<QuoteBuilder />} />
+                    <Route path="/supplier/clients" element={(localStorage.getItem('mpsone_user_type') === 'supplier') ? <ClientDirectory /> : <Navigate to="/procurement/workflow" replace />} />
+                  <Route path="/procurement/pr" element={<PRList />} />
+                  <Route path="/procurement/pr/new" element={<PRCreate />} />
+                  <Route path="/procurement/po/preview" element={<POPreview />} />
+                  <Route path="/procurement/quote-builder" element={(
+                    (localStorage.getItem('mpsone_user_type') === 'supplier')
+                      ? <QuoteBuilder />
+                      : <Navigate to="/procurement/workflow" replace />
+                  )} />
+                  <Route path="/procurement/workflow" element={<ProcurementWorkflow />} />
                   <Route path="/supply/order-tracker" element={<OrderTracker />} />
                   {/* Dev: DB connectivity status page */}
                   <Route path="/dev/db-status" element={<DBStatus />} />

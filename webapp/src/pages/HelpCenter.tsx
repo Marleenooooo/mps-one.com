@@ -67,7 +67,9 @@ export default function HelpCenter() {
         <div style={{ fontWeight: 600 }}>{t('help.quick_actions') || 'Quick Actions'}</div>
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <a className="btn" href="/procurement/pr/new">{t('help.go_create_pr') || 'Create PR'}</a>
-          <a className="btn" href="/procurement/quote-builder">{t('help.go_quote_builder') || 'Quote Builder'}</a>
+          {(localStorage.getItem('mpsone_user_type') === 'supplier') && (
+            <a className="btn" href="/procurement/quote-builder">{t('help.go_quote_builder') || 'Quote Builder'}</a>
+          )}
           <a className="btn" href="/procurement/po/preview">{t('help.go_po_preview') || 'PO Preview'}</a>
           <a className="btn" href="/supply/order-tracker">{t('help.go_order_tracker') || 'Order Tracker'}</a>
           <a className="btn" href="/supplier/reporting">{t('help.go_reporting') || 'Reporting'}</a>

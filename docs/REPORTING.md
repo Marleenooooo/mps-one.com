@@ -9,6 +9,7 @@ Language: [English](REPORTING.md) | [Bahasa Indonesia](id/REPORTING.md)
 - Spending by department/vendor/period.
 - PO lifecycle durations and delivery performance.
 - Payment status distribution (paid, waiting, next, overdue).
+- Next payment (green) schedule preview with countdown on dashboards.
 
 ## Exports
 - Export-ready tables and charts with filters.

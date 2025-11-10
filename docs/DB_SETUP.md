@@ -2,13 +2,13 @@ Language: [English](DB_SETUP.md) | [Bahasa Indonesia](id/DB_SETUP.md)
 
 # Backend API & MySQL Setup
 
-This project’s frontend is a React SPA. Database credentials must live on the backend only — never in the frontend. Below are the steps to configure MySQL on Hostinger and wire a backend API.
+This project’s frontend is a React SPA. Database credentials must live on the backend only — never in the frontend. Below are the steps to configure MySQL on Hostinger and wire the backend API used by the app.
 
 ## MySQL Credentials (Hostinger)
-- Database Name: `mpsonedatabase`
-- Database User: `mpsone`
+- Database Name: `u485208858_mpsonedatabase`
+- Database User: `u485208858_mpsone`
 - Database Password: set a strong password in hPanel
-- Host: Our MySQL server hostname is `srv1631.hstgr.io` or use IP `153.92.15.31` as the hostname
+- Host: `srv1631.hstgr.io` (or IP `153.92.15.31`)
 - Port: `3306`
 
 ## Create the Database/User
@@ -21,17 +21,17 @@ This project’s frontend is a React SPA. Database credentials must live on the 
 Set these environment variables in your backend service (Node, PHP, etc.):
 
 ```
-DB_HOST=srvXXXXXX.hstgr.cloud
+DB_HOST=srv1631.hstgr.io
 DB_PORT=3306
-DB_NAME=mpsonedatabase
-DB_USER=mpsone
+DB_NAME=u485208858_mpsonedatabase
+DB_USER=u485208858_mpsone
 DB_PASSWORD=REPLACE_WITH_STRONG_PASSWORD
 
 # CORS / app origin
 APP_ORIGIN=https://your-frontend-domain
 ```
 
-### Node (mysql2) Example
+### Node (mysql2) Example (used in this repo)
 ```ts
 import mysql from 'mysql2/promise';
 
@@ -46,6 +46,11 @@ export const pool = mysql.createPool({
   queueLimit: 0,
 });
 ```
+
+Backend server file: `webapp/server/index.mjs` exposes:
+- `GET /api/health` — MySQL `VERSION()` and `DATABASE()`
+- `GET /api/po/summary` — rows from `v_po_item_delivery_totals`
+- `GET /api/invoice/status` — rows from `v_invoice_status`
 
 ### PHP (PDO) Example
 ```php
@@ -120,8 +125,9 @@ CREATE TABLE invoices (
 ```
 
 ## Frontend → Backend
-- Frontend will call the backend API at `VITE_API_BASE` (see `.env` below).
-- Configure your web server to proxy `/api/*` to your backend (Apache/Nginx or Hostinger routing).
+- Frontend calls the backend API via `VITE_API_BASE`.
+- In development, we use Vite’s proxy: frontend fetches `/api/*` and Vite forwards to `http://localhost:3001`.
+- In production, set `VITE_API_BASE` to `/api` and configure your web server to proxy `/api/*` to your backend.
 
 ## Frontend Environment (Vite)
 Add this to `.env.development` and `.env.production`:
@@ -130,12 +136,45 @@ Add this to `.env.development` and `.env.production`:
 VITE_API_BASE=/api
 ```
 
+In development, the Vite proxy in `webapp/vite.config.ts` is:
+
+```ts
+server: {
+  proxy: {
+    '/api': { target: 'http://localhost:3001', changeOrigin: true }
+  }
+}
+```
+
 Use a full URL if you prefer: `https://api.your-domain.com`.
+
+## Local Development (quick start)
+
+1) Start backend API (new terminal in `webapp`):
+
+```
+$env:DB_HOST="srv1631.hstgr.io"; $env:DB_PORT="3306"; $env:DB_NAME="u485208858_mpsonedatabase"; $env:DB_USER="u485208858_mpsone"; $env:DB_PASSWORD="REPLACE_WITH_STRONG_PASSWORD"; npm run server
+```
+
+2) Start frontend (another terminal in `webapp`):
+
+```
+npm run dev
+```
+
+3) Open the DB status page:
+
+```
+http://localhost:5173/dev/db-status
+```
+
+This page calls `/api/health`, `/api/po/summary`, and `/api/invoice/status` through the proxy and renders results.
 
 ## Security Notes
 - Do NOT put `DB_HOST`, `DB_USER`, `DB_PASSWORD` in the frontend.
 - Use least-privilege DB users and rotate passwords regularly.
 - Enable TLS for API endpoints and enforce CORS to your frontend origin.
+ - Never commit real passwords to the repository; use environment variables in your local shell or an untracked `.env.local`.
 
 ## Quick Checks
 - Backend `.env` essentials:
@@ -174,9 +213,8 @@ print_r($stmt->fetch());
 ### Connectivity Scripts (ready to run)
 - Node:
   - Install dependency once: `cd webapp && npm i -D mysql2`
-  - Set env and run:
-    - PowerShell: `setx DB_HOST srv1631.hstgr.io && setx DB_PORT 3306 && setx DB_NAME u485208858_mpsonedatabase && setx DB_USER YOUR_DB_USER && setx DB_PASSWORD YOUR_DB_PASSWORD`
-    - Then: `node ../scripts/test-db-node.mjs`
+  - Set env in the current shell (do not persist secrets) and run:
+    - PowerShell: `$env:DB_HOST="srv1631.hstgr.io"; $env:DB_PORT="3306"; $env:DB_NAME="u485208858_mpsonedatabase"; $env:DB_USER="YOUR_DB_USER"; $env:DB_PASSWORD="YOUR_DB_PASSWORD"; node ../scripts/test-db-node.mjs`
 - PHP:
   - Run: `php scripts/test-db-php.php` (ensure PHP CLI installed)
 

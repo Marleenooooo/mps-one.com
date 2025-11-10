@@ -14,6 +14,11 @@ export default function POPreview() {
   const [showStockCode, setShowStockCode] = useState(true);
   const [showPartNo, setShowPartNo] = useState(true);
   const [showPRNumber, setShowPRNumber] = useState(false);
+  const [prNumber, setPrNumber] = useState('09857');
+  const [splitIndex, setSplitIndex] = useState(3);
+  const [splitTotal, setSplitTotal] = useState(20);
+  const [supplierNick, setSupplierNick] = useState('MBERKAH@');
+  const [revision, setRevision] = useState<'A'|''>('');
 
   const sampleIssuer = {
     name: 'PT MPS One Indonesia',
@@ -54,12 +59,50 @@ export default function POPreview() {
   }, 0), []);
 
   const words = useMemo(() => amountToWords(subtotal, language), [subtotal, language]);
+  const poNumberPreview = useMemo(() => {
+    const split = `${splitIndex}${splitTotal}`;
+    const revPart = revision ? `-${revision}` : '';
+    return `${prNumber}-${split}-${supplierNick}${revPart}`;
+  }, [prNumber, splitIndex, splitTotal, supplierNick, revision]);
 
   return (
     <div className="page" style={{ padding: 16 }}>
       <div className="page-header" style={{ marginBottom: 12 }}>
         <h2 style={{ margin: 0 }}>PO Preview</h2>
         <div style={{ color: 'var(--text-secondary)' }}>Optimize for A4 portrait, print/PDF ready.</div>
+      </div>
+      <div className="card" style={{ padding: 12, marginBottom: 12 }}>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>PO Numbering Scheme Preview</div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>PR Number</span>
+            <input className="input" value={prNumber} onChange={e => setPrNumber(e.target.value)} style={{ width: 120 }} />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>Split Index</span>
+            <input className="input" type="number" value={splitIndex} onChange={e => setSplitIndex(Number(e.target.value))} style={{ width: 80 }} />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>Total Splits</span>
+            <input className="input" type="number" value={splitTotal} onChange={e => setSplitTotal(Number(e.target.value))} style={{ width: 80 }} />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>Supplier Nickname</span>
+            <input className="input" value={supplierNick} onChange={e => setSupplierNick(e.target.value)} style={{ width: 140 }} />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>Revision</span>
+            <select className="input" value={revision} onChange={e => setRevision(e.target.value as 'A'|'') }>
+              <option value="">None</option>
+              <option value="A">A</option>
+            </select>
+          </label>
+          <div className="status-badge info">Preview: <code>{poNumberPreview}</code></div>
+          <button className="btn" onClick={() => { navigator.clipboard?.writeText(poNumberPreview); alert('PO number copied'); }}>Copy</button>
+        </div>
+        <div style={{ marginTop: 8, color: 'var(--text-secondary)' }}>
+          Format: PRNumber-<em>SplitIndexTotal</em>-SupplierNick[-Revision]. Example: 09857-320-MBERKAH@-A
+        </div>
       </div>
       <div className="controls" style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -117,4 +160,3 @@ export default function POPreview() {
     </div>
   );
 }
-

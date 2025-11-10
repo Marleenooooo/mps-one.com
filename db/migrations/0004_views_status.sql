@@ -36,8 +36,9 @@ GROUP BY p.id;
 -- Rules:
 --  paid       : paid_at IS NOT NULL
 --  over_due   : NOW() > due_date AND paid_at IS NULL
---  next       : NOW() <= due_date AND DATEDIFF(due_date, NOW()) <= 7 AND paid_at IS NULL
---  neutral    : NOW() < DATE_SUB(due_date, INTERVAL 7 DAY) AND paid_at IS NULL
+ --  next       : DATEDIFF(due_date, NOW()) BETWEEN 0 AND 7 AND paid_at IS NULL
+ --  waiting    : DATEDIFF(due_date, NOW()) BETWEEN 8 AND 30 AND paid_at IS NULL
+ --  neutral    : NOW() < DATE_SUB(due_date, INTERVAL 30 DAY) AND paid_at IS NULL
 CREATE OR REPLACE VIEW v_invoice_status AS
 SELECT
   i.id AS invoice_id,
@@ -48,8 +49,8 @@ SELECT
   CASE
     WHEN i.paid_at IS NOT NULL THEN 'paid'
     WHEN NOW() > i.due_date THEN 'over_due'
-    WHEN DATEDIFF(i.due_date, NOW()) <= 7 THEN 'next'
+    WHEN DATEDIFF(i.due_date, NOW()) BETWEEN 0 AND 7 THEN 'next'
+    WHEN DATEDIFF(i.due_date, NOW()) BETWEEN 8 AND 30 THEN 'waiting'
     ELSE 'neutral'
   END AS derived_status
 FROM invoice i;
-

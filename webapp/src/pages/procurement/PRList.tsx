@@ -6,7 +6,7 @@ import { computeOverscan } from '../../config';
 import { useI18n } from '../../components/I18nProvider';
 import { uniqueId } from '../../components/utils/uniqueId';
 
-type PRRow = { id: string; title: string; department: string; status: 'Draft' | 'Submitted' | 'Approved' | 'PO'; createdAt: string };
+type PRRow = { id: string; title: string; department: string; status: 'Draft' | 'Submitted' | 'Approved' | 'PO'; createdAt: string; actions?: string };
 
 export default function PRList() {
   useModule('procurement');
@@ -16,9 +16,9 @@ export default function PRList() {
   const [rows, setRows] = useState<PRRow[]>(() => {
     const now = new Date().toISOString();
     return [
-      { id: 'PR-443', title: 'Hydraulic Hoses', department: 'Mining Ops', status: 'PO', createdAt: now },
-      { id: 'PR-444', title: 'Excavator Bucket', department: 'Maintenance', status: 'Approved', createdAt: now },
-      { id: 'PR-445', title: 'Safety Helmets', department: 'Logistics', status: 'Submitted', createdAt: now },
+      { id: 'PR-443', title: 'Hydraulic Hoses', department: 'Mining Ops', status: 'PO', createdAt: now, actions: '' },
+      { id: 'PR-444', title: 'Excavator Bucket', department: 'Maintenance', status: 'Approved', createdAt: now, actions: '' },
+      { id: 'PR-445', title: 'Safety Helmets', department: 'Logistics', status: 'Submitted', createdAt: now, actions: '' },
     ];
   });
 
@@ -31,7 +31,7 @@ export default function PRList() {
       if (draft) {
         const d = JSON.parse(draft);
         const id = uniqueId('PR');
-        setRows(prev => [{ id, title: d.title || 'Draft PR', department: d.department || 'Unknown', status: 'Draft', createdAt: new Date().toISOString() }, ...prev]);
+        setRows(prev => [{ id, title: d.title || 'Draft PR', department: d.department || 'Unknown', status: 'Draft', createdAt: new Date().toISOString(), actions: '' }, ...prev]);
       }
     } catch {}
   }, []);
@@ -49,6 +49,25 @@ export default function PRList() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
+
+  function sendToSuppliers(prId: string) {
+    try {
+      const suppliers = JSON.parse(localStorage.getItem('mpsone_suppliers') || '[]');
+      const now = Date.now();
+      const sent = suppliers.map((s: any) => ({ supplierId: s.id, at: now }));
+      const map = JSON.parse(localStorage.getItem('mpsone_pr_sent') || '{}');
+      map[prId] = sent;
+      localStorage.setItem('mpsone_pr_sent', JSON.stringify(map));
+      alert(`Sent PR ${prId} to ${sent.length} suppliers`);
+    } catch {}
+  }
+
+  function countSent(prId: string): number {
+    try {
+      const map = JSON.parse(localStorage.getItem('mpsone_pr_sent') || '{}');
+      return Array.isArray(map[prId]) ? map[prId].length : 0;
+    } catch { return 0; }
+  }
 
   return (
     <div className="main" role="main" aria-label={t('pr.header')}>
@@ -71,6 +90,15 @@ export default function PRList() {
             { key: 'department', header: t('pr.department') },
             { key: 'status', header: t('pr.status'), render: v => <span className="status-badge info">{v}</span> },
             { key: 'createdAt', header: t('pr.created') },
+            { key: 'actions', header: 'Actions', render: (_v, row) => (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn outline" onClick={() => sendToSuppliers(row.id)}>Send PR to suppliers</button>
+                <a className="btn" href={`/client/quotes/${encodeURIComponent(row.id)}`}>Compare quotes</a>
+                {countSent(row.id) > 0 && (
+                  <span className="status-badge info">Sent to {countSent(row.id)}</span>
+                )}
+              </div>
+            ) },
           ]}
           virtualize
           height={360}

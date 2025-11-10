@@ -8,10 +8,24 @@ Welcome to the B2B Procurement Webapp. This guide walks you through core modules
 - Procurement, Finance, Inventory, and Reports sections are color coded for clarity.
 - Use the sidebar to access modules; the topbar provides language/theme toggles and quick actions.
 
+## Onboarding & Invitations
+- Sign up as a `Supplier Admin` or `Client Admin` to represent your company.
+- Admins invite additional users with codes that determine company, department, and role.
+- Manage invite codes under `Admin → Invitations`.
+
 ## Purchase Requests (PR)
 - Create PRs with items, need dates, and budgets. Submit for approval.
 - Statuses: `draft → submitted → approved | rejected`.
 - Only `approved` PRs are visible to suppliers and convertible to quotes.
+
+### Supplier Directory (Client)
+- Add suppliers (existing app accounts) before distributing PRs.
+- You can send one PR to multiple suppliers to compare quotes.
+
+### PR Distribution & Quote Comparison (Client)
+- From PR List, use "Send PR to suppliers" to distribute approved PRs to all connected suppliers (tracked as `sent_to[]`).
+- Open `Quote Comparison` from PR row to see per-supplier quote versions, totals, tax/discount, validity, and accept a version.
+- Accepted quotes can be converted into a PO.
 
 ## Quotes
 - Suppliers submit quotes with versioning. You can review, request changes, or accept a version.
@@ -30,6 +44,7 @@ Welcome to the B2B Procurement Webapp. This guide walks you through core modules
 - Invoices are based on client-confirmed deliveries and may be partial.
 - Payment status uses `due_date`, today, and `paid_at`.
   - `paid`, `neutral`, `waiting payment (yellow)`, `next payment (green)`, `over‑due (red)`.
+ - Reporting shows a visible "Next payment (green)" schedule preview with countdown.
 
 ## Key Invariants
 - Per item: `sum(delivery.qty) ≤ sum(po.qty)`.
@@ -44,4 +59,3 @@ Welcome to the B2B Procurement Webapp. This guide walks you through core modules
 
 ## Troubleshooting
 - Reset theme or language by clearing local storage keys `mpsone_lang` / `lang` and refresh.
-

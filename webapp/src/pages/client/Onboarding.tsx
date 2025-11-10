@@ -15,6 +15,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [company, setCompany] = useState('');
   const [domain, setDomain] = useState('');
+  const [npwp, setNpwp] = useState('');
   const [departments, setDepartments] = useState<string[]>(['Mining Ops']);
   const [roles, setRoles] = useState<Role[]>(['Admin']);
   const [budget, setBudget] = useState<number>(100000000);
@@ -49,6 +50,7 @@ export default function Onboarding() {
         const d = JSON.parse(raw);
         if (d.company) setCompany(d.company);
         if (d.domain) setDomain(d.domain);
+        if (d.npwp) setNpwp(d.npwp);
         if (Array.isArray(d.departments)) setDepartments(d.departments);
         if (Array.isArray(d.roles)) setRoles(d.roles);
         if (typeof d.budget === 'number') setBudget(d.budget);
@@ -56,6 +58,13 @@ export default function Onboarding() {
         if (d.permissions && typeof d.permissions === 'object') setPermissions(d.permissions);
       } catch {}
     }
+    // Prefill from signup data if present
+    try {
+      const signupCompany = localStorage.getItem('mpsone_company');
+      const signupNpwp = localStorage.getItem('mpsone_npwp');
+      if (signupCompany && !company) setCompany(signupCompany);
+      if (signupNpwp && !npwp) setNpwp(signupNpwp);
+    } catch {}
     if (savedAtRaw) {
       try {
         const dt = new Date(savedAtRaw);
@@ -69,7 +78,7 @@ export default function Onboarding() {
   const saveTimer = useRef<number | null>(null);
   const hydrated = useRef(false);
   useEffect(() => {
-    const data = { company, domain, departments, roles, budget, deptAlloc, permissions };
+    const data = { company, domain, npwp, departments, roles, budget, deptAlloc, permissions };
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(() => {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
@@ -86,6 +95,18 @@ export default function Onboarding() {
     }, 60000);
     return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
   }, [company, domain, departments, roles, budget, deptAlloc, permissions, t, toast]);
+  
+  function renderNpwpBadge() {
+    const digits = (npwp || '').replace(/[^0-9]/g, '');
+    const is16 = digits.length === 16;
+    const is15 = digits.length === 15;
+    const label = is16 ? 'NPWP16' : (is15 ? 'NPWP' : 'NPWP');
+    return (
+      <div className="status-badge info" aria-label={label} title={label}>
+        {npwp || '—'}
+      </div>
+    );
+  }
 
   function next() { setStep(s => Math.min(4, s + 1)); }
   function prev() { setStep(s => Math.max(1, s - 1)); }
@@ -126,6 +147,13 @@ export default function Onboarding() {
               <input className="input" placeholder={t('onb.company_name')} value={company} onChange={e => setCompany(e.target.value)} />
               <input className="input" placeholder={t('onb.domain')} value={domain} onChange={e => setDomain(e.target.value)} />
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('onb.company_id_label') || 'Company ID (Admin) = NPWP'}</label>
+              {renderNpwpBadge()}
+            </div>
+            <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>
+              {t('onb.company_identity_hint') || 'The admin account represents the company account. NPWP collected at signup is used as the admin User ID for credibility and auditability.'}
+            </p>
             <div style={{ marginTop: 12 }}>
               <button className="btn primary" onClick={next} disabled={!company || !domain}>{t('action.continue')}</button>
             </div>

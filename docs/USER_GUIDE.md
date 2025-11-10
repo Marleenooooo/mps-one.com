@@ -15,6 +15,13 @@ This guide explains how to use the B2B Procurement Webapp end-to-end: initiating
 - Page header uses module color cues for orientation.
 - Topbar includes language toggle and theme switch.
 
+### Role-Based Access & Workflow Alignment
+- Admin: Corporate Onboarding, invitations, and can generate PO from accepted quotes.
+- PIC Procurement: manage PRs, review supplier quotes, convert accepted quotes to POs.
+- PIC Operational: create PRs and support receiving with corrections.
+- PIC Finance: approve PRs, review invoices, process payments.
+- Supplier Admin: access supplier-side pages (quote submission, shipments, invoicing) per approved PRs.
+
 ## Themes & Language
 - Theme: switch between Light and Dark; preference persists.
 - Language: English or Indonesian; preference persists to local storage.

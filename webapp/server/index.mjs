@@ -43,7 +43,7 @@ app.get('/api/po/summary', async (req, res) => {
 
 app.get('/api/invoice/status', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT invoice_id, po_id, amount, due_date, paid_at FROM v_invoice_status ORDER BY invoice_id DESC LIMIT 10');
+    const [rows] = await pool.query('SELECT invoice_id, po_id, amount, due_date, paid_at, derived_status FROM v_invoice_status ORDER BY invoice_id DESC LIMIT 10');
     res.json({ ok: true, rows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -53,4 +53,3 @@ app.get('/api/invoice/status', async (req, res) => {
 app.listen(port, () => {
   console.log(`Backend API listening on http://localhost:${port}`);
 });
-

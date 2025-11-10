@@ -21,11 +21,11 @@ Dokumen ini merangkum langkah dasar menyiapkan MySQL di Hostinger dan menghubung
 Set variabel berikut di service backend (Node, PHP, dll):
 
 ```
-DB_HOST=srvXXXXXX.hstgr.cloud
-DB_PORT=3306
-DB_NAME=mpsonedatabase
-DB_USER=mpsone
-DB_PASSWORD=GANTI_DENGAN_PASSWORD_KUAT
+$env:DB_HOST="srv1631.hstgr.io"; 
+$env:DB_PORT="3306"; 
+$env:DB_NAME="u485208858_mpsonedatabase"; 
+$env:DB_USER="u485208858_mpsone"; 
+$env:DB_PASSWORD="4Vi4Z55LDb^paD;u"; node ..\scripts\test-db-node.mjs 
 
 # CORS / asal aplikasi
 APP_ORIGIN=https://domain-frontend-anda
