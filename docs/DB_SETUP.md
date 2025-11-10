@@ -171,6 +171,16 @@ $stmt = $pdo->query('SELECT VERSION() AS version');
 print_r($stmt->fetch());
 ```
 
+### Connectivity Scripts (ready to run)
+- Node:
+  - Install dependency once: `cd webapp && npm i -D mysql2`
+  - Set env and run:
+    - PowerShell: `setx DB_HOST srv1631.hstgr.io && setx DB_PORT 3306 && setx DB_NAME u485208858_mpsonedatabase && setx DB_USER YOUR_DB_USER && setx DB_PASSWORD YOUR_DB_PASSWORD`
+    - Then: `node ../scripts/test-db-node.mjs`
+- PHP:
+  - Run: `php scripts/test-db-php.php` (ensure PHP CLI installed)
+
+
 ## Option B — Scripted Migrations via phpMyAdmin
 Use the versioned SQL migrations provided in this repo.
 

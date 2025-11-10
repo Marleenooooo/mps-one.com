@@ -171,6 +171,16 @@ $stmt = $pdo->query('SELECT VERSION() AS version');
 print_r($stmt->fetch());
 ```
 
+### Script Konektivitas (siap jalan)
+- Node:
+  - Install dependency sekali: `cd webapp && npm i -D mysql2`
+  - Set environment lalu jalankan:
+    - PowerShell: `setx DB_HOST srv1631.hstgr.io && setx DB_PORT 3306 && setx DB_NAME u485208858_mpsonedatabase && setx DB_USER YOUR_DB_USER && setx DB_PASSWORD YOUR_DB_PASSWORD`
+    - Kemudian: `node ../scripts/test-db-node.mjs`
+- PHP:
+  - Jalankan: `php scripts/test-db-php.php` (pastikan PHP CLI terpasang)
+
+
 ## Opsi B — Migrasi SQL via phpMyAdmin
 Gunakan file migrasi versi yang tersedia di repo ini.
 
