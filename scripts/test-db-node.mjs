@@ -1,4 +1,12 @@
-import mysql from 'mysql2/promise';
+import { fileURLToPath, pathToFileURL } from 'url';
+import path from 'path';
+// Resolve mysql2 from webapp's node_modules so this script works from repo root
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const mysql2Path = process.env.MYSQL2_PATH || path.resolve(__dirname, '../webapp/node_modules/mysql2/promise.js');
+const mysqlURL = pathToFileURL(mysql2Path).href;
+const mysqlModule = await import(mysqlURL);
+const mysql = mysqlModule.default || mysqlModule;
 
 // Read connection from environment variables with sensible defaults
 const cfg = {
@@ -48,4 +56,3 @@ main().catch((err) => {
   console.error('Connection failed:', err.message);
   process.exitCode = 1;
 });
-
