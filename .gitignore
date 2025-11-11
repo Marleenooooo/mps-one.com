@@ -3,6 +3,10 @@ webapp/node_modules/
 webapp/dist/
 webapp/dist.zip
 
+# Docker/DB runtime data (do not commit)
+db/data/
+*.sock
+
 # IDE/Tooling
 .trae/
 

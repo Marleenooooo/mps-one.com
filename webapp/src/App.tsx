@@ -31,6 +31,7 @@ const SupplierDirectory = lazy(() => import('./pages/SupplierDirectory'));
 const ClientDirectory = lazy(() => import('./pages/ClientDirectory'));
 const QuoteComparison = lazy(() => import('./pages/client/QuoteComparison'));
 const AdminInvitations = lazy(() => import('./pages/AdminInvitations'));
+const DeliveryNotes = lazy(() => import('./pages/DeliveryNotes'));
 
 function StartRedirect() {
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
@@ -108,6 +109,7 @@ export default function App() {
                   )} />
                   <Route path="/procurement/workflow" element={<ProcurementWorkflow />} />
                   <Route path="/supply/order-tracker" element={<OrderTracker />} />
+                  <Route path="/inventory/delivery-notes" element={<DeliveryNotes />} />
                   {/* Dev: DB connectivity status page */}
                   <Route path="/dev/db-status" element={<DBStatus />} />
                     <Route path="/docs" element={<DocumentManager overscan={computeOverscan('documents')} />} />

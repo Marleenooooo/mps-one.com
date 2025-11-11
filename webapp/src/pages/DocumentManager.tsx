@@ -2,16 +2,17 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 
-type Doc = { id: number; name: string; version: number; canAccess: boolean; versions?: { v: number; when: string }[] };
+type DocType = 'PR' | 'Quote' | 'PO' | 'DeliveryNote' | 'Invoice' | 'Payment';
+type Doc = { id: number; name: string; version: number; type: DocType; refId?: string; canAccess: boolean; versions?: { v: number; when: string }[] };
 
 export default function DocumentManager({ overscan = 3 }: { overscan?: number }) {
   useModule('finance');
   const { t } = useI18n();
   const [mounting, setMounting] = useState(true);
   const [docs, setDocs] = useState<Doc[]>([
-    { id: 1, name: 'Quote-Q-1209.pdf', version: 3, canAccess: true, versions: [{ v: 1, when: '2025-07-20' }, { v: 2, when: '2025-08-02' }, { v: 3, when: '2025-08-15' }] },
-    { id: 2, name: 'PO-9821.pdf', version: 1, canAccess: true, versions: [{ v: 1, when: '2025-08-18' }] },
-    { id: 3, name: 'Invoice-INV-124.pdf', version: 2, canAccess: false, versions: [{ v: 1, when: '2025-08-01' }, { v: 2, when: '2025-08-20' }] },
+    { id: 1, name: 'Quote-Q-1209.pdf', version: 3, type: 'Quote', refId: 'PR-444', canAccess: true, versions: [{ v: 1, when: '2025-07-20' }, { v: 2, when: '2025-08-02' }, { v: 3, when: '2025-08-15' }] },
+    { id: 2, name: 'PO-9821.pdf', version: 1, type: 'PO', refId: 'PR-444', canAccess: true, versions: [{ v: 1, when: '2025-08-18' }] },
+    { id: 3, name: 'Invoice-INV-124.pdf', version: 2, type: 'Invoice', refId: 'PO-9821', canAccess: false, versions: [{ v: 1, when: '2025-08-01' }, { v: 2, when: '2025-08-20' }] },
   ]);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [selected, setSelected] = useState<Record<number, boolean>>({});
@@ -35,6 +36,19 @@ const overscanRows = overscan;
   const visibleDocs = docs.slice(startIndex, endIndex);
 
   useEffect(() => { const tm = setTimeout(() => setMounting(false), 400); return () => clearTimeout(tm); }, []);
+
+  const role = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_role') : null);
+  const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+
+  function canToggle(d: Doc): boolean {
+    if (role === 'Admin') return true;
+    if (role === 'PIC Finance') return d.type === 'Invoice' || d.type === 'Payment';
+    if (role === 'PIC Procurement') return d.type === 'PR' || d.type === 'PO' || d.type === 'Quote';
+    if (role === 'PIC Operational') return d.type === 'PR' || d.type === 'DeliveryNote';
+    // Suppliers can toggle only their Quotes
+    if (userType === 'supplier') return d.type === 'Quote';
+    return false;
+  }
 
   function toggleAccess(id: number) {
     setDocs(d => d.map(x => x.id === id ? { ...x, canAccess: !x.canAccess } : x));
@@ -153,10 +167,16 @@ const overscanRows = overscan;
                     <span className={`status-badge ${d.canAccess ? 'success' : ''}`}>{t('docs.access')}: {d.canAccess ? 'Allowed' : 'Denied'}</span>
                   </div>
                   <div style={{ color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
-                  <label className="btn" style={{ justifyContent: 'space-between', marginTop: 8 }}>
-                    {t('docs.access')}
-                    <input type="checkbox" checked={d.canAccess} onChange={() => toggleAccess(d.id)} />
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{d.type}{d.refId ? ` · ${d.refId}` : ''}</span>
+                    <label className="btn" style={{ justifyContent: 'space-between' }}>
+                      {t('docs.access')}
+                      <input type="checkbox" checked={d.canAccess} onChange={() => toggleAccess(d.id)} disabled={!canToggle(d)} />
+                    </label>
+                  </div>
+                  {!canToggle(d) && (
+                    <div className="status-badge" style={{ marginTop: 8 }}>View-only: Access changes restricted for your role</div>
+                  )}
                   <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                     <button className="btn" onClick={() => downloadDoc(d)}>{t('docs.download')}</button>
                     <button className="btn" onClick={() => toggleExpanded(d.id)}>{expanded[d.id] ? t('docs.hide_history') : t('docs.show_history')}</button>

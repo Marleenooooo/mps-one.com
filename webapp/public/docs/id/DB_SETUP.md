@@ -137,3 +137,55 @@ Gunakan URL penuh jika perlu: `https://api.domain-anda.com`.
 - Gunakan user DB least-privilege dan rotasi password berkala.
 - Aktifkan TLS untuk endpoint API dan enforce CORS ke origin frontend Anda.
 
+---
+
+## Stack Docker Lokal (Windows + WSL)
+
+Untuk pengembangan lokal tanpa hosting eksternal, jalankan MySQL dan phpMyAdmin via Docker Engine + WSL di Windows.
+
+### Prasyarat
+- Windows dengan WSL aktif (Ubuntu atau distro Linux setara).
+- Docker Engine terpasang dan dapat dipakai di WSL (`docker version`).
+- Path proyek: `D:\ProjectBuild\projects\mpsone\mpsone`.
+
+### Menyalakan Stack DB
+Di WSL:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/db
+docker compose up -d
+```
+
+Layanan:
+- `mpsone-db` (MySQL 8) di `localhost:3306`
+- `mpsone-phpmyadmin` di `http://localhost:8081/`
+
+Kredensial lokal (khusus development):
+- Database: `mpsone_dev`
+- User: `mpsone_dev` / Password: `devpass`
+- Root password: `rootpass`
+
+Data disimpan pada named volume `mpsone-db-data`. Untuk wipe/reset total: `docker compose down -v`.
+
+### Import Migrasi (idempotent)
+Jalankan dari root proyek di WSL:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+```
+
+Skrip memastikan kontainer aktif dan mengimpor seluruh SQL di `db/migrations/` menggunakan `mysql --force` sehingga aman untuk dijalankan berulang.
+
+### Verifikasi Skema
+
+```
+bash scripts/verify-db.sh
+```
+
+Pemeriksaan mencakup jumlah data demo dan keberadaan kolom & indeks penting pada PR (`title`, `description`, `budget_code`, `approver`, `idx_pr_status`, `idx_pr_need_date`).
+
+### phpMyAdmin
+- Buka `http://localhost:8081/`
+- Login dengan `mpsone_dev` / `devpass` atau `root` / `rootpass`
+- Gunakan Import untuk uji satu‑off; untuk konsistensi, lebih baik jalankan lewat skrip.

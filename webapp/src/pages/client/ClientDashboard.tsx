@@ -27,6 +27,35 @@ export default function ClientDashboard() {
     ]
   ), []);
 
+  type Invoice = { id: string; poId: string; amount: number; dueDate: string; paidAt?: string | null };
+  function derivePaymentStatus(inv: Invoice): 'paid' | 'over-due' | 'waiting payment' | 'next payment' | 'neutral' {
+    if (inv.paidAt) return 'paid';
+    const now = Date.now();
+    const due = new Date(inv.dueDate).getTime();
+    if (now > due) return 'over-due';
+    const days = Math.ceil((due - now) / (24*3600*1000));
+    if (days <= 7) return 'waiting payment';
+    if (days <= 14) return 'next payment';
+    return 'neutral';
+  }
+  const invoiceStatuses = useMemo(() => {
+    const invoices: Invoice[] = [
+      { id: 'INV-124', poId: 'PO-9821', amount: 50_000_000, dueDate: new Date(Date.now() + 5*24*3600*1000).toISOString() },
+      { id: 'INV-125', poId: 'PO-9821', amount: 75_000_000, dueDate: new Date(Date.now() - 3*24*3600*1000).toISOString() },
+      { id: 'INV-127', poId: 'PO-1200', amount: 20_000_000, dueDate: new Date(Date.now() - 1*24*3600*1000).toISOString(), paidAt: new Date().toISOString() },
+    ];
+    const counts = { paid: 0, neutral: 0, waiting: 0, next: 0, overdue: 0 };
+    invoices.forEach(inv => {
+      const st = derivePaymentStatus(inv);
+      if (st === 'paid') counts.paid += 1;
+      else if (st === 'over-due') counts.overdue += 1;
+      else if (st === 'waiting payment') counts.waiting += 1;
+      else if (st === 'next payment') counts.next += 1;
+      else counts.neutral += 1;
+    });
+    return counts;
+  }, []);
+
   const summaryActiveIndex = useMemo(() => {
     const map = (s: string) => {
       const low = s.toLowerCase();
@@ -87,6 +116,16 @@ export default function ClientDashboard() {
                 <div style={{ marginTop: 8 }}>{t('client.document_label')} {n}</div>
               </div>
             ))}
+          </div>
+        </div>
+        <div style={{ padding: '0 16px 16px' }}>
+          <h3 style={{ margin: 0 }}>Invoice Status Overview</h3>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            <span className="status-badge success">Paid: {invoiceStatuses.paid}</span>
+            <span className="status-badge warn">Waiting: {invoiceStatuses.waiting}</span>
+            <span className="status-badge success">Next: {invoiceStatuses.next}</span>
+            <span className="status-badge danger">Over-due: {invoiceStatuses.overdue}</span>
+            <span className="status-badge">Neutral: {invoiceStatuses.neutral}</span>
           </div>
         </div>
       </div>

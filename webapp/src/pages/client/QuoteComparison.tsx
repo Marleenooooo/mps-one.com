@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Topbar, Breadcrumbs } from '../../components/Layout/Topbar';
+import { AuditTimeline } from '../../components/UI/AuditTimeline';
 import { formatIDR } from '../../components/utils/format';
 
 type QuoteVersion = { version: number; total: number; taxPct: number; discountPct: number; validUntil: string; status?: 'accepted' | 'pending' };
@@ -52,7 +53,13 @@ export default function QuoteComparison() {
       const acceptedMap = JSON.parse(localStorage.getItem('mpsone_quote_accepted') || '{}');
       acceptedMap[String(prId)] = { supplierId, version };
       localStorage.setItem('mpsone_quote_accepted', JSON.stringify(acceptedMap));
-      alert(`Accepted v${version} from ${supplierId}. You can now convert to PO.`);
+      const audit = JSON.parse(localStorage.getItem('mpsone_audit_trail') || '{}');
+      const key = `PR:${String(prId)}`;
+      const listAudit = Array.isArray(audit[key]) ? audit[key] : [];
+      listAudit.push({ entity: 'PR', id: String(prId), action: 'quote_approved', actorRole: localStorage.getItem('mpsone_role'), actorType: localStorage.getItem('mpsone_user_type'), at: Date.now(), comment: `Supplier ${supplierId} v${version}` });
+      audit[key] = listAudit;
+      localStorage.setItem('mpsone_audit_trail', JSON.stringify(audit));
+      alert(`Approved quote v${version} from ${supplierId}. You can now generate a PO.`);
     } catch {}
   }
 
@@ -69,6 +76,7 @@ export default function QuoteComparison() {
           Compare quotes per supplier for PR <strong>{prId}</strong>, review versions, totals, tax/discount, validity, and accept.
         </p>
       </div>
+      <AuditTimeline entity="PR" refId={String(prId)} title="PR Audit Timeline" limit={6} />
       {supplierIds.length === 0 && (
         <div className="card" style={{ padding: 16, marginTop: 16 }}>
           <div>No quotes yet. Use "Send PR to suppliers" from PR List, then check back.</div>
@@ -95,9 +103,23 @@ export default function QuoteComparison() {
                   <td><span className={`status-badge ${q.status === 'accepted' ? 'success' : 'info'}`}>{q.status || 'pending'}</span></td>
                   <td>
                     {q.status === 'accepted' ? (
-                      <a className="btn" href="/procurement/po/preview">Convert to PO</a>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button className="btn" onClick={() => {
+                          try {
+                            const poSeed = { prId, supplierId: sid, version: q.version };
+                            localStorage.setItem('mpsone_po_from_quote', JSON.stringify(poSeed));
+                            const audit = JSON.parse(localStorage.getItem('mpsone_audit_trail') || '{}');
+                            const key = `PR:${String(prId)}`;
+                            const listAudit = Array.isArray(audit[key]) ? audit[key] : [];
+                            listAudit.push({ entity: 'PR', id: String(prId), action: 'po_generate', actorRole: localStorage.getItem('mpsone_role'), actorType: localStorage.getItem('mpsone_user_type'), at: Date.now(), comment: `From ${sid} v${q.version}` });
+                            audit[key] = listAudit;
+                            localStorage.setItem('mpsone_audit_trail', JSON.stringify(audit));
+                          } catch {}
+                          navigate('/procurement/po/preview');
+                        }}>Generate PO</button>
+                      </div>
                     ) : (
-                      <button className="btn" onClick={() => acceptQuote(sid, q.version)}>Accept</button>
+                      <button className="btn" onClick={() => acceptQuote(sid, q.version)}>Approve Quote</button>
                     )}
                   </td>
                 </tr>
@@ -109,4 +131,3 @@ export default function QuoteComparison() {
     </div>
   );
 }
-

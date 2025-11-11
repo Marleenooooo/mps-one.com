@@ -31,6 +31,28 @@ export default function OrderTracker() {
   const [uploads, setUploads] = useState<{ id: string; name: string; progress: number; done: boolean }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Tie DeliveryNotes entries into the pipeline by reading available-to-invoice gate
+  const poId = useMemo(() => {
+    try {
+      const seed = JSON.parse(localStorage.getItem('mpsone_po_from_quote') || '{}');
+      return seed?.poId || 'PO-9821';
+    } catch { return 'PO-9821'; }
+  }, []);
+
+  const deliveryGate = useMemo(() => {
+    try {
+      const gate = JSON.parse(localStorage.getItem('mpsone_available_to_invoice') || '{}');
+      return gate[poId] || null;
+    } catch { return null; }
+  }, [poId]);
+
+  useEffect(() => {
+    // If delivery info exists, ensure pipeline reflects 'delivered' stage
+    if (deliveryGate && typeof deliveryGate.deliveredAmount === 'number' && deliveryGate.deliveredAmount > 0) {
+      setActiveIndex((prev) => Math.max(prev, pipeline.indexOf('delivered')));
+    }
+  }, [deliveryGate]);
+
   function handleFiles(files: FileList) {
     const allowedExt = ['pdf','jpg','jpeg','png'];
     const maxSize = 20 * 1024 * 1024; // 20MB
@@ -165,6 +187,26 @@ export default function OrderTracker() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Delivery Notes Summary and link */}
+      <div className="card" style={{ padding: 16, marginTop: 16, borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0 }}>{t('order_tracker.delivery_notes') || 'Delivery Notes'}</h3>
+          <a className="btn outline" href="/inventory/delivery-notes">Open Delivery Notes</a>
+        </div>
+        {deliveryGate ? (
+          <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+            <div><span style={{ color: 'var(--text-secondary)' }}>PO</span> <strong>{poId}</strong></div>
+            <div><span style={{ color: 'var(--text-secondary)' }}>Delivered Amount</span> <span className="status-badge success">Rp {Number(deliveryGate.deliveredAmount).toLocaleString('id-ID')}</span></div>
+            <div><span style={{ color: 'var(--text-secondary)' }}>Available Qty</span> <span className="status-badge info">{Number(deliveryGate.availableQty)}</span></div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>No delivery notes yet. Submit corrections to unlock invoicing.</div>
+        )}
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
+          Pipeline auto-advances to Delivered when delivery info is present; invoicing stage unlocks after corrections.
         </div>
       </div>
     </div>

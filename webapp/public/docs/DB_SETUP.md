@@ -137,3 +137,55 @@ Use a full URL if you prefer: `https://api.your-domain.com`.
 - Use least-privilege DB users and rotate passwords regularly.
 - Enable TLS for API endpoints and enforce CORS to your frontend origin.
 
+---
+
+## Local Docker Stack (Windows + WSL)
+
+For local development without external hosting, you can run MySQL and phpMyAdmin via Docker Engine and WSL on Windows.
+
+### Prerequisites
+- Windows with WSL (Ubuntu or similar) enabled.
+- Docker Engine installed and accessible within WSL (`docker version`).
+- Project path: `D:\ProjectBuild\projects\mpsone\mpsone`.
+
+### Start the DB Stack
+In WSL:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/db
+docker compose up -d
+```
+
+Services:
+- `mpsone-db` (MySQL 8) on `localhost:3306`
+- `mpsone-phpmyadmin` at `http://localhost:8081/`
+
+Local credentials (development only):
+- Database: `mpsone_dev`
+- User: `mpsone_dev` / Password: `devpass`
+- Root password: `rootpass`
+
+Data persists in a named volume `mpsone-db-data`. To wipe and reset: `docker compose down -v`.
+
+### Import Migrations (idempotent)
+Run from the project root in WSL:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+```
+
+The script ensures containers are up and imports all SQL files in `db/migrations/` using `mysql --force` to continue past safe duplicates.
+
+### Verify Schema
+
+```
+bash scripts/verify-db.sh
+```
+
+Checks include demo counts and presence of PR columns and indexes (`title`, `description`, `budget_code`, `approver`, `idx_pr_status`, `idx_pr_need_date`).
+
+### phpMyAdmin
+- Open `http://localhost:8081/`
+- Login with `mpsone_dev` / `devpass` or `root` / `rootpass`
+- Prefer scripts for repeatable imports; phpMyAdmin Import is useful for one-off tests.

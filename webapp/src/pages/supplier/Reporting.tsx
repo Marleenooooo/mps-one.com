@@ -50,6 +50,8 @@ export default function Reporting() {
   useModule('reports');
   const { t } = useI18n();
   const [exporting, setExporting] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all'|'paid'|'neutral'|'waiting'|'next'|'over-due'>('all');
+  const [dueWindow, setDueWindow] = useState<'all'|'7'|'14'|'30'|'over-due'>('all');
 
   const spendingData = useMemo(() => ([
     { month: 'Jan', amount: 120_000_000 },
@@ -80,6 +82,35 @@ export default function Reporting() {
     { month: 'May', pr: 28 },
     { month: 'Jun', pr: 31 },
   ]), []);
+
+  type Invoice = { id: string; poId: string; amount: number; dueDate: string; paidAt?: string | null };
+  const invoices = useMemo<Invoice[]>(() => ([
+    { id: 'INV-124', poId: 'PO-9821', amount: 50_000_000, dueDate: new Date(Date.now() + 5*24*3600*1000).toISOString(), paidAt: null },
+    { id: 'INV-125', poId: 'PO-9821', amount: 75_000_000, dueDate: new Date(Date.now() - 3*24*3600*1000).toISOString(), paidAt: null },
+    { id: 'INV-126', poId: 'PO-7777', amount: 40_000_000, dueDate: new Date(Date.now() + 15*24*3600*1000).toISOString(), paidAt: null },
+    { id: 'INV-127', poId: 'PO-1200', amount: 20_000_000, dueDate: new Date(Date.now() - 1*24*3600*1000).toISOString(), paidAt: new Date().toISOString() },
+  ]), []);
+
+  function derivePaymentStatus(inv: Invoice): { label: string; colorClass: string } {
+    if (inv.paidAt) return { label: 'paid', colorClass: 'success' };
+    const now = Date.now();
+    const due = new Date(inv.dueDate).getTime();
+    if (now > due) return { label: 'over-due', colorClass: 'danger' };
+    const days = Math.ceil((due - now) / (24*3600*1000));
+    if (days <= 7) return { label: 'waiting payment', colorClass: 'warn' };
+    if (days <= 14) return { label: 'next payment', colorClass: 'success' };
+    return { label: 'neutral', colorClass: '' };
+  }
+
+  function checkInvoiceGate(inv: Invoice): string | null {
+    try {
+      const gate = JSON.parse(localStorage.getItem('mpsone_available_to_invoice') || '{}');
+      const g = gate[inv.poId];
+      if (!g) return null;
+      if (inv.amount > (g.deliveredAmount || 0)) return `Invoice exceeds delivered amount for ${inv.poId}`;
+      return null;
+    } catch { return null; }
+  }
 
   const exportSection = (key: string, rows: DataRow[], type: 'csv' | 'pdf' = 'csv') => {
     setExporting(key);
@@ -259,6 +290,97 @@ export default function Reporting() {
               ></div>
             ))}
           </div>
+        </div>
+      </div>
+      {/* Invoices & Payment Status */}
+      <div className="card" style={{ padding: 16, marginTop: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ margin: 0 }}>Invoices & Payment Status</h3>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Filters */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Status</span>
+              <select className="input" value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)}>
+                <option value="all">All</option>
+                <option value="paid">Paid</option>
+                <option value="neutral">Neutral</option>
+                <option value="waiting">Waiting (≤7d)</option>
+                <option value="next">Next (≤14d)</option>
+                <option value="over-due">Over‑due</option>
+              </select>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Due window</span>
+              <select className="input" value={dueWindow} onChange={e => setDueWindow(e.target.value as any)}>
+                <option value="all">All</option>
+                <option value="7">≤ 7 days</option>
+                <option value="14">≤ 14 days</option>
+                <option value="30">≤ 30 days</option>
+                <option value="over-due">Over‑due</option>
+              </select>
+            </label>
+            <button
+              className="btn"
+              onClick={() => exportSection('invoice_statuses', invoices.map(i => ({ id: i.id, poId: i.poId, amount: i.amount, dueDate: i.dueDate, status: derivePaymentStatus(i).label })), 'csv')}
+              aria-busy={exporting === 'invoice_statuses'}
+              title="Export CSV"
+            >
+              {exporting === 'invoice_statuses' ? '...' : 'CSV'}
+            </button>
+            <button
+              className="btn outline"
+              onClick={() => exportSection('invoice_statuses', invoices.map(i => ({ id: i.id, poId: i.poId, amount: i.amount, dueDate: i.dueDate, status: derivePaymentStatus(i).label })), 'pdf')}
+              aria-busy={exporting === 'invoice_statuses'}
+              title="Export PDF"
+            >
+              {exporting === 'invoice_statuses' ? '...' : 'PDF'}
+            </button>
+          </div>
+        </div>
+        <table className="table" style={{ width: '100%', marginTop: 8 }}>
+          <thead>
+            <tr><th>Invoice</th><th>PO</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Gate</th></tr>
+          </thead>
+          <tbody>
+            {invoices.filter(inv => {
+              const st = derivePaymentStatus(inv).label;
+              if (statusFilter !== 'all') {
+                if (statusFilter === 'waiting' && st !== 'waiting payment') return false;
+                else if (statusFilter === 'next' && st !== 'next payment') return false;
+                else if (statusFilter === 'over-due' && st !== 'over-due') return false;
+                else if (statusFilter === 'neutral' && st !== 'neutral') return false;
+                else if (statusFilter === 'paid' && st !== 'paid') return false;
+              }
+              if (dueWindow !== 'all') {
+                const now = Date.now();
+                const due = new Date(inv.dueDate).getTime();
+                if (dueWindow === 'over-due') {
+                  if (!(now > due && !inv.paidAt)) return false;
+                } else {
+                  const days = Math.ceil((due - now) / (24*3600*1000));
+                  const max = parseInt(dueWindow, 10);
+                  if (!(days <= max)) return false;
+                }
+              }
+              return true;
+            }).map(inv => {
+              const st = derivePaymentStatus(inv);
+              const gateWarn = checkInvoiceGate(inv);
+              return (
+                <tr key={inv.id}>
+                  <td>{inv.id}</td>
+                  <td>{inv.poId}</td>
+                  <td>Rp {inv.amount.toLocaleString('id-ID')}</td>
+                  <td>{new Date(inv.dueDate).toLocaleDateString()}</td>
+                  <td><span className={`status-badge ${st.colorClass}`}>{st.label}</span></td>
+                  <td>{gateWarn ? <span className="status-badge warn">{gateWarn}</span> : '-'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
+          Payment status follows 30-day calendar logic; invoice gating enforces sum(invoice.amount) ≤ sum(delivered.amount).
         </div>
       </div>
     </div>

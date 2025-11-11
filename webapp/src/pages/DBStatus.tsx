@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiHealth, apiPOSummary, apiInvoiceStatus } from '../services/api';
+import { apiHealth, apiPOSummary, apiInvoiceStatus, apiListPR } from '../services/api';
 import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
 
 export default function DBStatus() {
@@ -7,6 +7,7 @@ export default function DBStatus() {
   const [po, setPo] = useState<any[]>([]);
   const [inv, setInv] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [prs, setPrs] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -17,6 +18,8 @@ export default function DBStatus() {
         setPo(p.rows ?? []);
         const i = await apiInvoiceStatus();
         setInv(i.rows ?? []);
+        const lp = await apiListPR();
+        setPrs(lp.rows ?? []);
       } catch (err: any) {
         setError(String(err?.message || err));
       }
@@ -39,7 +42,7 @@ export default function DBStatus() {
             </span>
           </div>
           <div className="progress-bar" style={{ width: 200 }} aria-label="Data readiness">
-            <div className="value" style={{ width: `${Math.min(100, (po.length ? 40 : 20) + (inv.length ? 40 : 20))}%` }}></div>
+            <div className="value" style={{ width: `${Math.min(100, (po.length ? 30 : 15) + (inv.length ? 30 : 15) + (prs.length ? 40 : 10))}%` }}></div>
           </div>
         </div>
       </div>
@@ -57,7 +60,20 @@ export default function DBStatus() {
           </div>
         )}
 
-        <h3 style={{ marginTop: 0 }}>PO Summary (v_po_item_delivery_totals)</h3>
+        <h3 style={{ marginTop: 0 }}>Latest PRs</h3>
+        <table className="table" style={{ width: '100%', marginBottom: 16 }}>
+          <thead>
+            <tr><th>ID</th><th>Title</th><th>Status</th><th>Need Date</th><th>Approver</th></tr>
+          </thead>
+          <tbody>
+            {prs.slice(0,10).map((r, idx) => (
+              <tr key={idx}><td>{r.id}</td><td>{r.title || '-'}</td><td>{r.status}</td><td>{r.need_date || '-'}</td><td>{r.approver || '-'}</td></tr>
+            ))}
+            {!prs.length && (<tr><td colSpan={5} style={{ color: 'var(--text-secondary)' }}>No PR rows</td></tr>)}
+          </tbody>
+        </table>
+
+        <h3>PO Summary (v_po_item_delivery_totals)</h3>
         <table className="table" style={{ width: '100%', marginBottom: 16 }}>
           <thead>
             <tr><th>PO ID</th><th>Ordered</th><th>Confirmed</th></tr>
