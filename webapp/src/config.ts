@@ -1,6 +1,7 @@
 export const APP_URL = import.meta.env.VITE_APP_URL as string | undefined;
 export const IS_PROD = typeof APP_URL === 'string' && APP_URL.startsWith('https://');
 export const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? '/api';
+export const OFFLINE_FLAG = (import.meta.env.VITE_OFFLINE_MODE as string | undefined) ?? '0';
 
 // Example: place for future environment-driven config (APIs, email, logistics)
 export const APP_CONFIG = {
@@ -57,6 +58,26 @@ export function getHighPerformance(): boolean {
 export function setHighPerformance(on: boolean): boolean {
   try {
     localStorage.setItem(PERF_KEY, on ? '1' : '0');
+    return on;
+  } catch {
+    return on;
+  }
+}
+
+// Offline/mock mode toggle: respects env var and localStorage override
+const OFFLINE_KEY = 'mpsone_offline';
+export function getOfflineMode(): boolean {
+  try {
+    const ls = localStorage.getItem(OFFLINE_KEY);
+    if (ls === '1') return true;
+    if (ls === '0') return false;
+  } catch {}
+  return OFFLINE_FLAG === '1';
+}
+
+export function setOfflineMode(on: boolean): boolean {
+  try {
+    localStorage.setItem(OFFLINE_KEY, on ? '1' : '0');
     return on;
   } catch {
     return on;
