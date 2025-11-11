@@ -116,6 +116,11 @@ Wishlist (UI/UX & Integrasi)
 - Tampilkan pesan ramah di `/login/client` dengan tautan ke `mps-one.com` bagi pengguna yang belum memastikan perannya.
 - Catat redirect tidak dikenal untuk analitik guna mengukur minat dari non-pengguna.
 
+- Help Center: tambahkan tautan cepat/teaser ke dokumen “Local DB (Docker + WSL)” dan tile khusus di Doc Viewer untuk akses setup lokal yang lebih mudah.
+- Windows UX: sediakan aksi satu‑klik di halaman Dev Tools untuk menjalankan “Start DB + Import Migrations + Verify” (membungkus `import-migrations.ps1`), beserta indikator status DB & konektivitas MySQL.
+- phpMyAdmin: tambahkan deep link dari Help ke `http://localhost:8081/` dengan tips login (`mpsone_dev/devpass`) dan catatan keamanan lokal.
+- Dev Status: tambahkan tombol “Run Verify” di `/dev/db-status` untuk mengeksekusi verifikasi kolom/index PR melalui backend (proxy) sehingga tidak terpengaruh masalah quoting PowerShell.
+
 ### Wishlist Tambahan (Kenyamanan, Efektivitas, Performa)
 
 Kenyamanan Pengguna
@@ -186,6 +191,117 @@ Langkah Berdampak Tinggi Berikutnya
 - ✅ Link Help di Sidebar dan tombol Help di Topbar.
 - ✅ i18n dasar untuk Help Center dan `nav.help` sudah tersedia.
 - ✅ Perbaikan state aktif Sidebar untuk rute dasar (`/client`) telah diterapkan.
+
+## Local DB (Docker + WSL) — Setup & Verification
+
+Untuk pengembangan lokal di Windows dengan Docker Engine dan WSL, kami menyediakan stack MySQL + phpMyAdmin dan skrip migrasi/verifikasi agar skema database konsisten dengan aplikasi.
+
+### Prasyarat
+- Windows 10/11 dengan WSL (Ubuntu atau distro Linux lain) aktif.
+- Docker Engine terpasang dan dapat diakses dari WSL (`docker version` berfungsi di WSL).
+- Lokasi proyek: `D:\ProjectBuild\projects\mpsone\mpsone`.
+
+### Menjalankan Stack Database
+1) Buka terminal WSL dan masuk ke folder `db`:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/db
+```
+
+2) Jalankan compose:
+
+```
+docker compose up -d
+```
+
+Kontainer yang berjalan:
+- `mpsone-db` (MySQL 8) pada port `3306`
+- `mpsone-phpmyadmin` (phpMyAdmin) pada `http://localhost:8081/`
+
+Kredensial default (lokal saja, bukan produksi):
+- DB: `mpsone_dev`
+- User: `mpsone_dev` / Password: `devpass`
+- Root password: `rootpass`
+
+Data disimpan di named volume: `mpsone-db-data`. Untuk reset total (hapus data): `docker compose down -v`.
+
+### Import Migrasi SQL (otomatis, idempotent)
+Jalankan dari root proyek di WSL:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+```
+
+Skrip akan:
+- Memastikan kontainer DB aktif
+- Mengimpor file di `db/migrations/*.sql` secara berurutan
+- Menggunakan `mysql --force` agar tetap berjalan saat menemukan entri/kolom yang sudah ada (idempotent)
+
+### Verifikasi Skema & Seed
+Jalankan skrip verifikasi untuk memeriksa tabel contoh dan kolom/index penting pada `pr`:
+
+```
+bash scripts/verify-db.sh
+```
+
+Output yang diharapkan (contoh):
+- Counts: `companies=4`, `departments=3`, `users=4`
+- Kolom PR: `title`, `description`, `budget_code`, `approver` → OK
+- Indeks PR: `idx_pr_status`, `idx_pr_need_date` → OK
+
+### phpMyAdmin
+- Buka: `http://localhost:8081/`
+- Server: `db` (atau `localhost`), Database: `mpsone_dev`
+- Login: `mpsone_dev` / `devpass` atau `root` / `rootpass`
+- Gunakan halaman Import untuk uji satu‑off, tetapi prefer skrip agar konsisten/idempotent.
+
+### Troubleshooting (WSL/PowerShell)
+- Gunakan WSL untuk menjalankan skrip bash agar terhindar dari masalah quoting di PowerShell.
+- Jika `docker` tidak dikenali di WSL: pastikan integrasi Docker Engine dengan WSL aktif dan jalankan ulang terminal WSL.
+- Jika MySQL belum siap: tunggu beberapa detik; log dapat dilihat via `docker logs mpsone-db`.
+
+### Catatan Lingkungan (WSL‑only)
+- Pada sebagian lingkungan, Docker hanya tersedia di WSL (Ubuntu‑20.04) dan tidak di Windows PowerShell.
+- Jalankan semua perintah Docker di WSL: `wsl -d Ubuntu-20.04`.
+- Wrapper PowerShell (`scripts/import-migrations.ps1`) opsional dan memerlukan Docker tersedia di PowerShell; jika tidak dikenali, gunakan langkah WSL (bash) di atas.
+- Jika perlu autentikasi registry, jalankan `docker login` di WSL (jangan commit kredensial ke repo).
+
+### Uji Aplikasi dengan DB Lokal (Real DB)
+Langkah ini menjalankan backend API terhadap MySQL lokal (container), lalu frontend membaca melalui proxy.
+
+1) Mulai DB & impor migrasi (di WSL):
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/db
+docker compose up -d
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+bash scripts/verify-db.sh
+```
+
+2) Jalankan backend (di WSL atau PowerShell) dengan kredensial lokal:
+WSL (bash):
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/webapp
+export DB_HOST=127.0.0.1; export DB_PORT=3306; export DB_NAME=mpsone_dev; export DB_USER=mpsone_dev; export DB_PASSWORD=devpass; npm run server
+```
+PowerShell (jika tidak WSL‑only):
+```
+cd D:\ProjectBuild\projects\mpsone\mpsone\webapp
+$env:DB_HOST="127.0.0.1"; $env:DB_PORT="3306"; $env:DB_NAME="mpsone_dev"; $env:DB_USER="mpsone_dev"; $env:DB_PASSWORD="devpass"; npm run server
+```
+
+3) Jalankan frontend dev server:
+```
+cd D:\ProjectBuild\projects\mpsone\mpsone\webapp
+npm run dev
+```
+
+4) Buka halaman status DB:
+```
+http://localhost:5173/dev/db-status
+```
+Halaman ini memanggil `/api/health`, `/api/po/summary`, dan `/api/invoice/status` via proxy Vite (`http://localhost:3001`).
 
 ## API Wishlist (Free‑First dengan Alternatif)
 
@@ -308,3 +424,147 @@ Salinan berbahasa Indonesia tersedia di folder `docs/id/`:
 - Buka rute `/help` di aplikasi untuk akses cepat ke dokumentasi.
 - Dokumen `.md` dicerminkan ke `webapp/public/docs` dan dapat dibaca langsung via Doc Viewer.
 - Setiap dokumen memiliki toggle bahasa: "English" / "Bahasa Indonesia" di bagian atas.
+
+---
+
+## Front‑End UX Workflow Test Findings (Supplier/Admin/PIC)
+
+This section documents end‑to‑end workflow simulations across roles, highlights UX/workflow/route/code flaws, and provides a concrete fix guide. It is intended as a practical checklist to align the SPA with the Procurement Lifecycle and Permissions rules.
+
+### Supplier Admin: First Signup → Payment Received
+- Entry: `Signup → /supplier/admin` then navigate via Sidebar to: `Procurement Workflow`, `PR List`, `Quote Builder`, `PO Preview`, `Order Tracker`, `Document Manager`, `Communication Hub`, `Reporting`.
+- Observed flow:
+  - Builds quotes in `QuoteBuilder`; preview and “Send Quote” alert work.
+  - `PRList` shows PR rows and allows “Send PR to suppliers” for any status.
+  - `POPreview` renders layouts and provides a numbering preview; printing/export works.
+  - `OrderTracker` shows pipeline and delivery proof upload but does not model multi‑shipment Delivery Letters or Client corrections.
+  - `DocumentManager` handles versions, bulk actions; no linkage to domain entities (PR/Quote/PO/Delivery/Invoice).
+  - `CommunicationHub` simulates messaging/read receipts and attachments.
+- Flaws (High → Low):
+  - Approval gating missing: suppliers can interact without PR approval checks. “Send PR to suppliers” is available for Draft/Submitted rows; violates “Only approved PRs visible to suppliers and convertible to quotes”.
+  - Multi‑delivery & partial invoicing absent: no Delivery Letter representation; no corrected quantities; no invoice gating based on confirmed deliveries.
+  - Payment status logic unused: no 30‑day status colors (paid/neutral/waiting/yellow/next/green/over‑due/red) across dashboards; `DBStatus` fetches derived statuses but UI doesn’t surface them.
+  - Audit trails missing: no actor/timestamp/comment on transitions (PR approval, quote acceptance, PO creation, delivery confirmation, invoicing).
+  - Route gating inconsistent: `/docs` and `/comms` accessible to all; Document access flags are UI‑only and not role‑aware.
+  - Lifecycle coherence: `OrderTracker` pipeline advances without guards; no link from delivery to invoice or payment marking.
+
+### Client Admin: First Signup → Payment Received
+- Entry: `Signup → /client` then optionally `Onboarding` (Admin only), `PR Create`, `PR List`, `Quote Comparison`, `PO Preview`, `Order Tracker`, `Document Manager`, `Communication Hub`.
+- Observed flow:
+  - `PRCreate` works with autosave and attachments; `PRList` auto‑injects draft.
+  - `QuoteComparison` route exists and is role‑gated to client, but there is no explicit “approve quote → generate PO” action.
+  - `POPreview` and `OrderTracker` function visually.
+- Flaws:
+  - Missing explicit actions for “Approve Quote” and “Generate PO from accepted quote”; lifecycle jump points are not implemented, causing route‑level gaps.
+  - PR approval workflow not present (Submitted → Approved/Rejected) and not role‑gated to Finance/Admin as required.
+  - Payment status and invoice links absent from client dashboard; cannot mark invoices paid; no 30‑day calendar visualization.
+  - Document relationships not shown (e.g., PR→Quote→PO→Delivery→Invoice references).
+
+### PIC Roles (Operational/Procurement/Finance)
+- PIC Operational:
+  - Can initiate PRs; however, the approval step is not enforced. Delivery confirmation UI is missing; cannot correct Delivery Letters.
+- PIC Procurement:
+  - Can manage PRs and quotes, but approval gates and “Convert to Quote”/“Approve Quote → Create PO” actions are not implemented as discrete steps.
+- PIC Finance:
+  - Lacks invoice/payments UI; cannot mark invoice `paid_at`; no calendar‑based status derivation shown anywhere; reporting does not include payment status segmentation.
+
+### Route & Code Observations
+- `App.tsx` gating:
+  - `QuoteBuilder` gated by `mpsone_user_type === 'supplier'` only; should also check PR approval or present PR‑scoped quoting.
+  - `Onboarding` gated to client Admin; fine.
+  - `/docs` and `/comms` ungated; role‑aware access should be enforced.
+- `PRList.tsx` flaws:
+  - “Send PR to suppliers” button doesn’t validate `status === 'Approved'`.
+  - No approve/reject actions or audit capture.
+- `OrderTracker.tsx`:
+  - Pipeline advances arbitrarily; no shipment entities; no client confirmation/correction; no invoice stage gating.
+- `DocumentManager.tsx`:
+  - `Doc` lacks `type/ref_id/version/url/company/permissions`; cannot model relationships or access policies.
+- `DBStatus.tsx`:
+  - Fetches `derived_status` but not integrated into dashboards; colors and due‑date categories missing.
+- `POPreview.tsx`:
+  - Visual only; no “Create PO” from accepted quote flow.
+
+### Fix Guide (Prioritized)
+- Approval & Gating
+  - Enforce “Approved PR only” for supplier visibility and quote conversion in UI and route guards.
+  - Add PR approval actions (Finance/Admin) with audit trail (actor, timestamp, comment).
+- Quote → PO Conversion
+  - Implement client action to approve a quote and generate a PO; link PO to department/budget; add audit trail entry.
+- Delivery Notes & Corrections
+  - Introduce `DeliveryNote` entities in UI (multi‑delivery per PO); show shipped vs received quantities and corrections; compute available‑to‑invoice.
+- Invoicing & Payment Status (30‑Day Calendar)
+  - Build invoice creation UI referencing corrected deliveries; enforce `sum(invoice.amount) ≤ sum(delivered.amount)`.
+  - Surface per‑invoice status using `due_date`/`paid_at` with required color states and list grouping.
+- Audit Trails
+  - Add timeline components capturing transitions across PR/Quote/PO/Delivery/Invoice.
+- Document Relationships & Permissions
+  - Extend `DocumentManager` data model: `Document(id, type, ref_id, version, url, company_id, can_access)`; render entity‑linked views and role‑aware access.
+- Route Guards & Role Awareness
+  - Gate `/docs` and `/comms` based on role/company; ensure supplier sees only approved PRs and related docs.
+- Lifecycle Coherence
+  - Tie `OrderTracker` to delivery notes; enable client confirmation → unlock invoicing → payment marking; reflect stages consistently across dashboards.
+
+### Acceptance Criteria for Fixes
+- Guards: suppliers only see PRs with `status=Approved`; cannot quote on Draft/Submitted.
+- Conversion: client can “Approve Quote” → “Generate PO” with audit trail.
+- Delivery: per‑PO multiple delivery notes with corrections; UI shows per‑item totals and remaining.
+- Invoicing: invoices reference delivery notes; prevent over‑invoice; payment status reflects 30‑day categories with colors.
+- Documents: entity‑typed, versioned, permissioned; quick access by context.
+- Routes: consistent role‑based access; no unauthorized navigation to finance/comms/docs.
+
+### Quick Test Scripts (Manual)
+- Supplier Admin:
+  - Sign up as supplier admin → open `QuoteBuilder` → attempt to quote without approved PR; expect UI to block and show guidance.
+  - After client approves PR, quote and submit; client approves quote and generates PO; follow delivery and invoicing.
+- Client Admin:
+  - Create PR → submit for approval (Finance/Admin) → approve → convert incoming quote to PO → confirm deliveries → create invoices → mark payments.
+- PIC Finance:
+  - Approve PRs; view invoices by 30‑day calendar; mark `paid_at`; check color/status propagation in dashboards.
+
+### Known Gaps to Address First
+- Implement PR approval/gating in `PRList` and route guards.
+- Add quote approval and PO generation actions in client flows.
+- Model delivery notes and corrections; link to invoicing.
+- Integrate payment status logic into UI with colors and due‑date handling.
+- Introduce audit timeline components across lifecycle entities.
+
+---
+
+## Implemented Features (Nov 2025)
+
+This release implements the prioritized fixes aligned with Procurement Lifecycle & Permissions:
+
+- PR approval gating and audit trail stubs
+  - `PRList` now supports `Submit`, `Approve`, and `Reject` based on role (Finance/Admin), and restricts “Send PR to suppliers” and quote comparison to `Approved` PRs only.
+  - Client-side audit trail entries are recorded on PR status changes and key actions, persisted in `localStorage:mpsone_audit_trail`.
+  - Compact UI timeline: `AuditTimeline` component is wired on `PRList` and `client/QuoteComparison` to visualize recent audit events (actor, timestamp, action) per PR.
+
+- Quote approval and PO generation
+  - `client/QuoteComparison` adds “Approve Quote” and “Generate PO” actions; actions write audit entries and seed `localStorage:mpsone_po_from_quote` for downstream PO preview.
+
+- Delivery Notes UI with corrections and invoice gating
+  - New `DeliveryNotes` page (Inventory) captures shipped vs. received quantities and corrections per PO item.
+  - Calculates and persists `available_to_invoice` quantities to enforce `sum(invoice.amount) ≤ sum(delivered.amount)` gating in Reporting.
+  - OrderTracker integration: `supply/OrderTracker` reads `mpsone_available_to_invoice` and auto-advances the pipeline to “Delivered” when deliveries exist; shows a summary panel (PO, delivered amount, available qty) with a link to `Delivery Notes`.
+
+- Payment status logic integration
+  - `supplier/Reporting` lists invoices with derived statuses based on `due_date` and `paid_at`: `paid`, `neutral`, `waiting payment (yellow)`, `next payment (green)`, `over‑due (red)`.
+  - `client/ClientDashboard` now shows an “Invoice Status Overview” widget summarizing counts in the same color-coded categories.
+  - New filters on `supplier/Reporting`: segment invoice rows by Status (`all`, `paid`, `neutral`, `waiting`, `next`, `over‑due`) and Due Window (`all`, `≤7d`, `≤14d`, `≤30d`, `over‑due`).
+
+- DocumentManager entity typing and role-aware permissions
+  - Documents now display `type` (PR, Quote, PO, DeliveryNote, Invoice, Payment) and `refId` linkage.
+  - Access toggles are role-aware: Admin full control; Finance (Invoice/Payment); Procurement (PR/PO/Quote); Operational (PR/DeliveryNote); Supplier (Quote). Non-authorized roles see a “View-only” badge and cannot change access.
+
+- Routes & navigation
+  - Added `/inventory/delivery-notes` route and sidebar entries for relevant roles (client and supplier), ensuring multi-delivery and corrections are first-class.
+
+### How to Test Quickly
+- Approvals: Login as `PIC Finance` or `Admin`; in `PRList`, submit a draft, approve/reject; verify only `Approved` PRs enable “Send to suppliers” and “Compare Quotes”.
+- Quote → PO: In `QuoteComparison`, approve a quote then click “Generate PO”; confirm audit entry and PO preview context from `localStorage`.
+- Delivery Notes: Open `Delivery Notes`, enter corrections; verify available-to-invoice values appear and impact Reporting.
+- Payment Statuses: Open `Reporting` (supplier) to see status badges; check `ClientDashboard` widget for aggregated status counts.
+  - Filters: In `Reporting`, use Status and Due Window selectors to narrow invoice rows. Validate that “over‑due” shows unpaid invoices past due; `≤7d`/`≤14d`/`≤30d` show upcoming windows; exporting CSV/PDF respects filters.
+
+See `CHANGELOG.md v0.1.6` for detailed file changes.

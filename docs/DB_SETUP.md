@@ -212,7 +212,9 @@ print_r($stmt->fetch());
 
 ### Connectivity Scripts (ready to run)
 - Node:
-  - Install dependency once: `cd webapp && npm i -D mysql2`
+  - Install dependency once:
+    - `cd webapp`
+    - `npm i -D mysql2`
   - Set env in the current shell (do not persist secrets) and run:
     - PowerShell: `$env:DB_HOST="srv1631.hstgr.io"; $env:DB_PORT="3306"; $env:DB_NAME="u485208858_mpsonedatabase"; $env:DB_USER="YOUR_DB_USER"; $env:DB_PASSWORD="YOUR_DB_PASSWORD"; node ../scripts/test-db-node.mjs`
 - PHP:
@@ -235,4 +237,99 @@ Steps:
 Troubleshooting:
 - JSON column errors → ensure MySQL ≥ 5.7 or MariaDB ≥ 10.2; if needed I can provide a compatibility script using `TEXT`.
 - Import timeouts → enable partial import and retry; split files if necessary.
- - Foreign key errors on `po.quote_id` → ensure you imported in order and do not insert a PO without a valid `quote_id` (use 0005 script if unsure).
+- Foreign key errors on `po.quote_id` → ensure you imported in order and do not insert a PO without a valid `quote_id` (use 0005 script if unsure).
+
+---
+
+## Local Docker Stack (Windows + WSL)
+
+For local development without external hosting, you can run MySQL and phpMyAdmin via Docker Engine and WSL on Windows.
+
+### Prerequisites
+- Windows with WSL (Ubuntu or similar) enabled.
+- Docker Engine installed and accessible within WSL (`docker version`).
+- Project path: `D:\ProjectBuild\projects\mpsone\mpsone`.
+
+### Start the DB Stack
+In WSL:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/db
+docker compose up -d
+```
+
+Services:
+- `mpsone-db` (MySQL 8) on `localhost:3306`
+- `mpsone-phpmyadmin` at `http://localhost:8081/`
+
+Local credentials (development only):
+- Database: `mpsone_dev`
+- User: `mpsone_dev` / Password: `devpass`
+- Root password: `rootpass`
+
+Data persists in a named volume `mpsone-db-data`. To wipe and reset: `docker compose down -v`.
+
+### Import Migrations (idempotent)
+Run from the project root in WSL:
+
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+```
+
+The script ensures containers are up and imports all SQL files in `db/migrations/` using `mysql --force` to continue past safe duplicates.
+
+### Verify Schema
+
+```
+bash scripts/verify-db.sh
+```
+
+Checks include demo counts and presence of PR columns and indexes (`title`, `description`, `budget_code`, `approver`, `idx_pr_status`, `idx_pr_need_date`).
+
+### WSL-only Environment Notes
+- Some environments have Docker available only inside WSL2 Ubuntu-20.04 and not in Windows PowerShell.
+- Run all Docker commands inside WSL: `wsl -d Ubuntu-20.04`.
+- The PowerShell wrapper (`scripts/import-migrations.ps1`) requires Docker in PowerShell; if not recognized, use the WSL bash scripts above.
+- If registry authentication is required, run `docker login` in WSL; never commit credentials.
+
+### App Test with Local DB
+Run the app against the local Docker MySQL for end-to-end testing.
+
+1) Start DB and import migrations (in WSL):
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/db
+docker compose up -d
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+bash scripts/verify-db.sh
+```
+
+2) Start backend with local credentials:
+WSL (bash):
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/webapp
+export DB_HOST=127.0.0.1; export DB_PORT=3306; export DB_NAME=mpsone_dev; export DB_USER=mpsone_dev; export DB_PASSWORD=devpass; npm run server
+```
+PowerShell (if Docker also available there):
+```
+cd D:\ProjectBuild\projects\mpsone\mpsone\webapp
+$env:DB_HOST="127.0.0.1"; $env:DB_PORT="3306"; $env:DB_NAME="mpsone_dev"; $env:DB_USER="mpsone_dev"; $env:DB_PASSWORD="devpass"; npm run server
+```
+
+3) Start frontend dev server:
+```
+cd D:\ProjectBuild\projects\mpsone\mpsone\webapp
+npm run dev
+```
+
+4) Open the DB status page:
+```
+http://localhost:5173/dev/db-status
+```
+This page calls `/api/health`, `/api/po/summary`, and `/api/invoice/status` via the Vite proxy (`http://localhost:3001`).
+
+### phpMyAdmin
+- Open `http://localhost:8081/`
+- Login with `mpsone_dev` / `devpass` or `root` / `rootpass`
+- Prefer scripts for repeatable imports; phpMyAdmin Import is useful for one-off tests.
