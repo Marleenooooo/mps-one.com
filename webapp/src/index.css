@@ -207,8 +207,12 @@ body {
   color: var(--text-primary);
 }
 .btn.outline:hover {
-  background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
-  background-opacity: 0.1;
+  /* Replace invalid background-opacity with translucent gradient fill */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-gradient-start) 20%, transparent),
+    color-mix(in srgb, var(--primary-gradient-end) 20%, transparent)
+  );
   color: #fff;
 }
 
@@ -242,6 +246,19 @@ body {
   color: var(--text-primary);
   outline: none;
   transition: all 0.2s ease;
+}
+.input, .select, textarea {
+  /* Force LTR to avoid accidental backward rendering */
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
+}
+
+/* Ensure contenteditable regions (e.g., PR description) render LTR */
+[contenteditable] {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
 }
 .input:focus, .select:focus {
   border-color: var(--accent);

@@ -1,19 +1,20 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 import { uniqueId } from '../components/utils/uniqueId';
+import { apiListThreads, apiCreateThread, apiAppendThreadMessage } from '../services/api';
 
 type Message = { id: string; from: string; body: string; status: 'sent'|'delivered'|'read'; when: string; attachments?: { name: string, size: number }[] };
 
 export default function CommunicationHub() {
   useModule('procurement');
   const { t } = useI18n();
+  const [searchParams] = useSearchParams();
   const [liveText, setLiveText] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [thread, setThread] = useState<Message[]>([
-    { id: uniqueId('msg'), from: 'PIC Procurement - Sari', body: 'Requesting updated quote for hydraulic hoses @PIC Finance - Damar', status: 'read', when: '09:20' },
-    { id: uniqueId('msg'), from: 'PIC Finance - Damar', body: 'Approved budget, proceed to PO', status: 'delivered', when: '10:05' },
-  ]);
+  const [thread, setThread] = useState<Message[]>([]);
+  const [threadId, setThreadId] = useState<number | null>(null);
   const [input, setInput] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [progress, setProgress] = useState<Record<string, number>>({});
@@ -26,7 +27,7 @@ export default function CommunicationHub() {
     setProgress(p => ({ ...p, ...Object.fromEntries(f.map(ff => [ff.name, 0])) }));
   }
 
-  function send() {
+  async function send() {
     if (!input.trim() && files.length === 0) return;
     const now = new Date().toLocaleTimeString();
     const attachments = files.map(f => ({ name: f.name, size: f.size }));
@@ -35,6 +36,26 @@ export default function CommunicationHub() {
     setInput('');
     setLiveText(t('action.sending') || 'Sending message');
     inputRef.current?.focus();
+    // Backend send/append for context
+    try {
+      const role = localStorage.getItem('mpsone_role') || 'PIC_Operational';
+      // Map to backend message format
+      const backendMsg = { author: 'You', body: newMsg.body, attachments: newMsg.attachments, when: new Date().toISOString(), status: 'sent' };
+      const prId = searchParams.get('prId');
+      const poId = searchParams.get('poId');
+      if (threadId != null) {
+        await apiAppendThreadMessage(threadId, backendMsg, role);
+      } else {
+        const participants = [
+          { email: 'you@local', role },
+          { email: 'counterparty@local', role: 'PIC_Procurement' },
+        ];
+        const created = await apiCreateThread({ participants, messages: [backendMsg], ...(prId ? { pr_id: Number(prId) } : {}), ...(poId ? { po_id: Number(poId) } : {}) }, role);
+        if (created?.id) setThreadId(created.id);
+      }
+    } catch (err) {
+      console.error('Send/append failed', err);
+    }
     // simulate upload progress
     if (files.length) {
       const names = files.map(f => f.name);
@@ -81,7 +102,7 @@ export default function CommunicationHub() {
         <div aria-live="polite" style={{ position: 'absolute', left: -9999, width: 1, height: 1, overflow: 'hidden' }}>{liveText}</div>
         <div role="list" aria-label="Conversation" style={{ display: 'grid', gap: 8, marginTop: 12 }}>
           {thread.map(m => (
-            <div role="listitem" key={m.id} className="card" style={{ padding: 12, borderLeft: `4px solid ${m.status === 'read' ? 'var(--border)' : 'var(--accent)'}` }}>
+            <div role="listitem" key={m.id} className="card" style={{ padding: 12, borderLeft: `4px solid ${m.status === 'read' ? 'var(--border)' : 'var(--accent)'}`, transition: 'transform .2s ease, box-shadow .2s ease' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <strong>{m.from}</strong>
                 <span style={{ color: 'var(--text-secondary)' }}>{m.when}</span>
@@ -142,3 +163,36 @@ export default function CommunicationHub() {
     </div>
   );
 }
+  // Load threads by context (PR/PO)
+  useEffect(() => {
+    const prId = searchParams.get('prId');
+    const poId = searchParams.get('poId');
+    async function load() {
+      try {
+        const data = await apiListThreads({ pr_id: prId ? Number(prId) : undefined, po_id: poId ? Number(poId) : undefined });
+        const rows = Array.isArray(data.rows) ? data.rows : [];
+        // Use the most recent thread for this context if available
+        if (rows.length > 0) {
+          const row = rows[0];
+          setThreadId(row.id);
+          let msgs: any[] = [];
+          try { msgs = Array.isArray(row.messages_json) ? row.messages_json : JSON.parse(row.messages_json || '[]'); } catch {}
+          const mapped: Message[] = msgs.map((m: any) => ({
+            id: uniqueId('msg'),
+            from: m.author || m.from || 'Unknown',
+            body: m.body || m.text || '',
+            status: (m.status || 'read') as Message['status'],
+            when: m.when || new Date().toLocaleTimeString(),
+            attachments: m.attachments || [],
+          }));
+          setThread(mapped);
+        } else {
+          setThread([]);
+          setThreadId(null);
+        }
+      } catch (err) {
+        console.error('Load threads failed', err);
+      }
+    }
+    load();
+  }, [searchParams]);

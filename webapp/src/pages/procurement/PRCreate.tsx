@@ -3,6 +3,7 @@ import { useModule } from '../../components/useModule';
 import { useI18n } from '../../components/I18nProvider';
 import { useToast } from '../../components/UI/Toast';
 import { useNavigate } from 'react-router-dom';
+import { apiCreatePR } from '../../services/api';
 
 import { uniqueId } from '../../components/utils/uniqueId';
 type PRItem = { id: string; name: string; qty: number; spec?: string };
@@ -214,12 +215,13 @@ export default function PRCreate() {
                   role="textbox"
                   aria-label="Rich description"
                   contentEditable
+                  dir="ltr"
                   suppressContentEditableWarning
                   onInput={(e: React.FormEvent<HTMLDivElement>) => {
                     const text = e.currentTarget?.textContent ?? '';
                     setDraft(d => ({ ...d, description: text }));
                   }}
-                  style={{ minHeight: 80 }}
+                  style={{ minHeight: 80, direction: 'ltr', textAlign: 'left' }}
                 >{draft.description}</div>
               </div>
             </div>
@@ -306,8 +308,18 @@ export default function PRCreate() {
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
             <button className="btn" onClick={prev}>{t('action.back')}</button>
-            <button className="btn primary" onClick={() => {
-              if (validate(3)) {
+            <button className="btn primary" onClick={async () => {
+              if (!validate(3)) return;
+              try {
+                const payload = {
+                  title: draft.title,
+                  neededBy: draft.neededBy,
+                  description: draft.description,
+                  budgetCode: draft.budgetCode,
+                  approver: draft.approver,
+                  items: draft.items.map(it => ({ name: it.name, qty: it.qty, spec: it.spec || '' })),
+                };
+                const res = await apiCreatePR(payload, 'PIC_Procurement');
                 localStorage.removeItem(DRAFT_KEY);
                 toast.push({ type: 'success', message: t('pr.submit_success') });
                 let i = pipelineActive;
@@ -319,6 +331,8 @@ export default function PRCreate() {
                     navigate('/procurement/pr');
                   }
                 }, 250);
+              } catch (err: any) {
+                toast.push({ type: 'error', message: err?.message || 'Submit failed' });
               }
             }} disabled={!isValid}>{t('action.submit_pr')}</button>
           </div>
