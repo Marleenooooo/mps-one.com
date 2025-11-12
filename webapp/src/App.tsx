@@ -9,6 +9,7 @@ import { ToastProvider } from './components/UI/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Sidebar } from './components/Layout/Sidebar';
+import { RouteGuard } from './components/RouteGuard';
 import { Topbar, Breadcrumbs } from './components/Layout/Topbar';
 
 const AdminDashboard = lazy(() => import('./pages/supplier/AdminDashboard'));
@@ -211,13 +212,13 @@ export default function App() {
                     {/* Home: redirect based on stored user type, otherwise external */}
                     <Route path="/" element={<StartRedirect />} />
                     {/* Client routes (mode-aware) */}
-                    <Route path="/client" element={<ClientModeOnly><ClientDashboard /></ClientModeOnly>} />
+                    <Route path="/client" element={<RouteGuard requireUserType="client" fallbackTo="/login/client"><ClientDashboard /></RouteGuard>} />
                     <Route path="/client/onboarding" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Onboarding /> : <Navigate to="/client" replace />} />
                     <Route path="/client/quotes/:prId" element={<ClientQuoteGuard />} />
                     <Route path="/client/suppliers" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <SupplierDirectory /> : <Navigate to="/procurement/workflow" replace />} />
 
                     {/* Supplier routes (mode-aware, avoid redirect loops) */}
-                    <Route path="/supplier/admin" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                    <Route path="/supplier/admin" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><AdminDashboard /></RouteGuard>} />
                     <Route path="/admin/invitations" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminInvitations /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
                     <Route path="/admin/people" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <PeopleDirectory /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
                     <Route path="/supplier/reporting" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />

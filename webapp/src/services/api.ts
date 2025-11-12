@@ -43,7 +43,7 @@ export async function apiCreatePR(payload: any, role: string = 'PIC_Procurement'
   if (OFFLINE) return mock.apiCreatePR(payload, role);
   const res = await fetch(`${API_BASE}/pr`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-role': role },
+    headers: { 'Content-Type': 'application/json', 'x-role': role, 'x-user-type': (localStorage.getItem('mpsone_user_type') === 'supplier' ? 'Supplier' : 'Client') },
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
@@ -58,7 +58,7 @@ export async function apiUpdatePR(id: number, patch: any, role: string = 'PIC_Pr
   if (OFFLINE) return mock.apiUpdatePR(id, patch);
   const res = await fetch(`${API_BASE}/pr/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'x-role': role },
+    headers: { 'Content-Type': 'application/json', 'x-role': role, 'x-user-type': (localStorage.getItem('mpsone_user_type') === 'supplier' ? 'Supplier' : 'Client') },
     body: JSON.stringify(patch),
   });
   if (!res.ok) throw new Error(`Update PR failed: ${res.status}`);
@@ -67,7 +67,7 @@ export async function apiUpdatePR(id: number, patch: any, role: string = 'PIC_Pr
 
 export async function apiDeletePR(id: number, role: string = 'Admin') {
   if (OFFLINE) return mock.apiDeletePR(id);
-  const res = await fetch(`${API_BASE}/pr/${id}`, { method: 'DELETE', headers: { 'x-role': role } });
+  const res = await fetch(`${API_BASE}/pr/${id}`, { method: 'DELETE', headers: { 'x-role': role, 'x-user-type': (localStorage.getItem('mpsone_user_type') === 'supplier' ? 'Supplier' : 'Client') } });
   if (!res.ok) throw new Error(`Delete PR failed: ${res.status}`);
   return res.json();
 }
@@ -77,7 +77,7 @@ export async function apiCreateThread(input: { participants: any[]; messages?: a
   if (OFFLINE) return mock.apiCreateThread(input, role);
   const res = await fetch(`${API_BASE}/email-thread`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-role': role },
+    headers: { 'Content-Type': 'application/json', 'x-role': role, 'x-user-type': (localStorage.getItem('mpsone_user_type') === 'supplier' ? 'Supplier' : 'Client') },
     body: JSON.stringify(input),
   });
   if (!res.ok) throw new Error(`Create thread failed: ${res.status}`);
@@ -95,7 +95,7 @@ export async function apiAppendThreadMessage(id: number, message: any, role: str
   if (OFFLINE) return mock.apiAppendThreadMessage(id, message, role);
   const res = await fetch(`${API_BASE}/email-thread/${id}/messages`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-role': role },
+    headers: { 'Content-Type': 'application/json', 'x-role': role, 'x-user-type': (localStorage.getItem('mpsone_user_type') === 'supplier' ? 'Supplier' : 'Client') },
     body: JSON.stringify({ message }),
   });
   if (!res.ok) throw new Error(`Append message failed: ${res.status}`);
@@ -128,7 +128,7 @@ export async function apiUploadDoc(input: { type: string; refId: number | null; 
   if (OFFLINE) return mock.apiUploadDoc(input, role);
   const res = await fetch(`${API_BASE}/docs/upload`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-role': role },
+    headers: { 'Content-Type': 'application/json', 'x-role': role, 'x-user-type': (localStorage.getItem('mpsone_user_type') === 'supplier' ? 'Supplier' : 'Client') },
     body: JSON.stringify({
       type: input.type,
       refId: input.refId,

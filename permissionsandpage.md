@@ -42,6 +42,7 @@ Notes
 - Audit logs must include `active_mode` and permission checked.
 - Analytics should tag pillar correctly (Social vs Procurement).
  - UI now surfaces an active Pillar indicator in the topbar and context guards: QuickSearch suggestions and sidebar visually de‑emphasize out‑of‑context links to reduce cross‑pillar bleed while preserving navigation.
+ - Backend Guard Coverage: Client‑only → `/api/pr*`, `/api/po/summary`, `/api/invoice/status`; Client/Supplier → `/api/docs/upload`.
 
 Process Requirements
 - Add row BEFORE implementing a new route/feature.

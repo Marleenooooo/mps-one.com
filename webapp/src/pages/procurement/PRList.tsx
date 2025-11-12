@@ -8,6 +8,7 @@ import { useI18n } from '../../components/I18nProvider';
 import { uniqueId } from '../../components/utils/uniqueId';
 import { apiListPR } from '../../services/api';
 import * as pillarStorage from '../../services/pillarStorage';
+import { canPerform } from '../../services/permissions';
 
 type PRRow = { id: string; title: string; department: string; status: 'Draft' | 'Submitted' | 'Approved' | 'PO'; createdAt: string; actions?: string };
 
@@ -141,7 +142,12 @@ export default function PRList() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
         <div className="status-badge info">{rows.length} {t('pr.total')}</div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <a href="/procurement/pr/new" className="btn primary">{t('pr.new_pr')}</a>
+          <a
+            href={canPerform('create:pr') ? "/procurement/pr/new" : undefined}
+            className={`btn primary${canPerform('create:pr') ? '' : ' disabled'}`}
+            aria-disabled={!canPerform('create:pr')}
+            onClick={e => { if (!canPerform('create:pr')) e.preventDefault(); }}
+          >{t('pr.new_pr')}</a>
           <button className="btn" onClick={() => exportCSV(rows)} aria-label={t('action.export_csv') || 'Export CSV'}>{t('action.export_csv') || 'Export CSV'}</button>
         </div>
       </div>
@@ -157,15 +163,33 @@ export default function PRList() {
             { key: 'actions', header: 'Actions', render: (_v, row) => (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {row.status === 'Draft' && (
-                  <button className="btn sm" onClick={() => submitPR(row.id)}>{t('action.submit_pr')}</button>
+                  <button
+                    className={`btn sm${canPerform('create:pr') ? '' : ' disabled'}`}
+                    aria-disabled={!canPerform('create:pr')}
+                    onClick={() => { if (canPerform('create:pr')) submitPR(row.id); }}
+                  >{t('action.submit_pr')}</button>
                 )}
-                {(row.status === 'Submitted' && (role === 'PIC Finance' || role === 'Admin')) && (
+                {row.status === 'Submitted' && (
                   <>
-                    <button className="btn success sm" onClick={() => approvePR(row.id)}>{t('action.approve') || 'Approve'}</button>
-                    <button className="btn danger sm" onClick={() => rejectPR(row.id)}>{t('action.reject') || 'Reject'}</button>
+                    <button
+                      className={`btn success sm${canPerform('approve:pr') ? '' : ' disabled'}`}
+                      aria-disabled={!canPerform('approve:pr')}
+                      onClick={() => { if (canPerform('approve:pr')) approvePR(row.id); }}
+                    >{t('action.approve') || 'Approve'}</button>
+                    <button
+                      className={`btn danger sm${canPerform('reject:pr') ? '' : ' disabled'}`}
+                      aria-disabled={!canPerform('reject:pr')}
+                      onClick={() => { if (canPerform('reject:pr')) rejectPR(row.id); }}
+                    >{t('action.reject') || 'Reject'}</button>
                   </>
                 )}
-                <button className="btn outline sm" onClick={() => sendToSuppliers(row.id)} disabled={row.status !== 'Approved'} title={row.status !== 'Approved' ? (t('gating.approval_required_send') || 'Only Approved PRs can be sent') : undefined}>{t('action.send_pr_to_suppliers')}</button>
+                <button
+                  className={`btn outline sm${canPerform('send:pr') ? '' : ' disabled'}`}
+                  aria-disabled={!canPerform('send:pr') || row.status !== 'Approved'}
+                  onClick={() => { if (canPerform('send:pr')) sendToSuppliers(row.id); }}
+                  disabled={row.status !== 'Approved'}
+                  title={row.status !== 'Approved' ? (t('gating.approval_required_send') || 'Only Approved PRs can be sent') : undefined}
+                >{t('action.send_pr_to_suppliers')}</button>
                 <a className={`btn sm${row.status !== 'Approved' ? ' disabled' : ''}`} aria-disabled={row.status !== 'Approved'} href={row.status === 'Approved' ? `/client/quotes/${encodeURIComponent(row.id)}` : undefined} onClick={e => { if (row.status !== 'Approved') { e.preventDefault(); alert(t('gating.approval_required_compare') || 'Approve PR to compare quotes.'); } }}>{t('action.compare_quotes') || 'Compare quotes'}</a>
                 {countSent(row.id) > 0 && (
                   <span className="status-badge info">Sent to {countSent(row.id)}</span>
@@ -173,7 +197,9 @@ export default function PRList() {
               </div>
             ) },
           ]}
-          virtualize={false}
+          virtualize={true}
+          height={480}
+          rowHeight={48}
           overscan={computeOverscan('prList')}
         />
       </div>

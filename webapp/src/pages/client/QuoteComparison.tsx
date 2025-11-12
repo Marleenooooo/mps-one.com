@@ -5,6 +5,7 @@ import { Topbar, Breadcrumbs } from '../../components/Layout/Topbar';
 import { AuditTimeline } from '../../components/UI/AuditTimeline';
 import { formatIDR } from '../../components/utils/format';
 import { useI18n } from '../../components/I18nProvider';
+import { canPerform } from '../../services/permissions';
 
 type QuoteVersion = { version: number; total: number; taxPct: number; discountPct: number; validUntil: string; status?: 'accepted' | 'pending' | 'rejected' };
 
@@ -133,7 +134,7 @@ export default function QuoteComparison() {
                   <td>
                     {q.status === 'accepted' ? (
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn" onClick={() => {
+                        <button className="btn" aria-disabled={!canPerform('create:po')} onClick={() => {
                           try {
                             const poSeed = { prId, supplierId: sid, version: q.version };
                             pillarStorage.setItem('mpsone_po_from_quote', JSON.stringify(poSeed));
@@ -149,7 +150,7 @@ export default function QuoteComparison() {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn" onClick={() => acceptQuote(sid, q.version)}>{t('action.approve_quote') || 'Approve Quote'}</button>
+                        <button className="btn" aria-disabled={!canPerform('evaluate:quotes')} onClick={() => acceptQuote(sid, q.version)}>{t('action.approve_quote') || 'Approve Quote'}</button>
                         <button className="btn outline" onClick={() => rejectQuote(sid, q.version)}>{t('action.reject_quote') || 'Reject Quote'}</button>
                       </div>
                     )}

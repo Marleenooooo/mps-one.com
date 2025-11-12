@@ -26,6 +26,119 @@ Notes
 
 ---
 
+# Subroadmap — Performance: Proper Caching & Service Worker
+
+Item: Implement immutable asset caching and a service worker for runtime caching
+Status: Completed
+
+Acceptance Criteria
+- Fingerprinted assets under `dist/assets/*` are served with `Cache-Control: public, max-age=31536000, immutable`.
+- A lightweight service worker registers in production and:
+  - Uses cache‑first for fingerprinted static assets (`/assets/*`).
+  - Uses network‑first with fallback for HTML navigations (`/index.html`, route requests).
+  - Uses stale‑while‑revalidate for same‑origin API `GET` requests under `/api/*`.
+- Preview shows SW registered without console errors; offline reload serves cached shell.
+- Documentation is updated in `CHANGELOG.md` and `docs/DB_SETUP.md` (SOP reference) as needed.
+
+Plan & Alignment
+- Strengthen Apache caching via `webapp/public/.htaccess` for immutable assets.
+- Add `public/sw.js` implementing the caching strategies above; register from `src/main.tsx` only in production.
+- Build and preview to validate registration, caching behavior, and error‑free UI.
+- Update `roadmap.md` and mark Performance items completed when verified.
+
+Tasks
+- [x] Update `.htaccess` with immutable caching headers for assets.
+- [x] Add `public/sw.js` with cache‑first (assets), network‑first (HTML), stale‑while‑revalidate (API GET).
+- [x] Register SW in `src/main.tsx` for production builds.
+- [x] Build and preview; verify SW, caching, and no errors.
+- [x] Update `CHANGELOG.md` and mark roadmap/subroadmap.
+
+Notes
+- Keep service worker minimal and framework‑agnostic to avoid coupling. Aligns with Vite build output and existing preview flow.
+
+# Subroadmap — Performance Optimization: Image Optimization
+
+Item: Optimize images (lazy loading, async decoding, proper sizing)
+Status: Completed
+
+Acceptance Criteria
+- Replace direct `<img>` usages with `OptimizedImage` for lazy loading and async decoding.
+- QR code image in PO Preview uses optimized attributes; renders without layout shift.
+- Previews of `/procurement/po/preview` and `/client` show no console/terminal errors.
+- Roadmap and changelog updated to reflect completion.
+
+Plan & Alignment
+- Create `OptimizedImage` component in `components/UI` with `loading="lazy"`, `decoding="async"`, `fetchPriority` defaults.
+- Replace `<img>` in `QRCode` to leverage `OptimizedImage`.
+- Verify PO Preview page where QR code is displayed.
+
+Tasks
+- [x] Create `OptimizedImage` component with sensible defaults.
+- [x] Replace `<img>` in `webapp/src/components/UI/QRCode.tsx` with `OptimizedImage`.
+- [x] Preview `/procurement/po/preview` and `/client` for errors and layout consistency.
+- [x] Update `roadmap.md` and add `CHANGELOG.md` entry.
+
+Notes
+- Current assets are minimal and mostly generated (QR); pipeline support for WebP/AVIF can be added later when real images are introduced.
+
+# Subroadmap — Phase 7: Docs Modernization & Onboarding Polish
+
+Item: Modernize docs with Quickstart, onboarding guide with GIF placeholders, and troubleshooting polish
+Status: Completed
+
+Acceptance Criteria
+- README contains a concise Developer Quickstart that matches WSL/Docker SOP and Playwright setup.
+- New `docs/ONBOARDING.md` (EN) and `docs/id/ONBOARDING.md` (ID) provide step-by-step onboarding with links and GIF placeholders.
+- FAQ updated or referenced to cover onboarding troubleshooting (preview base path, Playwright install, port conflicts, offline mode).
+- Changes reflected in `CHANGELOG.md`; roadmap item marked completed.
+
+Plan & Alignment
+- Add onboarding docs under `docs/` with sections: environment setup, first run, switching modes, core flow walkthrough, and troubleshooting pointers.
+- Link onboarding from README and User Docs list; keep README focused on product vision.
+- Verify no UI changes required; run smoke scripts if applicable.
+
+Tasks
+- [x] Create `docs/ONBOARDING.md` and `docs/id/ONBOARDING.md` with Quickstart and GIF placeholders.
+- [x] Update README to link onboarding and clarify Quickstart notes.
+- [x] Mark roadmap item as completed.
+- [x] Add `CHANGELOG.md` entry.
+- [x] Verify docs render in `/public/docs` mirror where applicable.
+
+Notes
+- This modernization focuses on clarity and onboarding velocity; no UI changes.
+- Verified links from README to onboarding guides; preview servers running for cross-check.
+
+
+# Subroadmap — Phase 7: E2E Core Procurement Flow Coverage
+
+Item: Add Playwright tests for full PR→Quote→PO→Delivery→Invoice flow
+Status: Completed
+
+Acceptance Criteria
+- Test seeds suppliers and approved PR; sends PR to suppliers and seeds quotes.
+- Client approves quote and generates PO; PO Preview renders without errors.
+- Delivery Notes corrections update available-to-invoice gate for the PO.
+- Supplier Reporting allows invoice creation within remaining deliverable; over-amount validation triggers error.
+- Tests run via `npm run test:e2e` and pass locally; CI picks them up.
+
+Plan & Alignment
+- Implement `webapp/e2e/core-procurement-flow.spec.ts` covering end-to-end interactions and validations.
+- Use localStorage seeding via init scripts; rely on existing mocks and demo data.
+- Ensure selectors are resilient (role-based labels, stable texts) and neon theme unaffected.
+
+Tasks
+- [x] Seed suppliers and approved PR context; send PR to suppliers from PR List.
+- [x] Approve quote in Quote Comparison and generate PO; navigate to PO Preview.
+- [x] Update Delivery Notes corrections to unlock invoicing gate for PO-9821.
+- [x] Create invoice in Supplier Reporting; verify over-amount error then successful creation.
+- [x] Validate UI renders and no console/terminal errors during flow.
+- [x] Update roadmap and changelog entries.
+
+Notes
+- Uses existing demo rows and mock storage; avoids backend dependencies.
+- Gate keys: `mpsone_pr_sent`, `mpsone_quotes_{prId}`, `mpsone_po_from_quote`, `mpsone_available_to_invoice`, `mpsone_delivery_notes_{poId}`.
+
+
 # Subroadmap — Phase 7: Pillar Separation — Route Guards & State Isolation
 
 Item: Extend procurement route guards and add pillar-scoped state/caches
@@ -54,6 +167,66 @@ Notes
 - Verified via preview on `/procurement/po/preview` and `/procurement/quote-builder`; redirects occur when preconditions are not met, without errors.
 
 ---
+
+# Subroadmap — Phase 7: RBAC/ABAC Frontend Enforcement (Foundation)
+
+Item: Introduce a frontend RBAC helper and apply gating to key actions
+Status: Completed
+
+Acceptance Criteria
+- A centralized permissions helper exists to evaluate actions based on mode (Client/Supplier) and role.
+- PRList buttons (Submit, Approve, Reject, Send to Suppliers, New PR) reflect permissions via enabled/disabled states with proper `aria-disabled`.
+- Supplier Reporting “Create Invoice” button respects permissions and delivery gating.
+- No console errors in previews; visual theme and accessibility remain intact.
+
+Plan & Alignment
+- Add `webapp/src/services/permissions.ts` mapping roles to actions.
+- Wire helper into PRList and Supplier Reporting; start with non-invasive disabling (no layout changes).
+- Update CHANGELOG with an entry summarizing the enforcement foundation.
+
+Tasks
+- [x] Create permissions helper with minimal matrix and context derivation from localStorage.
+- [x] Gate PRList actions: New PR, Submit, Approve/Reject, Send to Suppliers.
+- [x] Gate Supplier Reporting: Create Invoice button.
+- [x] Update `CHANGELOG.md` with RBAC enforcement foundation.
+- [x] Preview affected routes and verify no errors.
+
+Notes
+- Roles are read from `mpsone_role` in localStorage; defaults applied by mode when missing.
+- Backend enforcement will follow per roadmap; this step is frontend-only.
+
+---
+
+# Subroadmap — Phase 7: RBAC/ABAC Frontend Enforcement (Scope Expansion)
+
+Item: Expand RBAC gating to QuoteComparison, PO Preview, Delivery Notes, and Order Tracker
+Status: Completed
+
+Acceptance Criteria
+- QuoteComparison: Approve Quote requires `evaluate:quotes`; Generate PO requires `create:po`.
+- PO Preview: Print/Save PDF gated by `create:po`.
+- Delivery Notes: Corrections input disabled unless `confirm:delivery`.
+- Order Tracker: “Mark as Paid” button visible after invoiced stage and gated by `mark:payment`.
+- No layout changes; only aria-disabled/disabled for gating; existing flows stay intact.
+
+Plan & Alignment
+- Import `canPerform` from `webapp/src/services/permissions.ts` and apply non-invasive gating.
+- Keep UX consistent with neon theme; ensure accessible states via `aria-disabled`.
+- Verify affected routes via preview with no console errors.
+- Update CHANGELOG to capture expanded RBAC scope.
+
+Tasks
+- [x] Gate QuoteComparison approve/generate actions.
+- [x] Gate PO Preview printing/export.
+- [x] Gate Delivery Notes corrections.
+- [x] Add gated “Mark as Paid” in Order Tracker.
+- [x] Update CHANGELOG with affected files.
+- [x] Preview affected routes and verify no errors.
+
+Notes
+- Roles read from `localStorage` (`mpsone_user_type`, `mpsone_role`). Backend enforcement to follow.
+- Verified via live preview of `/client/quotes/:id`, `/procurement/po/preview`, `/inventory/delivery-notes`, and `/supply/order-tracker`.
+
 
 # Subroadmap — Phase 7: Pillar Separation — Storage Isolation (Extension)
 
@@ -105,9 +278,34 @@ Plan & Alignment
 Tasks
 - [x] Implement redirect tests for PO Preview and Quote Builder.
 - [x] Run e2e and confirm passing.
-- [x] Update `CHANGELOG.md` with test coverage note.
+
+---
+
+# Subroadmap — Phase 7: Security & Access Control — Route Guards + Mode Guard
+
+Item: Standardize frontend route guards and add backend mode enforcement
+Status: Completed
+
+Acceptance Criteria
+- Frontend protected routes redirect unauthorized users (mode/role) without errors.
+- Backend enforces `Client`/`Supplier` mode via headers; unauthorized calls return 403.
+- No regressions in PR CRUD and Docs upload flows.
+
+Plan & Alignment
+- Create `RouteGuard` component to centralize RBAC checks on routes.
+- Extend backend auth parsing with `mode` and implement `requireMode([Client|Supplier])`.
+- Apply `requireMode('Client')` to PR endpoints; update client requests to send `x-user-type`.
+- Preview `/client` and `/supplier/admin` to validate guard behavior.
+
+Tasks
+- [x] Create `RouteGuard.tsx` and wrap key routes.
+- [x] Update `server/index.mjs` with `mode` parsing and `requireMode`.
+- [x] Update `src/services/api.ts` to include `x-user-type` header.
+- [x] Preview `/client` and `/supplier/admin` for guard verification.
+- [x] Update `roadmap.md` and add `v0.1.35` in CHANGELOG.
 
 Notes
+- Verified in dev preview: `/client` and `/supplier/admin` load without errors under correct mode/role; unauthorized states redirect via `RouteGuard`.
 - Analytics console logs are dev-only; e2e runs in preview (production) mode, so analytics verification is manual in dev.
 
 ---
@@ -191,4 +389,145 @@ Tasks
 
 Notes
 - Verified via preview; dashboards render correctly with mode-aware routing and actions; no errors observed.
- - Client Dashboard verification: Only client-specific actions are present (Quick PR, budget, documents, invoice overview). No supplier-only actions (e.g., New Quote, Quote Builder) appear.
+  - Client Dashboard verification: Only client-specific actions are present (Quick PR, budget, documents, invoice overview). No supplier-only actions (e.g., New Quote, Quote Builder) appear.
+
+---
+
+# Subroadmap — Performance & Reliability: Code Splitting & Dynamic Imports
+
+Item: Verify and finalize React.lazy/Suspense-based code splitting across heavy routes
+Status: Completed
+
+Acceptance Criteria
+- Heavy pages are loaded via `React.lazy` with a consistent `Suspense` fallback skeleton.
+- Key routes (`/client`, `/supplier/reporting`, `/client/quotes/:id`, `/procurement/po/preview`) render without console/terminal errors when lazy-loaded.
+- No visual regressions; neon theme skeletons match accessibility targets.
+- Roadmap and changelog updated to reflect completion.
+
+Plan & Alignment
+- Audit router (`webapp/src/App.tsx`) for lazy imports and a unified `Suspense` fallback.
+- Live-preview key routes to confirm chunk loading works and UI is error-free.
+- Update `roadmap.md` (mark code splitting complete) and add `CHANGELOG.md` entry.
+
+Tasks
+- [x] Audit lazy routes and fallback skeleton in `App.tsx`.
+- [x] Preview `/client`, `/supplier/reporting`, `/client/quotes/:id`, `/procurement/po/preview`.
+- [x] Update `roadmap.md` status for the performance item.
+- [x] Append `CHANGELOG.md` entry documenting verification and affected files.
+
+Notes
+- Verified via live previews on the listed routes; no browser errors observed and chunks load with the skeleton fallback.
+- `App.tsx` already uses `React.lazy` broadly; this cycle confirms and documents the setup per SOP.
+
+---
+
+# Subroadmap — Performance Optimization: Virtualize Long Lists
+
+Item: Virtualize heavy lists to reduce DOM work (PR List, Docs)
+Status: Completed
+
+Acceptance Criteria
+- PR List uses virtualized rows with smooth scroll and accessible selection.
+- Document Manager list remains virtualized with overscan tuned; no regressions.
+- Previews of `/procurement/pr` and `/docs` show no console/terminal errors.
+- Roadmap and changelog updated to reflect completion.
+
+Plan & Alignment
+- Enable virtualization in `PRList` by toggling DataTable `virtualize` and setting `height`/`rowHeight`.
+- Keep overscan via `computeOverscan('prList')`; reuse existing skeleton styles.
+- Verify behavior on live preview and update docs accordingly.
+
+Tasks
+- [x] Turn on DataTable virtualization in `webapp/src/pages/procurement/PRList.tsx`.
+- [x] Preview `/procurement/pr` and `/docs` for errors and feel.
+- [x] Update `roadmap.md` to mark “Virtualize long lists” completed.
+- [x] Append `CHANGELOG.md` entry with affected files and verification notes.
+
+Notes
+- `DocumentManager` already implements grid virtualization; this item focuses on PR List.
+- Verified `/procurement/pr` preview; no console/terminal errors; smooth scroll observed.
+
+---
+
+# Subroadmap — Performance & Build: Bundle Analysis & Tree‑Shaking
+
+Item: Integrate bundle visualizer, enable treeshake, inspect bundles, and document findings
+Status: Completed
+
+Acceptance Criteria
+- Visualizer generates `dist/stats.html` after production build and is accessible via preview.
+- Build enables Rollup treeshake with safe defaults to remove unused code paths.
+- Bundle inspection confirms major vendor chunks and app chunks; no preview errors.
+- Roadmap and changelog updated to reflect completion.
+
+Plan & Alignment
+- Add `rollup-plugin-visualizer` and wire into Vite build to output `dist/stats.html`.
+- Enable `treeshake` options under `build.rollupOptions` and turn on `sourcemap`.
+- Run `npm run build` and `npm run preview` to inspect `http://localhost:<port>/stats.html`.
+- Update `roadmap.md` and `CHANGELOG.md` with a short summary of findings.
+
+Tasks
+- [x] Add visualizer plugin and treeshake to `webapp/vite.config.ts`.
+- [x] Build app and open `dist/stats.html` via preview.
+- [x] Verify no browser errors; note any large chunks for follow‑up.
+- [x] Update `roadmap.md` and `CHANGELOG.md`.
+
+Notes
+- Verified via preview at `/stats.html` on the production build server; no browser errors.
+- Keep changes minimal and focused on build configuration; avoid aggressive drops unless verified (e.g., `drop: ['console']` deferred).
+
+---
+
+# Subroadmap — Phase 7: Backend Mode Guards & Audit active_mode
+
+Item: Persist active_mode in audit logs and enforce Client mode on PR reads
+Status: Completed
+
+Acceptance Criteria
+- `audit_log` includes `active_mode ENUM('Client','Supplier')` with supporting index.
+- Backend audit writes persist `active_mode` for all actions.
+- `GET /api/pr` and `GET /api/pr/:id` are guarded by Client mode.
+- DB docs updated with migration and verification steps; roadmap and changelog reflect changes.
+
+Plan & Alignment
+- Follow Front‑End ↔ Database Alignment Policy: schema designed, migration created under `db/migrations`, imported via WSL scripts; backend updated to log and guard; docs updated accordingly.
+
+Tasks
+- [x] Add migration `db/migrations/0020_audit_active_mode.sql` to create `active_mode` and `idx_audit_mode`.
+- [x] Update `webapp/server/index.mjs` `logAudit(...)` to write `active_mode`.
+- [x] Enforce Client mode on `GET /api/pr` and `GET /api/pr/:id` via `requireMode(['Client'])`.
+- [x] Update `docs/DB_SETUP.md` and `docs/id/DB_SETUP.md` with migration notes and verification.
+- [x] Update `CHANGELOG.md`, mark roadmap progress (mode‑sensitive audit logging completed).
+
+Notes
+- UI unchanged; backend enforcement and audit context strengthened.
+- Import migrations via WSL (`bash scripts/import-migrations.sh`) and verify with `bash scripts/verify-db.sh` and phpMyAdmin.
+
+---
+
+# Subroadmap — Phase 7: Mode Guards Extension — PO Summary & Invoice Status
+
+Item: Enforce Client mode on PO Summary and Invoice Status endpoints
+Status: Completed
+
+Acceptance Criteria
+- `GET /api/po/summary` is accessible only in Client mode; Supplier mode returns 403.
+- `GET /api/invoice/status` is accessible only in Client mode; Supplier mode returns 403.
+- Backend server responds `200` for Client mode when DB is available; guards evaluate prior to DB work.
+- Changelog updated; no UI changes required.
+
+Plan & Alignment
+- Extend `requireMode(['Client'])` to PO and invoice endpoints in `webapp/server/index.mjs`.
+- Verify behavior via dev server and WSL Docker for DB readiness.
+- Update `CHANGELOG.md` to reflect guard extension.
+
+Tasks
+- [x] Add `requireMode(['Client'])` to `GET /api/po/summary`.
+- [x] Add `requireMode(['Client'])` to `GET /api/invoice/status`.
+- [x] Start backend (`npm run server`) and WSL DB (`docker compose up -d`).
+- [x] Verify Supplier mode returns 403 and Client mode returns 200 (DB up).
+- [x] Update `CHANGELOG.md` with affected files and verification.
+
+Notes
+- Server listening at `http://localhost:3001`; DB reachability via WSL `mpsone-db` container.
+- Guard behavior confirmed even when DB is down (403 for Supplier occurs pre-DB).

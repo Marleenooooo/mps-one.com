@@ -486,3 +486,46 @@ Import Migrations (WSL)
 Impacted Areas
 - Backend API: `GET/PUT /api/user/preferences`, `GET/POST/PUT /api/notifications`
 - Frontend UI: `/settings` page for theme/language/notification preferences; `/notifications` page with unread counts and mark‑as‑read.
+## 0020 — Audit Log: active_mode
+
+Strengthens audit logging with mode tracking and enforces Client mode on PR reads.
+
+- Migration: `db/migrations/0020_audit_active_mode.sql`
+- Table changes (audit_log):
+  - Adds `active_mode ENUM('Client','Supplier') NOT NULL DEFAULT 'Client'`
+  - Adds index `idx_audit_mode (active_mode, action, created_at)`
+
+### Import & Verify (WSL)
+1) Import migrations:
+```
+bash scripts/import-migrations.sh
+bash scripts/verify-db.sh
+```
+2) Check via MySQL/phpMyAdmin:
+```
+SHOW COLUMNS FROM audit_log;          -- expect active_mode
+SHOW INDEX FROM audit_log;            -- expect idx_audit_mode
+```
+
+### Backend Alignment
+- `webapp/server/index.mjs`:
+  - `logAudit(...)` now writes `active_mode` for every audit entry.
+  - PR endpoints (reads) enforce Client mode:
+    - `GET /api/pr` guarded by `requireMode(['Client'])`
+    - `GET /api/pr/:id` guarded by `requireMode(['Client'])`
+
+### Query Samples
+```
+-- PR actions by mode
+SELECT active_mode, action, COUNT(*) cnt
+FROM audit_log
+WHERE action LIKE 'pr.%'
+GROUP BY active_mode, action
+ORDER BY active_mode, action;
+
+-- Recent FX refreshes done in Client mode
+SELECT actor_email, comment, created_at
+FROM audit_log
+WHERE action='fx.refresh' AND active_mode='Client'
+ORDER BY created_at DESC LIMIT 20;
+```

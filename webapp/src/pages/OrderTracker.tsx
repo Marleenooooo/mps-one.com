@@ -4,6 +4,7 @@ import { useI18n } from '../components/I18nProvider';
 import { StatusPipeline } from '../components/UI/StatusPipeline';
 import { uniqueId } from '../components/utils/uniqueId';
 import * as pillarStorage from '../services/pillarStorage';
+import { canPerform } from '../services/permissions';
 
 const pipeline: ('pr'|'quote'|'po'|'processing'|'shipped'|'delivered'|'invoiced'|'paid')[] = ['pr','quote','po','processing','shipped','delivered','invoiced','paid'];
 
@@ -209,6 +210,25 @@ export default function OrderTracker() {
         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
           Pipeline auto-advances to Delivered when delivery info is present; invoicing stage unlocks after corrections.
         </div>
+        {activeIndex >= pipeline.indexOf('invoiced') && (
+          <div style={{ marginTop: 12 }}>
+            <button className={`btn success${canPerform('mark:payment') ? '' : ' disabled'}`} aria-disabled={!canPerform('mark:payment')}
+                    onClick={() => {
+                      if (!canPerform('mark:payment')) { alert(t('gating.finance_only') || 'Only Finance can mark paid.'); return; }
+                      setActiveIndex(pipeline.indexOf('paid'));
+                      try {
+                        const audit = JSON.parse(pillarStorage.getItem('mpsone_audit_trail') || '{}');
+                        const key = `PO:${String(poId)}`;
+                        const listAudit = Array.isArray(audit[key]) ? audit[key] : [];
+                        listAudit.push({ entity: 'PO', id: String(poId), action: 'mark_paid', actorRole: localStorage.getItem('mpsone_role'), actorType: localStorage.getItem('mpsone_user_type'), at: Date.now(), comment: 'Order marked as paid' });
+                        audit[key] = listAudit;
+                        pillarStorage.setItem('mpsone_audit_trail', JSON.stringify(audit));
+                      } catch {}
+                    }}>
+              {t('order_tracker.mark_paid') || 'Mark as Paid'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

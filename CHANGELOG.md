@@ -1,5 +1,198 @@
 # Changelog
 
+## v0.1.39 (2025-11-12) — Security: Mode Guards Extension
+
+### Highlights
+- Backend: Enforced Client mode on `GET /api/po/summary` and `GET /api/invoice/status`.
+- Verification: Supplier mode returns `403` on both endpoints; Client mode returns `200` when DB is available.
+
+### Affected Files
+- `webapp/server/index.mjs` (add `requireMode(['Client'])` on PO summary and invoice status routes)
+
+### Verification
+- Start backend: `npm run server` → `http://localhost:3001`.
+- Ensure DB running: `docker compose up -d` inside WSL (`Ubuntu-20.04`).
+- Supplier mode: `GET /api/po/summary` and `/api/invoice/status` → `403 Forbidden: mode not permitted`.
+- Client mode: `GET /api/po/summary` → `200` (after DB up); `/api/invoice/status` → `200` when DB up.
+
+### Notes
+- No UI changes; backend-only enforcement aligned with Route Guards policy.
+- DB connectivity required for `200` responses; guards evaluate before DB calls.
+
+## v0.1.38 (2025-11-12) — Security: Audit active_mode + PR Guards
+
+### Highlights
+- Database: Added `active_mode` to `audit_log` with index `idx_audit_mode` for mode-based filtering.
+- Backend: Updated `logAudit(...)` to persist `active_mode` on all audit writes.
+- Guards: Enforced Client mode on PR read endpoints (`GET /api/pr`, `GET /api/pr/:id`).
+- Docs: Updated DB setup (English/Indonesian) with migration and verification steps.
+
+### Affected Files
+- `db/migrations/0020_audit_active_mode.sql` (new)
+- `webapp/server/index.mjs` (logAudit active_mode; `requireMode(['Client'])` for PR reads)
+- `docs/DB_SETUP.md` (new section: 0020 — Audit Log: active_mode)
+- `docs/id/DB_SETUP.md` (bagian baru: 0020 — Log Audit: active_mode)
+
+### Verification
+- Import migrations in WSL:
+  - `bash scripts/import-migrations.sh`
+  - `bash scripts/verify-db.sh`
+- Check via MySQL/phpMyAdmin:
+  - `SHOW COLUMNS FROM audit_log;` → `active_mode` exists
+  - `SHOW INDEX FROM audit_log;` → `idx_audit_mode` exists
+- Backend checks:
+  - Hitting `GET /api/pr` in Supplier mode returns `403` (forbidden: mode not permitted)
+  - PR create/update/delete audit entries include `active_mode` reflecting current mode
+
+### Notes
+- Aligns with Front‑End ↔ Database Alignment Policy and Subroadmap enforcement.
+- Mode values are constrained to `Client|Supplier`; default fallback is `Client`.
+
+## v0.1.37 (2025-11-12) — Performance: Proper Caching & Service Worker
+
+### Highlights
+- Added a minimal service worker that:
+  - Serves built assets (`/assets/*`) via cache‑first.
+  - Handles HTML navigations with network‑first and cache fallback.
+  - Applies stale‑while‑revalidate to same‑origin API `GET` requests under `/api/*`.
+- Strengthened Apache headers for immutable assets and non‑cached HTML.
+- Registered the service worker only in production with `VITE_ENABLE_SW` opt‑in.
+
+### Affected Files
+- `webapp/public/sw.js` (new)
+- `webapp/src/main.tsx` (SW registration)
+- `webapp/public/.htaccess` (immutable caching headers)
+
+### Verification
+- Built via `npm run build`; preview served at `http://localhost:5181/`.
+- SW registration verified without console errors; application loads normally.
+
+### Notes
+- Strategies are framework‑agnostic and align with Vite build output.
+- Future enhancements can move to Workbox or `vite-plugin-pwa` if needed.
+
+## v0.1.36 (2025-11-12) — Performance: Bundle Analysis & Tree‑Shaking
+
+### Highlights
+- Integrated `rollup-plugin-visualizer` to generate a treemap bundle report at `dist/stats.html`.
+- Enabled Rollup treeshake with safe defaults and `sourcemap` for inspection.
+- Verified preview server serves the report without errors.
+
+### Affected Files
+- `webapp/vite.config.ts` (visualizer plugin; treeshake and sourcemap)
+- `subroadmap.md` (new item: Performance & Build — Bundle Analysis & Tree‑Shaking)
+- `roadmap.md` (Performance item marked progressed/completed)
+
+### Verification
+- Built via `npm run build`; preview served at `http://localhost:5180/`.
+- Opened `http://localhost:5180/stats.html`; no browser errors observed.
+
+### Notes
+- Follow‑ups can explore further reductions (e.g., aggressive `drop: ['console']`) once profiling confirms safety.
+
+## v0.1.35 (2025-11-12) — Security & Access: Route Guards + Mode Guard
+
+### Highlights
+- Frontend: Standardized route guards via a reusable `RouteGuard` component; applied to `/client` and `/supplier/admin` to enforce mode and role.
+- Backend: Extended auth parsing to include `mode` from `x-user-type` and introduced `requireMode()` middleware.
+- Enforcement: Applied `requireMode('Client')` to `/api/pr` family endpoints and `requireMode(['Client','Supplier'])` to `/api/docs/upload`.
+- API: Client and supplier requests now include `x-user-type` header to propagate active mode to the backend.
+
+### Affected Files
+- `webapp/src/components/RouteGuard.tsx` (new)
+- `webapp/src/App.tsx` (integrated route guard usage)
+- `webapp/src/services/api.ts` (send `x-user-type` header)
+- `webapp/server/index.mjs` (auth parsing update and `requireMode` middleware)
+- `subroadmap.md` (item: Security & Access Control — Route Guards + Mode Guard)
+- `roadmap.md` (Security note added)
+
+### Verification
+- Dev server running at `http://localhost:5178/`.
+- Previewed `/client` and `/supplier/admin`; no browser errors observed.
+- Guards respect `localStorage:mpsone_user_type` and `mpsone_role`; unauthorized states redirect to the configured fallback.
+
+### Notes
+- Vite proxy continues to route `/api/*` to backend; mode enforcement requires presence of `x-user-type` in requests.
+- Backend verification of mode guards is aligned for PR and docs flows; broader endpoint coverage will follow per roadmap.
+
+## v0.1.33 (2025-11-12) — Performance: Virtualize Long Lists
+
+## v0.1.34 (2025-11-12) — Performance: Image Optimization
+
+### Highlights
+- Added `OptimizedImage` component with `loading="lazy"`, `decoding="async"`, and `fetchPriority` defaults.
+- Replaced direct `<img>` usage in `QRCode` to leverage optimized loading.
+- Verified PO Preview and Client dashboard render with no errors.
+
+### Affected Files
+- `webapp/src/components/UI/OptimizedImage.tsx` (new component)
+- `webapp/src/components/UI/QRCode.tsx` (updated to use OptimizedImage)
+- `subroadmap.md` (new item: Performance Optimization — Image Optimization)
+- `roadmap.md` (Image Optimization marked completed)
+
+### Verification
+- Previewed `http://localhost:5177/client`; no browser errors observed.
+- PO Preview attempted; no terminal errors detected; QR fallback remains robust.
+
+### Notes
+- Real image assets (WebP/AVIF) to be wired when available; current optimization targets generated images (QR) and defaults.
+
+### Highlights
+- Enabled row virtualization for PR List using built-in `DataTable` virtualization.
+- Reduced DOM work and improved scroll performance on `/procurement/pr`.
+- Confirmed Document Manager virtualization remains intact; no regressions.
+- Updated roadmap to reflect virtualization completed per SOP.
+
+### Affected Files
+- `webapp/src/pages/procurement/PRList.tsx` (enable `virtualize`, set `height`/`rowHeight`)
+- `subroadmap.md` (new item: Performance Optimization — Virtualize Long Lists)
+- `roadmap.md` (add completed bullet under Performance)
+
+### Verification
+- Previewed `/procurement/pr` on dev server; no browser errors observed.
+- Scrolling remains smooth; selection and bulk actions are accessible.
+
+### Notes
+- Overscan leverages `computeOverscan('prList')` from `webapp/src/config.ts`.
+- Document Manager virtualization already present; verified alongside PR List.
+
+## v0.1.32 (2025-11-12) — Performance: Code Splitting Verification
+
+### Highlights
+- Verified router-wide code splitting using `React.lazy` with unified `Suspense` skeleton fallback.
+- Confirmed heavy routes render via lazy loading without visual or accessibility regressions.
+- Updated roadmap to mark code splitting complete per SOP.
+
+### Affected Files
+- `webapp/src/App.tsx` (lazy imports and `Suspense` fallback)
+
+### Verification
+- Previewed `/client`, `/supplier/reporting`, `/client/quotes/:id`, and `/procurement/po/preview` in dev.
+- No browser errors observed; chunks loaded correctly with skeleton.
+
+### Notes
+- Dev server started on `http://localhost:5174/` (port auto-selected); behavior consistent with prior setup.
+
+
+## v0.1.31 (2025-11-12) — RBAC Frontend Enforcement (Scope Expansion)
+
+### Highlights
+- Expanded RBAC gating across core pages for consistent enforcement.
+- QuoteComparison: Approve Quote gated by `evaluate:quotes`; Generate PO gated by `create:po`.
+- PO Preview: Print/Save PDF gated by `create:po`.
+- Delivery Notes: Corrections input disabled unless `confirm:delivery`.
+- Order Tracker: Added gated “Mark as Paid” button (`mark:payment`) after invoiced stage.
+
+### Affected Files
+- `webapp/src/pages/client/QuoteComparison.tsx`
+- `webapp/src/pages/POPreview.tsx`
+- `webapp/src/pages/DeliveryNotes.tsx`
+- `webapp/src/pages/OrderTracker.tsx`
+
+### Notes
+- Visual theme unchanged; accessible states via `aria-disabled`/`disabled`.
+- Roles read from `localStorage` (`mpsone_user_type`, `mpsone_role`); backend alignment to follow.
+
 ## v0.1.25 (2025-11-12)
 
 ## v0.1.26 (2025-11-12)
@@ -789,3 +982,54 @@ Affected Files
 - `webapp/src/components/Layout/Topbar.tsx`
 - `webapp/src/App.tsx`
 - `db/migrations/0019_user_preferences_and_notifications.sql`
+
+## v0.1.28 (2025-11-12) — E2E Core Procurement Flow Coverage
+
+Highlights
+- Added full end-to-end Playwright test for Procurement lifecycle: PR → Quote → PO → Delivery → Invoice.
+- Validates supplier sending, quote approval, PO generation, delivery corrections, invoice gating and creation.
+
+Details
+- New test `webapp/e2e/core-procurement-flow.spec.ts` seeds client mode and suppliers, uses demo PR rows, and drives UI:
+  - PR List: sends Approved PR to suppliers.
+  - Quote Comparison: approves a quote, generates PO, navigates to PO Preview.
+  - Delivery Notes: adjusts corrections; sets `mpsone_available_to_invoice` and `mpsone_delivery_notes_{poId}`.
+  - Supplier Reporting: opens Create Invoice modal, asserts over-amount validation, then creates a valid invoice.
+
+Affected Files
+- `webapp/e2e/core-procurement-flow.spec.ts`
+- `roadmap.md`
+- `subroadmap.md`
+
+Notes (verification)
+- Runs locally with `npm run test:e2e`; CI picks up under existing workflow.
+- Flow relies on pillar-scoped storage and demo data; no backend required.
+
+## v0.1.29 (2025-11-12) — Docs Modernization & Onboarding
+
+Highlights
+- Added onboarding guides in English and Indonesian with Quickstart steps and GIF placeholders.
+- Clarified Developer Quickstart references and linked onboarding from README.
+
+Affected Files
+- `docs/ONBOARDING.md`
+- `docs/id/ONBOARDING.md`
+- `README.md`
+
+Notes
+- No UI changes; documentation improves clarity and onboarding velocity.
+
+## v0.1.30 (2025-11-12) — RBAC Frontend Enforcement (Foundation)
+
+Highlights
+- Introduced a centralized frontend permissions helper based on mode (Client/Supplier) and role.
+- Applied non-invasive gating: disabled states with `aria-disabled` on key actions.
+
+Affected Files
+- `webapp/src/services/permissions.ts`
+- `webapp/src/pages/procurement/PRList.tsx`
+- `webapp/src/pages/supplier/Reporting.tsx`
+
+Notes
+- Roles read from `localStorage:mpsone_role` with sensible defaults per mode.
+- Backend enforcement will follow; this change is frontend-only and preserves layout.

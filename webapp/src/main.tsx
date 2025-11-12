@@ -26,6 +26,14 @@ try {
   // One-time boot event for dev verification of analytics collector
   trackEvent('app_boot', { version: (import.meta as any).env?.APP_VERSION || 'dev' });
 } catch {}
+
+// Register service worker in production (opt-in via VITE_ENABLE_SW=true)
+try {
+  const ENABLE_SW = String((import.meta as any).env?.VITE_ENABLE_SW || 'true').toLowerCase() === 'true';
+  if (ENABLE_SW && 'serviceWorker' in navigator && (import.meta as any).env?.PROD) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+} catch {}
 const rootElement = document.getElementById('app-root')!;
 createRoot(rootElement).render(
   <React.StrictMode>

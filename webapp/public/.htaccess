@@ -17,3 +17,13 @@ RewriteRule ^ index.html [L]
   ExpiresByType image/gif "access plus 1 year"
   ExpiresByType image/svg+xml "access plus 1 year"
 </IfModule>
+
+# Strong immutable caching for fingerprinted build assets; prevent caching of HTML shell
+<IfModule mod_headers.c>
+  <FilesMatch "^assets/.+\.(js|css|svg|png|jpg|gif)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

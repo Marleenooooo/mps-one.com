@@ -160,6 +160,7 @@ bash scripts/verify-db.sh
 
 Dokumentasi end-user tersedia di folder `docs/`:
 
+- `docs/ONBOARDING.md`: Panduan onboarding langkah demi langkah dengan Quickstart & GIF placeholders.
 - `docs/USER_GUIDE.md`: Panduan menggunakan aplikasi dari awal hingga akhir.
 - `docs/WORKFLOWS.md`: Alur kerja detail dengan guard dan invariant.
 - `docs/ROLES_PERMISSIONS.md`: Peran dan matriks akses.
@@ -176,6 +177,7 @@ Dokumen‑dokumen ini selaras dengan lifecycle pengadaan dan siap untuk integras
 
 Salinan berbahasa Indonesia tersedia di folder `docs/id/`:
 
+- `docs/id/ONBOARDING.md`
 - `docs/id/USER_GUIDE.md`
 - `docs/id/WORKFLOWS.md`
 - `docs/id/ROLES_PERMISSIONS.md`

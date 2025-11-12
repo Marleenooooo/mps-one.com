@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useModule } from '../../components/useModule';
 import { useI18n } from '../../components/I18nProvider';
 import * as pillarStorage from '../../services/pillarStorage';
+import { canPerform } from '../../services/permissions';
 
 type DataRow = Record<string, string | number>;
 
@@ -169,6 +170,18 @@ export default function Reporting() {
     if (days <= 7) return { label: t('reporting.status.waiting'), colorClass: 'warn' };
     if (days <= 14) return { label: t('reporting.status.next'), colorClass: 'success' };
     return { label: t('reporting.status.neutral'), colorClass: '' };
+  }
+
+  // Localization-safe status code for filtering logic
+  function paymentStatusCode(inv: Invoice): 'paid'|'over-due'|'waiting'|'next'|'neutral' {
+    if (inv.paidAt) return 'paid';
+    const now = Date.now();
+    const due = new Date(inv.dueDate).getTime();
+    if (now > due) return 'over-due';
+    const days = Math.ceil((due - now) / (24*3600*1000));
+    if (days <= 7) return 'waiting';
+    if (days <= 14) return 'next';
+    return 'neutral';
   }
 
   function checkInvoiceGate(inv: Invoice): string | null {
@@ -389,24 +402,24 @@ export default function Reporting() {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {/* Filters */}
             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Status</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{t('datatable.status') || 'Status'}</span>
               <select className="input" value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)}>
                 <option value="all">All</option>
-                <option value="paid">Paid</option>
-                <option value="neutral">Neutral</option>
-                <option value="waiting">Waiting (≤7d)</option>
-                <option value="next">Next (≤14d)</option>
-                <option value="over-due">Over‑due</option>
+                <option value="paid">{t('reporting.status.paid')}</option>
+                <option value="neutral">{t('reporting.status.neutral')}</option>
+                <option value="waiting">{t('reporting.status.waiting')} (≤7 {t('time.days')})</option>
+                <option value="next">{t('reporting.status.next')} (≤14 {t('time.days')})</option>
+                <option value="over-due">{t('reporting.status.over_due')}</option>
               </select>
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ color: 'var(--text-secondary)' }}>Due window</span>
               <select className="input" value={dueWindow} onChange={e => setDueWindow(e.target.value as any)}>
                 <option value="all">All</option>
-                <option value="7">≤ 7 days</option>
-                <option value="14">≤ 14 days</option>
-                <option value="30">≤ 30 days</option>
-                <option value="over-due">Over‑due</option>
+                <option value="7">≤ 7 {t('time.days')}</option>
+                <option value="14">≤ 14 {t('time.days')}</option>
+                <option value="30">≤ 30 {t('time.days')}</option>
+                <option value="over-due">{t('reporting.status.over_due')}</option>
               </select>
             </label>
             <button
@@ -433,13 +446,9 @@ export default function Reporting() {
           </thead>
           <tbody>
             {invoices.filter(inv => {
-              const st = derivePaymentStatus(inv).label;
+              const code = paymentStatusCode(inv);
               if (statusFilter !== 'all') {
-                if (statusFilter === 'waiting' && st !== 'waiting payment') return false;
-                else if (statusFilter === 'next' && st !== 'next payment') return false;
-                else if (statusFilter === 'over-due' && st !== 'over-due') return false;
-                else if (statusFilter === 'neutral' && st !== 'neutral') return false;
-                else if (statusFilter === 'paid' && st !== 'paid') return false;
+                if (statusFilter !== code) return false;
               }
               if (dueWindow !== 'all') {
                 const now = Date.now();
@@ -469,13 +478,13 @@ export default function Reporting() {
                   <td>
                     <span className={canCreate ? '' : 'tooltip'} data-tip={canCreate ? undefined : t('reporting.insufficient_delivered_amount')}>
                       <button
-                        className="btn primary"
-                        disabled={!canCreate}
-                        aria-disabled={!canCreate}
+                        className={`btn primary${canPerform('create:invoice') ? '' : ' disabled'}`}
+                        disabled={!canCreate || !canPerform('create:invoice')}
+                        aria-disabled={!canCreate || !canPerform('create:invoice')}
                         onClick={() => {
-                          if (!canCreate) return;
+                          if (!canCreate || !canPerform('create:invoice')) return;
                           const defaultDue = new Date(Date.now() + 30*24*3600*1000).toISOString().slice(0,10);
-                          const suggested = Math.min(remaining, 10_000_000); // suggest up to 10M or remaining
+                          const suggested = Math.min(remaining, 10_000_000);
                           setInvoiceModal({ poId: inv.poId, amount: suggested, due: defaultDue });
                         }}
                       >

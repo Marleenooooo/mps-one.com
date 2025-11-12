@@ -3,6 +3,7 @@ import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
 import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 import * as pillarStorage from '../services/pillarStorage';
+import { canPerform } from '../services/permissions';
 
 type DeliveryItem = { id: string; name: string; orderedQty: number; shippedQty: number; receivedQty: number; correctionQty: number };
 
@@ -76,7 +77,8 @@ export default function DeliveryNotes() {
                   <td>
                     <input className="input" type="number" value={it.correctionQty}
                            onChange={e => updateCorrection(idx, parseInt(e.target.value || '0', 10))}
-                           aria-label={t('delivery.correction_aria').replace('{name}', it.name)} style={{ width: 100 }} />
+                           aria-label={t('delivery.correction_aria').replace('{name}', it.name)} style={{ width: 100 }}
+                           disabled={!canPerform('confirm:delivery')} aria-disabled={!canPerform('confirm:delivery')} />
                   </td>
                   <td>
                     <span className="status-badge success">{available}</span>

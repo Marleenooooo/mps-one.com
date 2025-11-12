@@ -317,3 +317,46 @@ Impor Migrasi (WSL)
 Area Terpengaruh
 - Backend API: `GET/PUT /api/user/preferences`, `GET/POST/PUT /api/notifications`
 - Frontend UI: halaman `/settings` untuk tema/bahasa/preferensi notifikasi; halaman `/notifications` dengan jumlah belum dibaca dan aksi tandai baca.
+## 0020 — Log Audit: active_mode
+
+Penguatan guard backend berdasar mode dan pencatatan audit dengan `active_mode`.
+
+- Migrasi: `db/migrations/0020_audit_active_mode.sql`
+- Perubahan tabel (`audit_log`):
+  - Menambah kolom `active_mode ENUM('Client','Supplier') NOT NULL DEFAULT 'Client'`
+  - Menambah indeks `idx_audit_mode (active_mode, action, created_at)`
+
+### Impor & Verifikasi (WSL)
+1) Impor migrasi:
+```
+bash scripts/import-migrations.sh
+bash scripts/verify-db.sh
+```
+2) Cek via MySQL/phpMyAdmin:
+```
+SHOW COLUMNS FROM audit_log;   -- pastikan active_mode ada
+SHOW INDEX FROM audit_log;     -- pastikan idx_audit_mode ada
+```
+
+### Penyesuaian Backend
+- `webapp/server/index.mjs`:
+  - `logAudit(...)` kini menulis `active_mode` untuk setiap entri audit.
+  - Endpoint PR (read) mewajibkan mode Client:
+    - `GET /api/pr` dilindungi `requireMode(['Client'])`
+    - `GET /api/pr/:id` dilindungi `requireMode(['Client'])`
+
+### Contoh Query
+```
+-- Aksi PR per mode
+SELECT active_mode, action, COUNT(*) cnt
+FROM audit_log
+WHERE action LIKE 'pr.%'
+GROUP BY active_mode, action
+ORDER BY active_mode, action;
+
+-- FX refresh terbaru yang dilakukan dalam mode Client
+SELECT actor_email, comment, created_at
+FROM audit_log
+WHERE action='fx.refresh' AND active_mode='Client'
+ORDER BY created_at DESC LIMIT 20;
+```

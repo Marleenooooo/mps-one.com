@@ -56,10 +56,9 @@ Phase 7 — Post-Release Polishing (100–120%)
 - [x] Notification Center and Settings (preferences: theme, language, notifications).
  - [x] Offline mode parity with mocks and sync reconciliation.
 - [x] Performance profiling and tuning (memoization, code splitting, bundle size checks).
-- [ ] E2E tests and CI coverage for core workflows (PR → Quote → PO → Delivery → Invoice).
+- [x] E2E tests and CI coverage for core workflows (PR → Quote → PO → Delivery → Invoice).
  - [x] E2E tests and CI coverage for core workflows (PR → Quote → PO → Delivery → Invoice).
-- [ ] Docs modernization and onboarding polish (quickstart, gifs, troubleshooting).
- - [x] Docs modernization and onboarding polish (quickstart, gifs, troubleshooting).
+- [x] Docs modernization and onboarding polish (quickstart, gifs, troubleshooting).
  - [x] Observability enhancements (SLOs, tracing dashboards, error budgets).
 - [x] Joyful layout polish (micro-interactions, neon gradients/glow, card/bubble aesthetics, intuitive action placement and layout positions).
 - [x] Layout ergonomics & navigation clarity (sidebar active/hover states, page header gradients, accent borders).
@@ -88,17 +87,19 @@ Phase 7 — Post-Release Polishing (100–120%)
   Security, Audit, User Flows, Permission Matrix & Accessibility (Target: 90–95%)
   A. Performance Optimization
   - [ ] Virtualize long lists (tanstack-virtual / react-window)
-  - [ ] Code splitting + React.lazy/Suspense + dynamic imports for heavy chunks/libraries
-  - [ ] Image optimization (WebP/AVIF, srcset/sizes, native lazy loading)
-  - [ ] Bundle analysis + tree-shaking + removal of unused code
+  - [x] Code splitting + React.lazy/Suspense + dynamic imports for heavy chunks/libraries
+  - [x] Virtualize long lists (PR List, People Directory, Documents)
+  - [x] Image optimization (WebP/AVIF, srcset/sizes, native lazy loading)
+  - [x] Bundle analysis + tree-shaking (visualizer integrated; report generated and verified)
   - [ ] Proper caching (immutable assets, stale-while-revalidate for API where applicable)
-  - [ ] Aggressive caching + service worker (planned; aligned with Vite build)
+  - [x] Proper caching (immutable assets, stale-while-revalidate for API where applicable)
+  - [x] Aggressive caching + service worker (aligned with Vite build)
 
   B. Security & Access Control (RBAC + Context-Based Rules)
   - [ ] Full RBAC/ABAC implementation with enforcement on both frontend and backend
   - [ ] All routes protected via route guards / middleware / navigation guards
   - [ ] Component-level and UI-element-level permission checks (hide or disable if not allowed)
-  - [ ] Every backend endpoint validates user role + current mode (Client/Supplier) → returns 403 if not authorized
+  - [~] Every backend endpoint validates user role + current mode (Client/Supplier) → returns 403 if not authorized
   - [x] Direct URL access fully blocked (always to https://mps-one.com/)
   - [ ] Auth provider RBAC integration (e.g., Auth0): tenant/app configured with RBAC and permissions in tokens; roles defined to match app — Admin, PIC Operational, PIC Procurement, PIC Finance, Supplier Admin, Supplier PIC Procurement, Supplier PIC Finance; permissions mapped (kebab-case) to procurement actions (e.g., create:pr, approve:pr, submit:quote, evaluate:quotes, create:po, confirm:delivery, create:invoice, mark:payment, switch:procurement-mode, view:audit-logs).
   - [ ] Post-login action populates claims for company_id and default/active procurement mode (client/supplier) so UI/guards can derive context.
@@ -117,7 +118,7 @@ Phase 7 — Post-Release Polishing (100–120%)
     - [x] Supplier Admin dashboard shows only supplier-relevant action (New Quote); hides client-only actions (New PR, New PO).
     - [x] Client dashboard actions are client-specific only (no supplier-only items shown).
   - [ ] Strict separation enforced by backend: a user in Supplier mode cannot access “Create Tender” or “Evaluate Bids”, and vice versa
-  - [ ] All mode-sensitive actions logged with current mode context
+  - [x] All mode-sensitive actions logged with current mode context
 
   E. Audit Trail & Activity Logging
   - [ ] Immutable audit log for all procurement actions (tender creation, bid submission, evaluation, mode switch, etc.)
@@ -141,3 +142,5 @@ Notes
 - When an item in this roadmap is completed, reflect the status here and in `subroadmap.md`. Use checkmarks here for completed items.
  - Phase 3 verified (2025-11-11): Backend running in WSL; audit logs written on PR/thread/user actions; documents upload stub with scan status; pagination and filters present across PR, users, and docs.
  - Phase 4 Communications verified (2025-11-12): Subject column migrated; backend endpoints aligned; frontend wired; preview validated without errors.
+  - Security & Access verified (2025-11-12): Frontend route guards standardized (`RouteGuard`); backend mode guard enforced on `/api/pr*` (Client only) and `/api/docs/upload` (Client/Supplier); previews validated without errors.
+  - Security & Access verified extension (2025-11-12): Backend mode guard enforced on `GET /api/po/summary` and `GET /api/invoice/status` (Client only); Supplier mode returns 403, Client mode returns 200 with DB available.

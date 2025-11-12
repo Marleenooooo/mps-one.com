@@ -88,6 +88,7 @@ function parseAuth(req) {
   const authz = req.header('authorization') || req.header('Authorization') || '';
   let email = String(req.header('x-email') || '').trim();
   let role = String(req.header('x-role') || '').trim();
+  let mode = String(req.header('x-user-type') || '').trim(); // 'client' | 'supplier'
   if (authz.toLowerCase().startsWith('bearer ')) {
     const token = authz.slice(7).trim();
     if (token.startsWith('dev.')) {
@@ -95,11 +96,13 @@ function parseAuth(req) {
       // dev.<type>.<role>.<code>
       if (parts.length >= 4) {
         role = parts[2] || role || 'Admin';
+        mode = parts[1] || mode || '';
       }
     }
   }
   if (!role) role = 'Admin';
-  return { email, role };
+  mode = mode ? (mode.toLowerCase() === 'supplier' ? 'Supplier' : 'Client') : 'Client';
+  return { email, role, mode };
 }
 
 function attachAuth(req, _res, next) {
@@ -119,12 +122,24 @@ function requireRole(roles = []) {
   };
 }
 
+// Mode guard using parsed auth ('Client' | 'Supplier')
+function requireMode(modes = []) {
+  return (req, res, next) => {
+    const mode = String(req?.auth?.mode || 'Client');
+    if (modes.length && !modes.includes(mode)) {
+      return res.status(403).json({ ok: false, error: 'Forbidden: mode not permitted', mode });
+    }
+    next();
+  };
+}
+
 // Audit utility
-async function logAudit({ actorEmail, action, entityType = null, entityId = null, comment = null }) {
+async function logAudit({ actorEmail, action, entityType = null, entityId = null, comment = null, activeMode = null }) {
   try {
+    const mode = ['Client','Supplier'].includes(String(activeMode)) ? String(activeMode) : 'Client';
     await pool.query(
-      'INSERT INTO audit_log (actor_email, action, entity_type, entity_id, comment) VALUES (?, ?, ?, ?, ?)',
-      [String(actorEmail || ''), String(action), entityType, entityId, comment]
+      'INSERT INTO audit_log (actor_email, action, entity_type, entity_id, comment, active_mode) VALUES (?, ?, ?, ?, ?, ?)',
+      [String(actorEmail || ''), String(action), entityType, entityId, comment, mode]
     );
   } catch (e) {
     // Swallow audit errors in demo mode
@@ -195,7 +210,7 @@ app.put('/api/user/preferences', async (req, res) => {
       'INSERT INTO user_preferences (user_id, theme, language, notify_inapp, notify_email) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE theme=VALUES(theme), language=VALUES(language), notify_inapp=VALUES(notify_inapp), notify_email=VALUES(notify_email)'
       , [userId, theme, language, notify_inapp, notify_email]
     );
-    await logAudit({ actorEmail: req?.auth?.email, action: 'prefs.update', entityType: 'user_preferences', entityId: userId, comment: `${theme}/${language}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'prefs.update', entityType: 'user_preferences', entityId: userId, comment: `${theme}/${language}`, activeMode: req?.auth?.mode });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -227,7 +242,7 @@ app.post('/api/notifications', async (req, res) => {
     const notifBody = String(body.body || '');
     const type = ['info','warning','success','error'].includes(body.type) ? body.type : 'info';
     const [result] = await pool.query('INSERT INTO notifications (user_id, module, title, body, type, is_read) VALUES (?,?,?,?,?,0)', [userId, module, title, notifBody, type]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'notifications.create', entityType: 'notification', entityId: result.insertId, comment: title });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'notifications.create', entityType: 'notification', entityId: result.insertId, comment: title, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true, id: result.insertId });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -243,14 +258,14 @@ app.put('/api/notifications/:id', async (req, res) => {
     const is_read = body.is_read ? 1 : 0;
     const [rows] = await pool.query('UPDATE notifications SET is_read=? WHERE id=? AND user_id=?', [is_read, id, userId]);
     if (!rows || rows.affectedRows === 0) return res.status(404).json({ ok: false, error: 'Not found' });
-    await logAudit({ actorEmail: req?.auth?.email, action: 'notifications.update', entityType: 'notification', entityId: id, comment: `is_read=${is_read}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'notifications.update', entityType: 'notification', entityId: id, comment: `is_read=${is_read}`, activeMode: req?.auth?.mode });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
   }
 });
 
-app.get('/api/po/summary', async (req, res) => {
+app.get('/api/po/summary', requireMode(['Client']), async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT po_id, ordered_qty, confirmed_qty FROM v_po_item_delivery_totals ORDER BY po_id DESC LIMIT 10');
     res.json({ ok: true, rows });
@@ -260,7 +275,7 @@ app.get('/api/po/summary', async (req, res) => {
   }
 });
 
-app.get('/api/invoice/status', async (req, res) => {
+app.get('/api/invoice/status', requireMode(['Client']), async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT invoice_id, po_id, amount, due_date, paid_at, derived_status FROM v_invoice_status ORDER BY invoice_id DESC LIMIT 10');
     res.json({ ok: true, rows });
@@ -284,7 +299,7 @@ async function resolveDefaults() {
 }
 
 // List PRs (basic)
-app.get('/api/pr', async (req, res) => {
+app.get('/api/pr', requireMode(['Client']), async (req, res) => {
   try {
     const status = req.query.status ? String(req.query.status) : null;
     const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 200);
@@ -302,7 +317,7 @@ app.get('/api/pr', async (req, res) => {
 });
 
 // Get PR by id
-app.get('/api/pr/:id', async (req, res) => {
+app.get('/api/pr/:id', requireMode(['Client']), async (req, res) => {
   try {
     const id = Number(req.params.id);
     const [rows] = await pool.query('SELECT * FROM pr WHERE id=?', [id]);
@@ -314,7 +329,7 @@ app.get('/api/pr/:id', async (req, res) => {
 });
 
 // Create PR (submit)
-app.post('/api/pr', requireRole(['Admin','PIC_Procurement','PIC_Operational']), async (req, res) => {
+app.post('/api/pr', requireMode(['Client']), requireRole(['Admin','PIC_Procurement','PIC_Operational']), async (req, res) => {
   try {
     const body = req.body || {};
     const defaults = await resolveDefaults();
@@ -335,7 +350,7 @@ app.post('/api/pr', requireRole(['Admin','PIC_Procurement','PIC_Operational']), 
       [company_id, department_id, requester_id, status, title, need_date, description, budget_code, approver, items_json]
     );
     const id = result.insertId;
-    await logAudit({ actorEmail: req?.auth?.email, action: 'pr.create', entityType: 'PR', entityId: id, comment: title });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'pr.create', entityType: 'PR', entityId: id, comment: title, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true, id });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -343,7 +358,7 @@ app.post('/api/pr', requireRole(['Admin','PIC_Procurement','PIC_Operational']), 
 });
 
 // Update PR
-app.put('/api/pr/:id', requireRole(['Admin','PIC_Procurement']), async (req, res) => {
+app.put('/api/pr/:id', requireMode(['Client']), requireRole(['Admin','PIC_Procurement']), async (req, res) => {
   try {
     const id = Number(req.params.id);
     const body = req.body || {};
@@ -361,7 +376,7 @@ app.put('/api/pr/:id', requireRole(['Admin','PIC_Procurement']), async (req, res
     const sql = `UPDATE pr SET ${fields.join(', ')} WHERE id=?`;
     values.push(id);
     const [result] = await pool.query(sql, values);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'pr.update', entityType: 'PR', entityId: id, comment: JSON.stringify(body).slice(0, 256) });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'pr.update', entityType: 'PR', entityId: id, comment: JSON.stringify(body).slice(0, 256), activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -369,11 +384,11 @@ app.put('/api/pr/:id', requireRole(['Admin','PIC_Procurement']), async (req, res
 });
 
 // Delete PR
-app.delete('/api/pr/:id', requireRole(['Admin']), async (req, res) => {
+app.delete('/api/pr/:id', requireMode(['Client']), requireRole(['Admin']), async (req, res) => {
   try {
     const id = Number(req.params.id);
     const [result] = await pool.query('DELETE FROM pr WHERE id=?', [id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'pr.delete', entityType: 'PR', entityId: id });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'pr.delete', entityType: 'PR', entityId: id, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -394,7 +409,7 @@ app.post('/api/email-thread', requireRole(['Admin','PIC_Procurement','PIC_Financ
       'INSERT INTO email_thread (pr_id, po_id, subject, participants_json, messages_json) VALUES (?, ?, ?, CAST(? AS JSON), CAST(? AS JSON))',
       [pr_id, po_id, subject, JSON.stringify(participants), JSON.stringify(messages)]
     );
-    await logAudit({ actorEmail: req?.auth?.email, action: 'thread.create', entityType: 'EmailThread', entityId: result.insertId });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'thread.create', entityType: 'EmailThread', entityId: result.insertId, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true, id: result.insertId });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -429,7 +444,7 @@ app.post('/api/email-thread/:id/messages', requireRole(['Admin','PIC_Procurement
       } catch { current = []; }
       current.push(message);
       const [result] = await conn.query('UPDATE email_thread SET messages_json=CAST(? AS JSON) WHERE id=?', [JSON.stringify(current), id]);
-      await logAudit({ actorEmail: req?.auth?.email, action: 'thread.append', entityType: 'EmailThread', entityId: id });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'thread.append', entityType: 'EmailThread', entityId: id, activeMode: req?.auth?.mode });
       res.json({ ok: true, affectedRows: result.affectedRows });
     } finally {
       conn.release();
@@ -468,7 +483,7 @@ app.post('/api/email/oauth/start', requireRole(['Admin','PIC_Procurement','PIC_F
       'INSERT INTO email_account (provider, account_email, token_json) VALUES (?, ?, CAST(? AS JSON)) ON DUPLICATE KEY UPDATE token_json=VALUES(token_json)',
       [provider, account_email, JSON.stringify(token)]
     );
-    await logAudit({ actorEmail: req?.auth?.email, action: 'email.oauth.start', entityType: 'EmailAccount', entityId: result.insertId || null, comment: account_email });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'email.oauth.start', entityType: 'EmailAccount', entityId: result.insertId || null, comment: account_email, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true, id: result.insertId || null, authUrl: `https://auth.example.com/${provider}`, account_email });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -484,7 +499,7 @@ app.get('/api/email/oauth/callback', async (req, res) => {
     if (!account_email) return res.status(400).json({ ok: false, error: 'Missing account_email' });
     const token = { dev: true, code, updated_at: new Date().toISOString(), provider };
     const [result] = await pool.query('UPDATE email_account SET token_json=CAST(? AS JSON) WHERE provider=? AND account_email=?', [JSON.stringify(token), provider, account_email]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'email.oauth.callback', entityType: 'EmailAccount', entityId: null, comment: `${provider}:${account_email}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'email.oauth.callback', entityType: 'EmailAccount', entityId: null, comment: `${provider}:${account_email}`, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -506,7 +521,7 @@ app.delete('/api/email/accounts/:id', requireRole(['Admin']), async (req, res) =
   try {
     const id = Number(req.params.id);
     const [result] = await pool.query('DELETE FROM email_account WHERE id=?', [id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'email.account.delete', entityType: 'EmailAccount', entityId: id });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'email.account.delete', entityType: 'EmailAccount', entityId: id, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -522,7 +537,7 @@ app.post('/api/email/sync', requireRole(['Admin','PIC_Procurement','PIC_Finance'
       'INSERT INTO email_sync_state (account_id, last_synced_at) VALUES (?, NOW()) ON DUPLICATE KEY UPDATE last_synced_at=NOW()',
       [account_id]
     );
-    await logAudit({ actorEmail: req?.auth?.email, action: 'email.sync', entityType: 'EmailAccount', entityId: account_id });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'email.sync', entityType: 'EmailAccount', entityId: account_id, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -542,7 +557,7 @@ app.post('/api/webhooks/courier/:vendor', async (req, res) => {
       'INSERT INTO shipment_tracking (po_id, vendor, tracking_no, status, events_json) VALUES (?, ?, ?, ?, CAST(? AS JSON)) ON DUPLICATE KEY UPDATE status=VALUES(status), events_json=VALUES(events_json), updated_at=NOW()',
       [po_id, vendor, tracking_no, status, JSON.stringify(events)]
     );
-    await logAudit({ actorEmail: req?.auth?.email, action: 'courier.webhook', entityType: 'ShipmentTracking', entityId: null, comment: `${vendor}:${tracking_no}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'courier.webhook', entityType: 'ShipmentTracking', entityId: null, comment: `${vendor}:${tracking_no}`, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true, id: result.insertId || null });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -617,7 +632,7 @@ app.post('/api/fx/refresh', requireRole(['Admin']), async (req, res) => {
       await conn.commit();
       // Bust cache for pair so next latest is fresh
       fxCache.delete(cacheKey(base, quote));
-      await logAudit({ actorEmail: req?.auth?.email, action: 'fx.refresh', entityType: 'FX', comment: `${base}/${quote}:${inserted}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'fx.refresh', entityType: 'FX', comment: `${base}/${quote}:${inserted}`, activeMode: req?.auth?.mode });
       res.status(201).json({ ok: true, inserted });
     } catch (e) {
       await conn.rollback();
@@ -670,7 +685,7 @@ app.post('/api/users/follow', async (req, res) => {
     );
     if (blk.length) return res.status(409).json({ ok: false, error: 'Blocked: cannot follow' });
     await pool.query('INSERT IGNORE INTO user_relationships (follower_id, followee_id) VALUES (?, ?)', [follower.id, followee.id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'user.follow', entityType: 'User', entityId: followee.id, comment: `${follower.email} -> ${followee.email}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'user.follow', entityType: 'User', entityId: followee.id, comment: `${follower.email} -> ${followee.email}`, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -686,7 +701,7 @@ app.post('/api/users/unfollow', async (req, res) => {
     const followee = await getUserByEmail(String(followeeEmail));
     if (!follower || !followee) return res.status(404).json({ ok: false, error: 'User not found' });
     const [result] = await pool.query('DELETE FROM user_relationships WHERE follower_id=? AND followee_id=?', [follower.id, followee.id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'user.unfollow', entityType: 'User', entityId: followee.id, comment: `${follower.email} -/-> ${followee.email}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'user.unfollow', entityType: 'User', entityId: followee.id, comment: `${follower.email} -/-> ${followee.email}`, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -704,7 +719,7 @@ app.post('/api/users/block', async (req, res) => {
     await pool.query('INSERT IGNORE INTO user_blocks (blocker_id, blocked_id) VALUES (?, ?)', [blocker.id, blocked.id]);
     // Optional: remove relationships if any
     await pool.query('DELETE FROM user_relationships WHERE (follower_id=? AND followee_id=?) OR (follower_id=? AND followee_id=?)', [blocker.id, blocked.id, blocked.id, blocker.id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'user.block', entityType: 'User', entityId: blocked.id, comment: `${blocker.email} x ${blocked.email}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'user.block', entityType: 'User', entityId: blocked.id, comment: `${blocker.email} x ${blocked.email}`, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -720,7 +735,7 @@ app.post('/api/users/unblock', async (req, res) => {
     const blocked = await getUserByEmail(String(blockedEmail));
     if (!blocker || !blocked) return res.status(404).json({ ok: false, error: 'User not found' });
     const [result] = await pool.query('DELETE FROM user_blocks WHERE blocker_id=? AND blocked_id=?', [blocker.id, blocked.id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'user.unblock', entityType: 'User', entityId: blocked.id, comment: `${blocker.email} ~ ${blocked.email}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'user.unblock', entityType: 'User', entityId: blocked.id, comment: `${blocker.email} ~ ${blocked.email}`, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -774,7 +789,7 @@ app.post('/api/users/invite', async (req, res) => {
       'INSERT INTO user_invites (email, from_email, role, user_type, token, status, expires_at) VALUES (?, ?, NULL, NULL, ?, "pending", DATE_ADD(NOW(), INTERVAL 7 DAY))',
       [String(toEmail), String(fromEmail), token]
     );
-    await logAudit({ actorEmail: req?.auth?.email || fromEmail, action: 'invite.create', entityType: 'Invite', entityId: result.insertId, comment: `${fromEmail} -> ${toEmail}` });
+    await logAudit({ actorEmail: req?.auth?.email || fromEmail, action: 'invite.create', entityType: 'Invite', entityId: result.insertId, comment: `${fromEmail} -> ${toEmail}`, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true, id: result.insertId, token });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -808,7 +823,7 @@ app.put('/api/users/invites/:id', async (req, res) => {
     const next = String(status || '').toLowerCase();
     if (!allowed.has(next)) return res.status(400).json({ ok: false, error: 'Invalid status' });
     const [result] = await pool.query('UPDATE user_invites SET status=? WHERE id=?', [next, id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: `invite.${next}`, entityType: 'Invite', entityId: id });
+    await logAudit({ actorEmail: req?.auth?.email, action: `invite.${next}`, entityType: 'Invite', entityId: id, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -820,7 +835,7 @@ app.delete('/api/users/invites/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
     const [result] = await pool.query('DELETE FROM user_invites WHERE id=?', [id]);
-    await logAudit({ actorEmail: req?.auth?.email, action: 'invite.delete', entityType: 'Invite', entityId: id });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'invite.delete', entityType: 'Invite', entityId: id, activeMode: req?.auth?.mode });
     res.json({ ok: true, affectedRows: result.affectedRows });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
@@ -876,7 +891,7 @@ app.get('/api/docs', async (req, res) => {
   }
 });
 
-app.post('/api/docs/upload', requireRole(['Admin','PIC_Procurement','PIC_Finance','PIC_Operational']), async (req, res) => {
+app.post('/api/docs/upload', requireMode(['Client','Supplier']), requireRole(['Admin','PIC_Procurement','PIC_Finance','PIC_Operational']), async (req, res) => {
   try {
     const body = req.body || {};
     const type = String(body.type || 'Generic');
@@ -890,7 +905,7 @@ app.post('/api/docs/upload', requireRole(['Admin','PIC_Procurement','PIC_Finance
       'INSERT INTO document (type, ref_id, version, url, can_access_json, storage_provider, storage_key, hash_sha256, scan_status, scan_vendor, scan_at) VALUES (?, ?, 1, ?, CAST(? AS JSON), ?, ?, ?, "scanned", "demo", NOW())',
       [type, refId, url, JSON.stringify(canAccess), storageProvider, storageKey, hash]
     );
-    await logAudit({ actorEmail: req?.auth?.email, action: 'doc.upload', entityType: 'Document', entityId: result.insertId, comment: `${type}:${refId}` });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'doc.upload', entityType: 'Document', entityId: result.insertId, comment: `${type}:${refId}`, activeMode: req?.auth?.mode });
     res.status(201).json({ ok: true, id: result.insertId, hash_sha256: hash });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });

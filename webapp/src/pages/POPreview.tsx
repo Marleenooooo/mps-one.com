@@ -6,6 +6,7 @@ import { POLayoutC } from '../components/po/POLayoutC';
 import { amountToWords, formatIDR } from '../components/utils/format';
 import { useModule } from '../components/useModule';
 import '../components/po/print.css';
+import { canPerform } from '../services/permissions';
 
 export default function POPreview() {
   useModule('procurement');
@@ -178,7 +179,7 @@ export default function POPreview() {
       </div>
       {layout === 'A' && <div style={{ marginTop: 12, color: 'var(--text-secondary)' }}>{words}</div>}
       <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-        <button className="btn primary" onClick={() => window.print()}>Print / Save PDF</button>
+        <button className="btn primary" aria-disabled={!canPerform('create:po')} onClick={() => window.print()}>Print / Save PDF</button>
         <button className="btn secondary" onClick={() => alert(`Grand total: ${formatIDR(subtotal, language)}`)}>Quick Total</button>
       </div>
     </div>
