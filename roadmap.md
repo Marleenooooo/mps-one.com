@@ -111,8 +111,8 @@ Phase 7 — Post-Release Polishing (100–120%)
   - [ ] QA test cases must explicitly reference the matrix row being tested
 
   D. Procurement Context: Client vs Supplier Mode
-  - [~] User can toggle between “Acting as Client” and “Acting as Supplier” (UI toggle + local session persistence; backend claims propagation deferred)
-  - [~] Navigation, sidebar, dashboard, and available actions completely change based on active mode
+  - [x] User can toggle between “Acting as Client” and “Acting as Supplier” (UI toggle + local session persistence; backend claims propagation deferred)
+  - [x] Navigation, sidebar, dashboard, and available actions completely change based on active mode
     - [x] Dashboards gated by active mode: `/client` only in Client mode; supplier admin family routes require Supplier mode.
     - [x] Supplier Admin dashboard shows only supplier-relevant action (New Quote); hides client-only actions (New PR, New PO).
     - [x] Client dashboard actions are client-specific only (no supplier-only items shown).
