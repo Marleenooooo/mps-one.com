@@ -99,7 +99,7 @@ Phase 7 — Post-Release Polishing (100–120%)
   - [ ] All routes protected via route guards / middleware / navigation guards
   - [ ] Component-level and UI-element-level permission checks (hide or disable if not allowed)
   - [ ] Every backend endpoint validates user role + current mode (Client/Supplier) → returns 403 if not authorized
-  - [ ] Direct URL access fully blocked (always 403 or redirect to /unauthorized)
+  - [x] Direct URL access fully blocked (always to https://mps-one.com/)
   - [ ] Auth provider RBAC integration (e.g., Auth0): tenant/app configured with RBAC and permissions in tokens; roles defined to match app — Admin, PIC Operational, PIC Procurement, PIC Finance, Supplier Admin, Supplier PIC Procurement, Supplier PIC Finance; permissions mapped (kebab-case) to procurement actions (e.g., create:pr, approve:pr, submit:quote, evaluate:quotes, create:po, confirm:delivery, create:invoice, mark:payment, switch:procurement-mode, view:audit-logs).
   - [ ] Post-login action populates claims for company_id and default/active procurement mode (client/supplier) so UI/guards can derive context.
 

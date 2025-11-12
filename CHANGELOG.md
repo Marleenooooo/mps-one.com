@@ -115,8 +115,22 @@
 - `webapp/src/pages/supplier/AdminDashboard.tsx`
 
 ### Notes
-- Previewed `/client` and `/supplier/admin`; dashboards render cleanly with mode-aware routing and actions. No browser or terminal errors observed.
+ - Previewed `/client` and `/supplier/admin`; dashboards render cleanly with mode-aware routing and actions. No browser or terminal errors observed.
  - Verified Client Dashboard shows only client-specific actions (Quick PR, budget utilization, documents, invoice overview); no supplier-only actions appear.
+
+### Highlights
+- Direct URL Access Blocking:
+  - Implemented an env-gated check in `webapp/src/main.tsx` to block direct deep-link access.
+  - In production (`VITE_BLOCK_DIRECT_URL=1`), non-whitelisted direct entries redirect to `VITE_APP_URL` (https://mps-one.com/).
+  - Development remains unaffected (`VITE_BLOCK_DIRECT_URL=0`) to allow deep-link previews.
+
+### Affected Files
+- `webapp/src/main.tsx`
+- `webapp/.env.production`
+- `webapp/.env.development`
+
+### Notes
+- Verified dev preview remains functional on `/client` and `/supplier/reporting` with no unintended redirects.
 
 ## v0.1.24 (2025-11-12)
 
