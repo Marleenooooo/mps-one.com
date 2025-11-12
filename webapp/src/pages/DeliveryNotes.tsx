@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
 import { useModule } from '../components/useModule';
+import { useI18n } from '../components/I18nProvider';
+import * as pillarStorage from '../services/pillarStorage';
 
 type DeliveryItem = { id: string; name: string; orderedQty: number; shippedQty: number; receivedQty: number; correctionQty: number };
 
 export default function DeliveryNotes() {
   useModule('inventory');
+  const { t } = useI18n();
   const [poId, setPoId] = useState<string>(() => {
     try {
-      const seed = JSON.parse(localStorage.getItem('mpsone_po_from_quote') || '{}');
+      const seed = JSON.parse(pillarStorage.getItem('mpsone_po_from_quote') || '{}');
       return seed?.poId || 'PO-9821';
     } catch { return 'PO-9821'; }
   });
@@ -30,12 +33,12 @@ export default function DeliveryNotes() {
   useEffect(() => {
     try {
       const key = `mpsone_delivery_notes_${poId}`;
-      localStorage.setItem(key, JSON.stringify(items));
+      pillarStorage.setItem(key, JSON.stringify(items));
       const gateKey = 'mpsone_available_to_invoice';
-      const gate = JSON.parse(localStorage.getItem(gateKey) || '{}');
+      const gate = JSON.parse(pillarStorage.getItem(gateKey) || '{}');
       const availableQty = items.reduce((sum, it) => sum + Math.max(0, it.receivedQty + it.correctionQty), 0);
       gate[poId] = { availableQty, deliveredAmount: totalDeliveredAmount };
-      localStorage.setItem(gateKey, JSON.stringify(gate));
+      pillarStorage.setItem(gateKey, JSON.stringify(gate));
     } catch {}
   }, [items, poId, totalDeliveredAmount]);
 
@@ -46,20 +49,20 @@ export default function DeliveryNotes() {
   return (
     <div className="main" data-module="inventory">
       <Topbar>
-        <Breadcrumbs items={["Inventory", "Delivery Notes"]} />
+        <Breadcrumbs items={["Inventory", t('delivery.title')]} />
       </Topbar>
       <div className="page-header inventory" role="region" aria-label="Delivery Notes Header">
-        <h1 style={{ margin: 0 }}>Delivery Notes</h1>
-        <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>Confirm receipts and record corrections; invoices must respect corrected quantities.</p>
+        <h1 style={{ margin: 0 }}>{t('delivery.title')}</h1>
+        <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>{t('delivery.header_desc')}</p>
       </div>
       <div className="card" style={{ padding: 16, borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontWeight: 600 }}>PO: {poId}</div>
-          <div className="status-badge info">Delivered Amount: Rp {totalDeliveredAmount.toLocaleString('id-ID')}</div>
+          <div style={{ fontWeight: 600 }}>{t('delivery.po_label')}: {poId}</div>
+          <div className="status-badge info">{t('delivery.delivered_amount')}: Rp {totalDeliveredAmount.toLocaleString('id-ID')}</div>
         </div>
         <table className="table" style={{ width: '100%', marginTop: 12 }}>
           <thead>
-            <tr><th>Item</th><th>Ordered</th><th>Shipped</th><th>Received</th><th>Correction</th><th>Available to Invoice</th></tr>
+            <tr><th>{t('delivery.table.item')}</th><th>{t('delivery.table.ordered')}</th><th>{t('delivery.table.shipped')}</th><th>{t('delivery.table.received')}</th><th>{t('delivery.table.correction')}</th><th>{t('delivery.table.available_to_invoice')}</th></tr>
           </thead>
           <tbody>
             {items.map((it, idx) => {
@@ -73,7 +76,7 @@ export default function DeliveryNotes() {
                   <td>
                     <input className="input" type="number" value={it.correctionQty}
                            onChange={e => updateCorrection(idx, parseInt(e.target.value || '0', 10))}
-                           aria-label={`Correction for ${it.name}`} style={{ width: 100 }} />
+                           aria-label={t('delivery.correction_aria').replace('{name}', it.name)} style={{ width: 100 }} />
                   </td>
                   <td>
                     <span className="status-badge success">{available}</span>
@@ -85,11 +88,10 @@ export default function DeliveryNotes() {
         </table>
         <div className="card" style={{ padding: 12, marginTop: 12 }}>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-            Invariant: sum(delivery.qty) ≤ sum(po.qty). Corrections adjust available-to-invoice quantities; invoices must respect corrected quantities.
+            {t('delivery.invariant')}
           </div>
         </div>
       </div>
     </div>
   );
 }
-

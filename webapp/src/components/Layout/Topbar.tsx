@@ -1,16 +1,27 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../ThemeProvider';
 import { useI18n } from '../I18nProvider';
-import { DEPARTMENTS, DEPARTMENTS_ID, getOverscanPrefs, setOverscanPrefs, OVERSCAN_DEFAULTS, getHighPerformance, setHighPerformance, getDebounceMs } from '../../config';
+import { DEPARTMENTS, DEPARTMENTS_ID, getOverscanPrefs, setOverscanPrefs, OVERSCAN_DEFAULTS, getHighPerformance, setHighPerformance, getDebounceMs, getOfflineMode } from '../../config';
 import { getPreferredLanguage } from '../../services/i18n';
+import { listNotifications } from '../../services/notifications';
+import * as pillarStorage from '../../services/pillarStorage';
 
 export function Topbar({ children }: { children?: React.ReactNode }) {
   const { theme, toggle: toggleTheme, setTheme } = useTheme();
   const { language, setLanguage, t } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem('mock_notifications');
+      const rows = raw ? JSON.parse(raw) : [];
+      return rows.filter((r: any) => !r.is_read).length;
+    } catch { return 0; }
+  });
   const [highPerf, setHighPerf] = useState<boolean>(() => getHighPerformance());
+  const offline = getOfflineMode();
   const role = (localStorage.getItem('mpsone_role') as string | null) || null;
   const userType = (localStorage.getItem('mpsone_user_type') as 'supplier' | 'client' | null) || null;
   const displayName = (localStorage.getItem('mpsone_display_name') as string | null) || null;
@@ -18,6 +29,25 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
   const typeLabel = userType === 'supplier' ? (t('user.supplier') || 'Supplier') : userType === 'client' ? (t('user.client') || 'Client') : '';
   const identityLabel = [displayName || '', nickname ? `(${nickname})` : ''].filter(Boolean).join(' ');
   const loginLabel = [identityLabel, [typeLabel, role || ''].filter(Boolean).join(' ')].filter(Boolean).join(' — ');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const rows = await listNotifications({ unread: true, limit: 200 });
+        const count = Array.isArray(rows) ? rows.length : 0;
+        if (count > 0) setUnreadCount(count);
+      } catch {}
+    })();
+    const onFocus = () => {
+      try {
+        const raw = localStorage.getItem('mock_notifications');
+        const rows = raw ? JSON.parse(raw) : [];
+        setUnreadCount(rows.filter((r: any) => !r.is_read).length);
+      } catch {}
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
 
   function clearSession() {
     try {
@@ -27,9 +57,63 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
     } catch { /* noop */ }
     navigate('/login/client', { replace: true });
   }
+  function resetProcurementCaches() {
+    const keys = [
+      'mpsone_pr_draft',
+      'mpsone_pr_sent',
+      'mpsone_quote_accepted',
+      'mpsone_audit_trail',
+      'mpsone_suppliers',
+      'mpsone_po_from_quote',
+      'mpsone_available_to_invoice',
+    ];
+    keys.forEach(k => pillarStorage.removeItem(k));
+  }
+  function switchMode(to: 'client' | 'supplier') {
+    if (userType === to) return;
+    try { localStorage.setItem('mpsone_user_type', to); } catch {}
+    // Clear pillar-scoped procurement caches to avoid cross-mode bleed
+    resetProcurementCaches();
+    // Navigate to mode-specific landing to trigger layout reset
+    if (to === 'client') {
+      navigate('/client/quotes', { replace: true });
+    } else {
+      navigate('/supplier/reporting', { replace: true });
+    }
+    // Smooth UX touch
+    try { setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0); } catch {}
+  }
+  const currentModule = (typeof document !== 'undefined' ? (document.documentElement.getAttribute('data-module') as string | null) : null) || 'procurement';
+  const moduleLabel = (() => {
+    switch (currentModule) {
+      case 'finance': return 'Finance';
+      case 'inventory': return 'Inventory';
+      case 'reports': return 'Reports';
+      case 'procurement':
+      default: return 'Procurement';
+    }
+  })();
   return (
     <header className="topbar" role="banner">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Pillar context indicator */}
+        <div
+          className="pillar-indicator"
+          aria-label={`Active Module: ${moduleLabel}`}
+          title={`Active Module: ${moduleLabel}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 10px',
+            borderRadius: 999,
+            background: 'linear-gradient(90deg, var(--module-color) 0%, var(--module-gradient-end) 100%)',
+            color: '#fff',
+            boxShadow: '0 0 8px color-mix(in srgb, var(--module-color) 30%, transparent)'
+          }}
+        >
+          <span style={{ fontWeight: 700 }}>{moduleLabel}</span>
+        </div>
         {children}
       </div>
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
@@ -39,7 +123,43 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <QuickSearch />
-        <NotificationBell count={3} />
+        {offline && (
+          <span className="status-badge info tooltip" data-tip={t('topbar.offline_mock') || 'Offline Mock Mode'} aria-label={t('topbar.offline_mock') || 'Offline Mock Mode'}>
+            🧪 Offline Mock
+          </span>
+        )}
+        <NotificationBell count={unreadCount} onClick={() => navigate('/notifications')} />
+        {/* Client/Supplier mode toggle (explicit context switch) */}
+        <div role="group" aria-label={t('topbar.mode_switch') || 'Mode Switch'} style={{ display: 'inline-flex', gap: 6 }}>
+          <button
+            className="btn outline tooltip"
+            data-tip={(t('user.client') || 'Client') + ' mode'}
+            aria-pressed={userType === 'client'}
+            aria-label={(t('user.client') || 'Client') + ' mode'}
+            onClick={() => switchMode('client')}
+            style={userType === 'client' ? {
+              background: 'linear-gradient(135deg, var(--module-color) 0%, var(--module-gradient-end) 100%)',
+              color: '#fff',
+              boxShadow: '0 0 10px var(--module-color)'
+            } : undefined}
+          >
+            {(t('user.client') || 'Client')}
+          </button>
+          <button
+            className="btn outline tooltip"
+            data-tip={(t('user.supplier') || 'Supplier') + ' mode'}
+            aria-pressed={userType === 'supplier'}
+            aria-label={(t('user.supplier') || 'Supplier') + ' mode'}
+            onClick={() => switchMode('supplier')}
+            style={userType === 'supplier' ? {
+              background: 'linear-gradient(135deg, var(--module-color) 0%, var(--module-gradient-end) 100%)',
+              color: '#fff',
+              boxShadow: '0 0 10px var(--module-color)'
+            } : undefined}
+          >
+            {(t('user.supplier') || 'Supplier')}
+          </button>
+        </div>
         {/* Theme toggle button (light/dark) */}
         <button
           className="btn ghost tooltip"
@@ -153,12 +273,16 @@ export function Breadcrumbs({ items }: { items: string[] }) {
   }
   return (
     <nav aria-label="Breadcrumb" style={{ color: 'var(--text-secondary)' }}>
-      {items.map((item, idx) => (
-        <span key={item}>
-          <span aria-current={idx === items.length - 1 ? 'page' : undefined}>{translateItem(item)}</span>
-          {idx < items.length - 1 && <span style={{ margin: '0 8px' }}>/</span>}
-        </span>
-      ))}
+      <ol style={{ listStyle: 'none', display: 'flex', alignItems: 'center', padding: 0, margin: 0 }}>
+        {items.map((item, idx) => (
+          <li key={item} style={{ display: 'flex', alignItems: 'center' }}>
+            <span aria-current={idx === items.length - 1 ? 'page' : undefined}>{translateItem(item)}</span>
+            {idx < items.length - 1 && (
+              <span aria-hidden style={{ margin: '0 8px' }}>/</span>
+            )}
+          </li>
+        ))}
+      </ol>
     </nav>
   );
 }
@@ -175,30 +299,71 @@ function QuickSearch() {
   const RECENTS_KEY = 'global_search_recent';
   const SEARCHES_KEY = 'global_search_queries';
 
-  type Item = { label: string; path: string; icon: string; keywords: string[]; kind?: 'recent' | 'action' | 'link' | 'search'; group?: string; execute?: (q: string) => void };
+  type Item = { label: string; path: string; icon: string; keywords: string[]; kind?: 'recent' | 'action' | 'link' | 'search'; group?: string; execute?: (q: string) => void; disabled?: boolean; tooltip?: string };
   type Recent = { path: string; label: string; icon: string; ts: number };
   type RecentSearch = { q: string; ts: number };
 
   const quickActions: Item[] = useMemo(() => ([
-    { label: t('pr.new_pr') || 'New PR', path: '/procurement/pr/new', icon: '⚡', keywords: ['new', 'create', 'pr'], kind: 'action' },
+    // Only surface New PR in Procurement context to prevent cross-pillar bleed
+    ...(typeof document !== 'undefined' && (document.documentElement.getAttribute('data-module') || 'procurement') === 'procurement'
+      && (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') === 'client' : true)
+      ? [{ label: t('pr.new_pr') || 'New PR', path: '/procurement/pr/new', icon: '⚡', keywords: ['new', 'create', 'pr'], kind: 'action' }]
+      : [])
   ]), [t]);
 
   // Build global shortcuts index
   const index: Item[] = useMemo(() => {
     const docUserGuide = language === 'id' ? 'docs/id/USER_GUIDE.md' : 'docs/USER_GUIDE.md';
     const docWorkflows = language === 'id' ? 'docs/id/WORKFLOWS.md' : 'docs/WORKFLOWS.md';
-    return [
-      { label: t('nav.purchase_requests') || 'Purchase Requests', path: '/procurement/pr', icon: '📝', keywords: ['pr', 'purchase request', 'procurement', 'requests'], kind: 'link' },
-      { label: t('nav.quote_builder') || 'Quote Builder', path: '/procurement/quote-builder', icon: '💬', keywords: ['quote', 'penawaran', 'builder'], kind: 'link' },
-      { label: 'PO Preview', path: '/procurement/po/preview', icon: '📄', keywords: ['po', 'purchase order', 'preview'], kind: 'link' },
-      { label: t('nav.order_tracker') || 'Order Tracker', path: '/supply/order-tracker', icon: '🚚', keywords: ['delivery', 'tracking', 'order', 'shipment'], kind: 'link' },
-      { label: t('nav.docs') || 'Document Manager', path: '/docs', icon: '📁', keywords: ['documents', 'doc', 'versions', 'proof'], kind: 'link' },
-      { label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: '📊', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' },
-      { label: t('nav.help') || 'Help Center', path: '/help', icon: '❓', keywords: ['help', 'docs', 'guide'], kind: 'link' },
-      { label: (t('help.topicPOConversion') || 'Convert Quote → PO'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('convert quote')}` , icon: '🔀', keywords: ['convert', 'po', 'quote', 'guide'], kind: 'link' },
-      { label: (t('help.topicInvoicing') || 'Invoicing & Payments'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('invoice')}`, icon: '💵', keywords: ['invoice', 'payment', 'finance'], kind: 'link' },
-      { label: (t('help.topicLifecycle') || 'Procurement Lifecycle'), path: `/help/docs?file=${encodeURIComponent(docWorkflows)}#${encodeURIComponent('lifecycle')}`, icon: '📈', keywords: ['lifecycle', 'workflow', 'procurement'], kind: 'link' },
-    ];
+    const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    const canBuildQuote = (() => {
+      try {
+        if (userType !== 'supplier') return false;
+        const supplierId = localStorage.getItem('mpsone_user_id');
+        if (!supplierId) return false;
+        const map = JSON.parse(pillarStorage.getItem('mpsone_pr_sent') || '{}');
+        const prIds = Object.keys(map || {});
+        for (const prId of prIds) {
+          const list = Array.isArray(map[prId]) ? map[prId] : [];
+          if (list.some((x: any) => String(x.supplierId) === String(supplierId))) return true;
+        }
+        return false;
+      } catch { return false; }
+    })();
+    const base: Item[] = [];
+    // Client-only items
+    if (userType === 'client' || !userType) {
+      base.push({ label: t('nav.purchase_requests') || 'Purchase Requests', path: '/procurement/pr', icon: '📝', keywords: ['pr', 'purchase request', 'procurement', 'requests'], kind: 'link' });
+      base.push({ label: 'PO Preview', path: '/procurement/po/preview', icon: '📄', keywords: ['po', 'purchase order', 'preview'], kind: 'link' });
+    }
+    // Supplier-only items
+    if (userType === 'supplier') {
+      base.push({ label: t('nav.quote_builder') || 'Quote Builder', path: '/procurement/quote-builder', icon: '💬', keywords: ['quote', 'penawaran', 'builder'], kind: 'link', disabled: (userType === 'supplier' && !canBuildQuote), tooltip: (userType === 'supplier' && !canBuildQuote) ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined });
+      base.push({ label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: '📊', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' });
+    }
+    // Shared items
+    base.push({ label: t('nav.order_tracker') || 'Order Tracker', path: '/supply/order-tracker', icon: '🚚', keywords: ['delivery', 'tracking', 'order', 'shipment'], kind: 'link' });
+    base.push({ label: t('nav.docs') || 'Document Manager', path: '/docs', icon: '📁', keywords: ['documents', 'doc', 'versions', 'proof'], kind: 'link' });
+    base.push({ label: t('nav.help') || 'Help Center', path: '/help', icon: '❓', keywords: ['help', 'docs', 'guide'], kind: 'link' });
+    base.push({ label: (t('help.topicPOConversion') || 'Convert Quote → PO'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('convert quote')}` , icon: '🔀', keywords: ['convert', 'po', 'quote', 'guide'], kind: 'link' });
+    base.push({ label: (t('help.topicInvoicing') || 'Invoicing & Payments'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('invoice')}`, icon: '💵', keywords: ['invoice', 'payment', 'finance'], kind: 'link' });
+    base.push({ label: (t('help.topicLifecycle') || 'Procurement Lifecycle'), path: `/help/docs?file=${encodeURIComponent(docWorkflows)}#${encodeURIComponent('lifecycle')}`, icon: '📈', keywords: ['lifecycle', 'workflow', 'procurement'], kind: 'link' });
+    const mod = (typeof document !== 'undefined' ? (document.documentElement.getAttribute('data-module') as string | null) : null) || 'procurement';
+    const isGlobal = (p: string) => p.startsWith('/help') || p.startsWith('/docs');
+    const inContext = (p: string) => {
+      if (isGlobal(p)) return true;
+      switch (mod) {
+        case 'inventory':
+          return p.startsWith('/inventory/') || p.startsWith('/supply/order-tracker');
+        case 'finance':
+        case 'reports':
+          return p.startsWith('/supplier/reporting');
+        case 'procurement':
+        default:
+          return p.startsWith('/procurement/');
+      }
+    };
+    return base.filter(item => inContext(item.path));
   }, [t, language]);
 
   const [recents, setRecents] = useState<Recent[]>(() => {
@@ -284,7 +449,24 @@ function QuickSearch() {
       };
       const mItem = map[term];
       if (mItem) {
-        return { label: mItem.label, path: mItem.path, icon: mItem.icon, keywords: ['open','goto',term], kind: 'action', group: 'Actions' };
+        // Apply gating when navigating to Quote Builder via typed command
+        const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+        const canBuildQuote = (() => {
+          try {
+            if (userType !== 'supplier') return false;
+            const supplierId = localStorage.getItem('mpsone_user_id');
+            if (!supplierId) return false;
+            const map = JSON.parse(pillarStorage.getItem('mpsone_pr_sent') || '{}');
+            const prIds = Object.keys(map || {});
+            for (const prId of prIds) {
+              const list = Array.isArray(map[prId]) ? map[prId] : [];
+              if (list.some((x: any) => String(x.supplierId) === String(supplierId))) return true;
+            }
+            return false;
+          } catch { return false; }
+        })();
+        const disabled = (mItem.path === '/procurement/quote-builder' && userType === 'supplier' && !canBuildQuote);
+        return { label: mItem.label, path: mItem.path, icon: mItem.icon, keywords: ['open','goto',term], kind: 'action', group: 'Actions', disabled, tooltip: disabled ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined };
       }
     }
     // Export PRs CSV (EN + ID)
@@ -439,6 +621,11 @@ function QuickSearch() {
         setQuery(''); setActive(0);
         if (typeof sel.execute === 'function') sel.execute(query);
         if (sel.path) {
+          // Gating: block Quote Builder if disabled
+          if (sel.path === '/procurement/quote-builder' && sel.disabled) {
+            alert(sel.tooltip || (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes'));
+            return;
+          }
           const next: Recent[] = [{ path: sel.path, label: sel.label, icon: sel.icon, ts: Date.now() }, ...recents.filter(r => r.path !== sel.path)];
           saveRecents(next);
           navigate(sel.path);
@@ -485,6 +672,11 @@ function QuickSearch() {
                 setQuery(''); setActive(0);
                 if (typeof r.execute === 'function') r.execute(query);
                 if (r.path) {
+                  // Gating: block Quote Builder if disabled
+                  if (r.path === '/procurement/quote-builder' && r.disabled) {
+                    alert(r.tooltip || (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes'));
+                    return;
+                  }
                   const next: Recent[] = [{ path: r.path, label: r.label, icon: r.icon, ts: Date.now() }, ...recents.filter(x => x.path !== r.path)];
                   saveRecents(next);
                   navigate(r.path);
@@ -497,7 +689,9 @@ function QuickSearch() {
                 borderLeft: i === active ? '3px solid var(--module-color)' : '3px solid transparent',
                 boxShadow: i === active ? '0 0 10px var(--module-color)' : 'none'
               }}
-            >
+              title={r.tooltip}
+              aria-disabled={r.disabled ? true : undefined}
+           >
               <span aria-hidden>{r.icon}</span>
               <span>{/* highlight match in label */}
                 {(() => {
@@ -569,10 +763,10 @@ function OverscanControl() {
   );
 }
 
-function NotificationBell({ count }: { count: number }) {
+function NotificationBell({ count, onClick }: { count: number, onClick?: () => void }) {
   const { t } = useI18n();
   return (
-    <button className="btn ghost tooltip" data-tip={t('topbar.notifications')} aria-label={t('topbar.notifications')}>
+    <button className="btn ghost tooltip" data-tip={t('topbar.notifications')} aria-label={t('topbar.notifications')} onClick={onClick}>
       🔔
       {count > 0 && (
         <span aria-label={`${count} ${t('topbar.unread')}`} style={{

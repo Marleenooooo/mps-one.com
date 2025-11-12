@@ -18,12 +18,34 @@ Bahasa: [English](../UI_THEME_I18N.md) | [Bahasa Indonesia](UI_THEME_I18N.md)
 ### Interaksi
 - Tombol primer/sekunder memakai gradasi dengan efek glow.
 - Indikator fokus: `outline: 2px solid [module-color]; outline-offset: 2px`.
+ - Skip Link: terlihat saat fokus di kiri-atas; pengguna keyboard bisa lompat ke konten utama.
+ - Pintasan keyboard: `/` fokus ke kolom pencarian People; Alt+Left/Right pindah halaman DataTable; Alt+P ekspor ke PDF.
 
 ## Preferensi Bahasa (i18n)
 - Didukung: Inggris (`en`) dan Indonesia (`id`).
 - Key penyimpanan: `mpsone_lang` (utama) dan `lang` (legacy) untuk kompatibilitas.
 - Default pengguna baru: `id` untuk Indonesia, selainnya `en` (berdasarkan geo).
 - Ganti bahasa di topbar; preferensi dicache lokal antar sesi.
+
+### Tindakan Procurement (Label Terlokalisasi)
+- Label Perbandingan Penawaran: `quotes.title`, `quotes.subtitle`, `quote.version`, `quote.total`, `quote.tax_rate`, `quote.discount`, `quote.valid_until`.
+- Label tindakan: `action.approve_quote`, `action.reject_quote`, `po.generate_from_quote`.
+- Kelompok label status: `status.label`, `actions.label`.
+- Peringatan: `quote.approved_alert`, `quote.rejected_alert`.
+- Tooltip penjaga: `gating.approval_required_compare`, `gating.approval_required_send`, `gating.quote_builder_disabled`.
+
+### Catatan Pengiriman & Pelaporan (Supplier) — Key I18N
+- Catatan Pengiriman:
+  - `delivery.title`, `delivery.header_desc`, `delivery.po_label`, `delivery.delivered_amount`
+  - `delivery.table.item`, `delivery.table.ordered`, `delivery.table.shipped`, `delivery.table.received`, `delivery.table.correction`, `delivery.table.available_to_invoice`
+  - `delivery.invariant`, `delivery.correction_aria`
+- Pelaporan Supplier:
+  - `reporting.create_invoice`, `reporting.remaining_deliverable`, `reporting.delivery_references`, `reporting.no_delivery_records`, `reporting.insufficient_delivered_amount`
+  - Status pembayaran: `reporting.status.paid`, `reporting.status.over_due`, `reporting.status.waiting`, `reporting.status.next`, `reporting.status.neutral`
+
+Catatan
+- Pastikan key baru tersedia di kamus `en` dan `id` pada `webapp/src/components/I18nProvider.tsx`.
+- State UI mengikuti interaksi neon: glow saat hover, scale, dan indikator fokus yang aksesibel.
 
 ## Troubleshooting
 - Untuk reset tema/bahasa, hapus key di localStorage lalu refresh.

@@ -39,6 +39,13 @@
   /* Interaction States */
   --accent: var(--module-color);
   --hover: color-mix(in srgb, var(--accent) 8%, transparent);
+
+  /* Motion & Easing */
+  --motion-fast: 160ms;
+  --motion-medium: 300ms;
+  --motion-slow: 480ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
 }
 
 [data-theme="dark"] {
@@ -113,6 +120,18 @@ body {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Smooth theme switching (Neon palette guidance) */
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Global focus indicators per Neon Accessibility SOP */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--module-color);
+  outline-offset: 2px;
 }
 
 .skip-link {
@@ -128,6 +147,8 @@ body {
   color: white;
   padding: 8px 12px;
   border-radius: 6px;
+  outline: 2px solid var(--module-color);
+  outline-offset: 2px;
 }
 
 /* Shared UI tokens */
@@ -136,12 +157,27 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  transition: background-color var(--motion-medium) var(--ease-standard),
+              color var(--motion-medium) var(--ease-standard),
+              border-color var(--motion-medium) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
 }
 
 [data-theme="dark"] .card {
   backdrop-filter: blur(4px);
   box-shadow: 0 0 10px color-mix(in srgb, var(--module-color) 20%, transparent), 
               0 0 20px color-mix(in srgb, var(--module-color) 10%, transparent);
+}
+
+/* Card hover micro-interaction (Neon VNS) */
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+[data-theme="dark"] .card:hover {
+  box-shadow: 0 0 15px color-mix(in srgb, var(--module-color) 30%, transparent),
+              0 0 30px color-mix(in srgb, var(--module-color) 20%, transparent);
 }
 
 .btn {
@@ -154,7 +190,13 @@ body {
   background: var(--surface);
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+.btn.sm {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.2;
 }
 .btn:hover { 
   background: var(--hover);
@@ -170,7 +212,21 @@ body {
 }
 .btn.primary:hover { 
   filter: brightness(1.1);
+  transform: scale(1.02);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-gradient-start) 40%, transparent);
+}
+[data-theme="light"] .btn.primary:focus-visible,
+.btn.primary:focus-visible {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-gradient-start) 30%, transparent),
+              0 4px 12px color-mix(in srgb, var(--primary-gradient-start) 25%, transparent);
+}
+[data-theme="dark"] .btn.primary:hover {
+  transform: scale(1.02);
+}
+.btn.primary:active {
+  filter: brightness(0.9);
+  transform: scale(0.98);
 }
 
 [data-theme="dark"] .btn.primary {
@@ -191,7 +247,21 @@ body {
 }
 .btn.secondary:hover {
   filter: brightness(1.1);
+  transform: scale(1.02);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--secondary-gradient-start) 40%, transparent);
+}
+[data-theme="light"] .btn.secondary:focus-visible,
+.btn.secondary:focus-visible {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--secondary-gradient-start) 30%, transparent),
+              0 4px 12px color-mix(in srgb, var(--secondary-gradient-start) 25%, transparent);
+}
+[data-theme="dark"] .btn.secondary:hover {
+  transform: scale(1.02);
+}
+.btn.secondary:active {
+  filter: brightness(0.9);
+  transform: scale(0.98);
 }
 
 [data-theme="dark"] .btn.secondary:hover {
@@ -199,38 +269,110 @@ body {
   box-shadow: 0 0 15px var(--secondary-gradient-start);
 }
 
+/* Ghost Button (global, outside sidebar) */
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-primary);
+}
+.btn.ghost:hover,
+.btn.ghost:focus-visible {
+  background: color-mix(in srgb, var(--module-color) 8%, transparent);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--module-color) 20%, transparent);
+}
+[data-theme="dark"] .btn.ghost:hover,
+[data-theme="dark"] .btn.ghost:focus-visible {
+  background: color-mix(in srgb, var(--module-color) 12%, transparent);
+  box-shadow: 0 0 10px var(--module-color), 0 0 20px color-mix(in srgb, var(--module-color) 30%, transparent);
+}
+
 /* Outline Button */
 .btn.outline { 
   background: transparent; 
   border: 2px solid transparent;
-  border-image: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end)) 1;
+  /* Use module-specific gradient per Neon SOP */
+  border-image: linear-gradient(135deg, var(--module-color), var(--module-gradient-end)) 1;
   color: var(--text-primary);
 }
 .btn.outline:hover {
   /* Replace invalid background-opacity with translucent gradient fill */
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--primary-gradient-start) 20%, transparent),
-    color-mix(in srgb, var(--primary-gradient-end) 20%, transparent)
+    color-mix(in srgb, var(--module-color) 20%, transparent),
+    color-mix(in srgb, var(--module-gradient-end) 20%, transparent)
   );
   color: #fff;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--module-color) 30%, transparent);
+}
+/* Focus-visible parity with hover for accessibility */
+.btn.outline:focus-visible {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--module-color) 20%, transparent),
+    color-mix(in srgb, var(--module-gradient-end) 20%, transparent)
+  );
+  color: #fff;
+  transform: scale(1.02);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--module-color) 30%, transparent),
+              0 4px 12px color-mix(in srgb, var(--module-color) 25%, transparent);
 }
 
 [data-theme="dark"] .btn.outline:hover {
-  background: color-mix(in srgb, var(--primary-gradient-start) 20%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--primary-gradient-start) 30%, transparent);
+  background: color-mix(in srgb, var(--module-color) 20%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--module-color) 40%, transparent),
+              0 0 25px color-mix(in srgb, var(--module-gradient-end) 30%, transparent);
+}
+/* Dark mode focus-visible glow */
+[data-theme="dark"] .btn.outline:focus-visible {
+  background: color-mix(in srgb, var(--module-color) 20%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--module-color) 40%, transparent),
+              0 0 25px color-mix(in srgb, var(--module-gradient-end) 30%, transparent);
 }
 
-.btn[disabled] { 
-  opacity: 0.6; 
+
+/* Disabled states with improved contrast (WCAG AA) */
+/* Disabled states per Neon SOP: consistent base and reduced emphasis */
+.btn[disabled] {
+  background: var(--border);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  opacity: 0.4; /* Visual de-emphasis while remaining legible */
   cursor: not-allowed;
+  pointer-events: none;
   transform: none !important;
   box-shadow: none !important;
 }
 
 [data-theme="dark"] .btn.primary[disabled] {
-  background: #2D3250;
+  background: #2D3250; /* Dark border base */
+  color: var(--text-secondary);
+  border-color: #2D3250;
   opacity: 0.4;
+}
+
+/* Light theme primary disabled for parity */
+[data-theme="light"] .btn.primary[disabled] {
+  background: var(--border);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  opacity: 0.4;
+}
+
+/* Inputs disabled */
+.input[disabled], .select[disabled], textarea[disabled] {
+  background: var(--surface2);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  opacity: 1;
+}
+[data-theme="dark"] .input[disabled],
+[data-theme="dark"] .select[disabled],
+[data-theme="dark"] textarea[disabled] {
+  background: #2D3250;
+  color: var(--text-secondary);
+  border-color: #2D3250;
 }
 
 @keyframes spin { 
@@ -245,7 +387,7 @@ body {
   background: var(--surface);
   color: var(--text-primary);
   outline: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 .input, .select, textarea {
   /* Force LTR to avoid accidental backward rendering */
@@ -269,6 +411,32 @@ body {
 :where(button, a, input, select, textarea):focus-visible {
   outline: 2px solid var(--module-color);
   outline-offset: 2px;
+}
+
+/* Accent Borders ---------------------------------------------------------- */
+/* Utility classes to add Neon VNS accent borders to sections/cards/headers */
+.accent-border {
+  border: 1px solid transparent;
+  border-image: linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1;
+}
+
+.accent-border-left {
+  border-left: 3px solid;
+  border-image: linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1;
+  border-image-slice: 1;
+}
+
+.accent-border-top {
+  border-top: 3px solid;
+  border-image: linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1;
+  border-image-slice: 1;
+}
+
+/* Dark mode tune for accent borders to keep strong contrast */
+[data-theme="dark"] .accent-border,
+[data-theme="dark"] .accent-border-left,
+[data-theme="dark"] .accent-border-top {
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .input:focus,
@@ -348,6 +516,19 @@ body {
   to { background-position: -200% 0; } 
 }
 
+/* Reduced Motion Accessibility ------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton { animation: none !important; }
+  .fade-enter-active, .fade-exit-active { transition: none !important; }
+  .card:hover { transform: none !important; box-shadow: none !important; }
+}
+
 .fade-enter { opacity: 0; }
 .fade-enter-active { opacity: 1; transition: opacity 160ms ease; }
 .fade-exit { opacity: 1; }
@@ -362,6 +543,7 @@ body {
 .sidebar {
   background: var(--surface);
   border-right: 1px solid var(--border);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 [data-theme="dark"] .sidebar {
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent) 0%, color-mix(in srgb, var(--surface) 70%, transparent) 100%);
@@ -371,7 +553,7 @@ body {
 .sidebar .btn.ghost {
   border-color: transparent;
   color: var(--text-primary);
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast) var(--ease-standard);
   text-decoration: none;
 }
 .sidebar .btn.ghost:hover,
@@ -400,9 +582,36 @@ body {
               0 0 15px color-mix(in srgb, var(--module-color) 25%, transparent);
 }
 
+/* Context guard: visually de-emphasize out-of-context links while keeping navigation available */
+.sidebar .btn.ghost.out-of-context {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+.sidebar .btn.ghost.out-of-context:hover,
+.sidebar .btn.ghost.out-of-context:focus-visible {
+  background: transparent;
+  color: var(--text-secondary);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Ergonomic micro-interactions for sidebar navigation */
+.sidebar .btn.ghost:hover { transform: translateX(2px); }
+.sidebar .btn.ghost:focus-visible {
+  outline: 2px solid var(--module-color);
+  outline-offset: 2px;
+  transform: translateX(2px);
+}
+
 .content {
   display: grid;
   grid-template-rows: 64px 1fr;
+}
+.page-title {
+  background: linear-gradient(90deg, var(--module-color) 0%, var(--module-gradient-end) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .topbar {
   display: flex;
@@ -412,10 +621,15 @@ body {
   padding: 0 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 [data-theme="dark"] .topbar {
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 95%, transparent) 0%, color-mix(in srgb, var(--surface) 85%, transparent) 100%);
   box-shadow: 0 0 15px color-mix(in srgb, var(--module-color) 15%, transparent);
+}
+/* Pillar indicator visual token */
+.pillar-indicator {
+  border: 1px solid color-mix(in srgb, #fff 30%, transparent);
 }
 .main {
   padding: 20px;
@@ -425,6 +639,7 @@ body {
 .page-header { 
   padding: 16px; 
   border-bottom: 1px solid var(--border); 
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 [data-theme="light"] .page-header.procurement { 
@@ -449,6 +664,7 @@ body {
   border-radius: 999px; 
   background: var(--border); 
   overflow: hidden; 
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 .progress-bar .value { 
   height: 100%; 
@@ -501,6 +717,70 @@ body {
   box-shadow: 0 0 10px var(--danger-gradient-start);
 }
 [data-theme="dark"] .btn.warn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px var(--danger-gradient-start);
+}
+
+/* Success Button */
+.btn.success {
+  background: linear-gradient(135deg, var(--success-gradient-start) 0%, var(--success-gradient-end) 100%);
+  border-color: transparent;
+  color: #fff;
+}
+.btn.success:hover {
+  filter: brightness(1.06);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--success-gradient-start) 40%, transparent);
+}
+[data-theme="light"] .btn.success:focus-visible,
+.btn.success:focus-visible {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success-gradient-start) 30%, transparent),
+              0 4px 12px color-mix(in srgb, var(--success-gradient-start) 25%, transparent);
+}
+[data-theme="dark"] .btn.success:hover {
+  transform: scale(1.02);
+}
+.btn.success:active {
+  filter: brightness(0.92);
+  transform: scale(0.98);
+}
+[data-theme="dark"] .btn.success {
+  box-shadow: 0 0 10px var(--success-gradient-start);
+}
+[data-theme="dark"] .btn.success:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px var(--success-gradient-start);
+}
+
+/* Danger Button (alias for warn for compatibility) */
+.btn.danger {
+  background: linear-gradient(135deg, var(--danger-gradient-start) 0%, var(--danger-gradient-end) 100%);
+  border-color: transparent;
+  color: #fff;
+}
+.btn.danger:hover {
+  filter: brightness(1.06);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--danger-gradient-start) 40%, transparent);
+}
+[data-theme="light"] .btn.danger:focus-visible,
+.btn.danger:focus-visible {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-gradient-start) 30%, transparent),
+              0 4px 12px color-mix(in srgb, var(--danger-gradient-start) 25%, transparent);
+}
+[data-theme="dark"] .btn.danger:hover {
+  transform: scale(1.02);
+}
+.btn.danger:active {
+  filter: brightness(0.92);
+  transform: scale(0.98);
+}
+[data-theme="dark"] .btn.danger {
+  box-shadow: 0 0 10px var(--danger-gradient-start);
+}
+[data-theme="dark"] .btn.danger:hover {
   transform: scale(1.02);
   box-shadow: 0 0 15px var(--danger-gradient-start);
 }

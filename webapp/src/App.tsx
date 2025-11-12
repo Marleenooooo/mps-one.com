@@ -1,7 +1,10 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { computeOverscan } from './config';
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate, useParams, useLocation } from 'react-router-dom';
+import { trackEvent, startSpan, endSpan } from './services/monitoring';
+import * as pillarStorage from './services/pillarStorage';
 import { ThemeProvider } from './components/ThemeProvider';
+import { PillarProvider, usePillar } from './components/PillarProvider';
 import { ToastProvider } from './components/UI/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -18,6 +21,8 @@ const QuoteBuilder = lazy(() => import('./pages/QuoteBuilder'));
 const OrderTracker = lazy(() => import('./pages/OrderTracker'));
 const DocumentManager = lazy(() => import('./pages/DocumentManager'));
 const CommunicationHub = lazy(() => import('./pages/CommunicationHub'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 const Reporting = lazy(() => import('./pages/supplier/Reporting'));
 const PRList = lazy(() => import('./pages/procurement/PRList'));
 const PRCreate = lazy(() => import('./pages/procurement/PRCreate'));
@@ -32,6 +37,104 @@ const ClientDirectory = lazy(() => import('./pages/ClientDirectory'));
 const QuoteComparison = lazy(() => import('./pages/client/QuoteComparison'));
 const AdminInvitations = lazy(() => import('./pages/AdminInvitations'));
 const DeliveryNotes = lazy(() => import('./pages/DeliveryNotes'));
+const PeopleDirectory = lazy(() => import('./pages/admin/PeopleDirectory'));
+const UserProfile = lazy(() => import('./pages/people/UserProfile'));
+
+function hasApprovedPRForSupplier(): boolean {
+  try {
+    const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    if (userType !== 'supplier') return false;
+    const supplierId = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_id') : null);
+    if (!supplierId) return false;
+    const mapRaw = (typeof localStorage !== 'undefined' ? pillarStorage.getItem('mpsone_pr_sent') : null) || '{}';
+    const sentMap = JSON.parse(mapRaw);
+    const prIds = Object.keys(sentMap || {});
+    for (const prId of prIds) {
+      const list = Array.isArray(sentMap[prId]) ? sentMap[prId] : [];
+      if (list.some((x: any) => String(x.supplierId) === String(supplierId))) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function ClientQuoteGuard() {
+  const { prId } = useParams();
+  try {
+    const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    if (userType !== 'client') return <Navigate to="/procurement/workflow" replace />;
+    const rowsRaw = (typeof localStorage !== 'undefined' ? localStorage.getItem('mock_pr_rows') : null) || '[]';
+    const rows = JSON.parse(rowsRaw);
+    const approved = Array.isArray(rows) && rows.some((r: any) => String(r.id) === String(prId) && r.status === 'Approved');
+    if (!approved) return <Navigate to="/procurement/workflow" replace />;
+    return <QuoteComparison />;
+  } catch {
+    return <Navigate to="/procurement/workflow" replace />;
+  }
+}
+
+function POPreviewGuard() {
+  try {
+    const seedRaw = (typeof localStorage !== 'undefined' ? pillarStorage.getItem('mpsone_po_from_quote') : null) || '{}';
+    const seed = JSON.parse(seedRaw);
+    if (!seed || !seed.prId || !seed.supplierId) {
+      return <Navigate to="/procurement/workflow" replace />;
+    }
+    const accRaw = (typeof localStorage !== 'undefined' ? pillarStorage.getItem('mpsone_quote_accepted') : null) || '{}';
+    const acceptedMap = JSON.parse(accRaw);
+    const accepted = acceptedMap[String(seed.prId)];
+    if (!accepted || String(accepted.supplierId) !== String(seed.supplierId) || Number(accepted.version) !== Number(seed.version)) {
+      return <Navigate to={`/client/quotes/${encodeURIComponent(String(seed.prId))}`} replace />;
+    }
+    return <POPreview />;
+  } catch {
+    return <Navigate to="/procurement/workflow" replace />;
+  }
+}
+
+function isLoggedInUserType(): boolean {
+  try {
+    const t = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    return t === 'client' || t === 'supplier';
+  } catch {
+    return false;
+  }
+}
+
+// Frontend route guards by procurement mode (pillar separation):
+function ClientOnlyProcurement({ children }: { children: React.ReactElement }) {
+  try {
+    const t = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    if (t !== 'client') return <Navigate to="/login/client" replace />;
+    return children;
+  } catch {
+    return <Navigate to="/login/client" replace />;
+  }
+}
+
+function SupplierOnly({ children }: { children: React.ReactElement }) {
+  try {
+    const t = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    if (t !== 'supplier') return <Navigate to="/login/supplier" replace />;
+    return children;
+  } catch {
+    return <Navigate to="/login/supplier" replace />;
+  }
+}
+
+// General client mode guard (non-procurement-specific)
+function ClientModeOnly({ children }: { children: React.ReactElement }) {
+  try {
+    const t = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    if (t !== 'client') return <Navigate to="/login/client" replace />;
+    return children;
+  } catch {
+    return <Navigate to="/login/client" replace />;
+  }
+}
 
 function StartRedirect() {
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
@@ -58,12 +161,32 @@ function StartRedirect() {
 }
 
 export default function App() {
+  function RouteAnalytics() {
+    const location = useLocation();
+    const { pillar } = usePillar();
+    useEffect(() => {
+      // Track route view (existing lightweight event)
+      trackEvent('route_view', { path: location.pathname, pillar });
+      // Minimal OpenTelemetry-like navigation span
+      const s = startSpan('route_navigation', { path: location.pathname, pillar });
+      // End after next frame to approximate initial paint
+      const id = requestAnimationFrame(() => {
+        endSpan(s);
+      });
+      return () => cancelAnimationFrame(id);
+    }, [location.pathname, pillar]);
+    return null;
+  }
   return (
     <ThemeProvider>
       <ToastProvider>
         <BrowserRouter>
-          <ErrorBoundary>
+          <PillarProvider>
+            <RouteAnalytics />
+            <ErrorBoundary>
             <OfflineIndicator />
+            {/* Accessibility: Skip to content link for keyboard users */}
+            <a href="#main-content" className="skip-link" aria-label="Skip to main content">Skip to content</a>
             <div className="layout">
               <Sidebar />
               <div className="content" id="main-content">
@@ -87,35 +210,40 @@ export default function App() {
                     <Route path="/signup/client" element={<Signup />} />
                     {/* Home: redirect based on stored user type, otherwise external */}
                     <Route path="/" element={<StartRedirect />} />
-                    {/* Client routes */}
-                    <Route path="/client" element={<ClientDashboard />} />
+                    {/* Client routes (mode-aware) */}
+                    <Route path="/client" element={<ClientModeOnly><ClientDashboard /></ClientModeOnly>} />
                     <Route path="/client/onboarding" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Onboarding /> : <Navigate to="/client" replace />} />
-                    <Route path="/client/quotes/:prId" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <QuoteComparison /> : <Navigate to="/procurement/workflow" replace />} />
+                    <Route path="/client/quotes/:prId" element={<ClientQuoteGuard />} />
                     <Route path="/client/suppliers" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <SupplierDirectory /> : <Navigate to="/procurement/workflow" replace />} />
 
-                    {/* Supplier routes */}
-                    <Route path="/supplier/admin" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminDashboard /> : <Navigate to="/client" replace />} />
-                    <Route path="/admin/invitations" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminInvitations /> : <Navigate to="/client" replace />} />
-                    <Route path="/supplier/reporting" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/client" replace />} />
-                    <Route path="/supplier/email" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/client" replace />} />
+                    {/* Supplier routes (mode-aware, avoid redirect loops) */}
+                    <Route path="/supplier/admin" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                    <Route path="/admin/invitations" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminInvitations /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                    <Route path="/admin/people" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <PeopleDirectory /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                    <Route path="/supplier/reporting" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                    <Route path="/supplier/email" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
                     <Route path="/supplier/clients" element={(localStorage.getItem('mpsone_user_type') === 'supplier') ? <ClientDirectory /> : <Navigate to="/procurement/workflow" replace />} />
-                  <Route path="/procurement/pr" element={<PRList />} />
-                  <Route path="/procurement/pr/new" element={<PRCreate />} />
-                  <Route path="/procurement/po/preview" element={<POPreview />} />
+                  <Route path="/procurement/pr" element={<ClientOnlyProcurement><PRList /></ClientOnlyProcurement>} />
+                  <Route path="/procurement/pr/new" element={<ClientOnlyProcurement><PRCreate /></ClientOnlyProcurement>} />
+                  <Route path="/procurement/po/preview" element={<ClientOnlyProcurement><POPreviewGuard /></ClientOnlyProcurement>} />
                   <Route path="/procurement/quote-builder" element={(
-                    (localStorage.getItem('mpsone_user_type') === 'supplier')
-                      ? <QuoteBuilder />
+                    (localStorage.getItem('mpsone_user_type') === 'supplier' && hasApprovedPRForSupplier())
+                      ? <SupplierOnly><QuoteBuilder /></SupplierOnly>
                       : <Navigate to="/procurement/workflow" replace />
                   )} />
-                  <Route path="/procurement/workflow" element={<ProcurementWorkflow />} />
+                  <Route path="/procurement/workflow" element={<ClientOnlyProcurement><ProcurementWorkflow /></ClientOnlyProcurement>} />
                   <Route path="/supply/order-tracker" element={<OrderTracker />} />
                   <Route path="/inventory/delivery-notes" element={<DeliveryNotes />} />
                   {/* Dev: DB connectivity status page */}
                   <Route path="/dev/db-status" element={<DBStatus />} />
-                    <Route path="/docs" element={<DocumentManager overscan={computeOverscan('documents')} />} />
-                    <Route path="/comms" element={<CommunicationHub />} />
+                    <Route path="/docs" element={isLoggedInUserType() ? (<DocumentManager overscan={computeOverscan('documents')} />) : (<Navigate to="/login/client" replace />)} />
+                    <Route path="/comms" element={isLoggedInUserType() ? (<CommunicationHub />) : (<Navigate to="/login/client" replace />)} />
+                    <Route path="/settings" element={isLoggedInUserType() ? (<Settings />) : (<Navigate to="/login/client" replace />)} />
+                    <Route path="/notifications" element={isLoggedInUserType() ? (<Notifications />) : (<Navigate to="/login/client" replace />)} />
                     <Route path="/help" element={<HelpCenter />} />
                     <Route path="/help/docs" element={<DocViewer />} />
+                    {/* People profiles */}
+                    <Route path="/people/:userId" element={<UserProfile />} />
                     {/* Legacy redirects */}
                     <Route path="/admin" element={<Navigate to="/supplier/admin" replace />} />
                     <Route path="/email" element={<Navigate to="/supplier/email" replace />} />
@@ -125,7 +253,8 @@ export default function App() {
                 </Suspense>
               </div>
             </div>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </PillarProvider>
         </BrowserRouter>
       </ToastProvider>
     </ThemeProvider>

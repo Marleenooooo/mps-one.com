@@ -122,6 +122,18 @@ export default function PRCreate() {
 
   const isValid = useMemo(() => Object.keys(errors).length === 0, [errors]);
 
+  // Immediate persistence helper (used for description to avoid loss on refresh)
+  function persistNow(next: PRDraft) {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(next));
+      const now = new Date();
+      localStorage.setItem(DRAFT_KEY + ':lastSavedAt', now.toISOString());
+      setLastSavedAt(now.toLocaleTimeString());
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 1500);
+    } catch {}
+  }
+
   function simulateUpload(file: File) {
     const allowedExt = ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'];
     const maxSize = 25 * 1024 * 1024; // 25MB
@@ -193,36 +205,61 @@ export default function PRCreate() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label>{t('form.title')}</label>
-              <input className="input" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} aria-invalid={!!errors.title} />
-              {errors.title && <div role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.title}</div>}
+              <input
+                className="input"
+                value={draft.title}
+                onChange={e => setDraft(d => ({ ...d, title: e.target.value }))}
+                aria-invalid={!!errors.title}
+                aria-describedby={errors.title ? 'err-title' : undefined}
+              />
+              {errors.title && (
+                <div id="err-title" role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.title}</div>
+              )}
             </div>
             <div>
               <label>{t('form.department')}</label>
-              <select className="select" value={draft.department} onChange={e => setDraft(d => ({ ...d, department: e.target.value }))} aria-invalid={!!errors.department}>
+              <select
+                className="select"
+                value={draft.department}
+                onChange={e => setDraft(d => ({ ...d, department: e.target.value }))}
+                aria-invalid={!!errors.department}
+                aria-describedby={errors.department ? 'err-department' : undefined}
+              >
                 {['Mining Ops','Logistics','Maintenance','Finance'].map(d => <option key={d} value={d}>{d}</option>)}
               </select>
-              {errors.department && <div role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.department}</div>}
+              {errors.department && (
+                <div id="err-department" role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.department}</div>
+              )}
             </div>
             <div>
               <label>{t('form.needed_by')}</label>
-              <input className="input" type="date" value={draft.neededBy} onChange={e => setDraft(d => ({ ...d, neededBy: e.target.value }))} aria-invalid={!!errors.neededBy} />
-              {errors.neededBy && <div role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.neededBy}</div>}
+              <input
+                className="input"
+                type="date"
+                value={draft.neededBy}
+                onChange={e => setDraft(d => ({ ...d, neededBy: e.target.value }))}
+                aria-invalid={!!errors.neededBy}
+                aria-describedby={errors.neededBy ? 'err-neededBy' : undefined}
+              />
+              {errors.neededBy && (
+                <div id="err-neededBy" role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.neededBy}</div>
+              )}
             </div>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label>{t('form.description')}</label>
               <div className="card" style={{ padding: 8 }}>
-                <div
-                  role="textbox"
-                  aria-label="Rich description"
-                  contentEditable
-                  dir="ltr"
-                  suppressContentEditableWarning
-                  onInput={(e: React.FormEvent<HTMLDivElement>) => {
-                    const text = e.currentTarget?.textContent ?? '';
-                    setDraft(d => ({ ...d, description: text }));
+                <textarea
+                  className="input"
+                  value={draft.description}
+                  onChange={e => {
+                    const next = { ...draft, description: e.target.value };
+                    setDraft(next);
+                    persistNow(next);
                   }}
-                  style={{ minHeight: 80, direction: 'ltr', textAlign: 'left' }}
-                >{draft.description}</div>
+                  aria-label={t('form.description')}
+                  rows={6}
+                  style={{ minHeight: 120, resize: 'vertical', direction: 'ltr', textAlign: 'left', width: '100%' }}
+                />
               </div>
             </div>
           </div>
@@ -268,10 +305,33 @@ export default function PRCreate() {
             {draft.items.map((it, idx) => (
               <div key={it.id} role="row" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 80px', borderBottom: '1px solid var(--border)' }}>
                 <div role="cell" style={{ padding: 8 }}>
-                  <input className="input" value={it.name} onChange={e => updateItem(idx, { name: e.target.value })} aria-invalid={!!errors[`items.${idx}.name`]} />
+                  <input
+                    className="input"
+                    value={it.name}
+                    onChange={e => updateItem(idx, { name: e.target.value })}
+                    aria-invalid={!!errors[`items.${idx}.name`]}
+                    aria-describedby={errors[`items.${idx}.name`] ? `err-items-${idx}-name` : undefined}
+                  />
+                  {errors[`items.${idx}.name`] && (
+                    <div id={`err-items-${idx}-name`} role="alert" style={{ color: 'var(--secondary-gradient-start)', marginTop: 4 }}>
+                      {errors[`items.${idx}.name`]}
+                    </div>
+                  )}
                 </div>
                 <div role="cell" style={{ padding: 8 }}>
-                  <input className="input" type="number" value={it.qty} onChange={e => updateItem(idx, { qty: Number(e.target.value) })} aria-invalid={!!errors[`items.${idx}.qty`]} />
+                  <input
+                    className="input"
+                    type="number"
+                    value={it.qty}
+                    onChange={e => updateItem(idx, { qty: Number(e.target.value) })}
+                    aria-invalid={!!errors[`items.${idx}.qty`]}
+                    aria-describedby={errors[`items.${idx}.qty`] ? `err-items-${idx}-qty` : undefined}
+                  />
+                  {errors[`items.${idx}.qty`] && (
+                    <div id={`err-items-${idx}-qty`} role="alert" style={{ color: 'var(--secondary-gradient-start)', marginTop: 4 }}>
+                      {errors[`items.${idx}.qty`]}
+                    </div>
+                  )}
                 </div>
                 <div role="cell" style={{ padding: 8 }}>
                   <input className="input" value={it.spec || ''} onChange={e => updateItem(idx, { spec: e.target.value })} placeholder={t('pr.item_spec')} />
@@ -295,15 +355,31 @@ export default function PRCreate() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label>{t('pr.budget_code')}</label>
-              <input className="input" value={draft.budgetCode} onChange={e => setDraft(d => ({ ...d, budgetCode: e.target.value }))} aria-invalid={!!errors.budgetCode} />
-              {errors.budgetCode && <div role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.budgetCode}</div>}
+              <input
+                className="input"
+                value={draft.budgetCode}
+                onChange={e => setDraft(d => ({ ...d, budgetCode: e.target.value }))}
+                aria-invalid={!!errors.budgetCode}
+                aria-describedby={errors.budgetCode ? 'err-budgetCode' : undefined}
+              />
+              {errors.budgetCode && (
+                <div id="err-budgetCode" role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.budgetCode}</div>
+              )}
             </div>
             <div>
               <label>{t('pr.approver')}</label>
-              <select className="select" value={draft.approver} onChange={e => setDraft(d => ({ ...d, approver: e.target.value }))} aria-invalid={!!errors.approver}>
+              <select
+                className="select"
+                value={draft.approver}
+                onChange={e => setDraft(d => ({ ...d, approver: e.target.value }))}
+                aria-invalid={!!errors.approver}
+                aria-describedby={errors.approver ? 'err-approver' : undefined}
+              >
                 {['PIC Procurement','PIC Operational','PIC Finance','Admin'].map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              {errors.approver && <div role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.approver}</div>}
+              {errors.approver && (
+                <div id="err-approver" role="alert" style={{ color: 'var(--secondary-gradient-start)' }}>{errors.approver}</div>
+              )}
             </div>
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>

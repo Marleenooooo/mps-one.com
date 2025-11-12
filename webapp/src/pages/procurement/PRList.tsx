@@ -3,9 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useModule } from '../../components/useModule';
 import { DataTable } from '../../components/UI/DataTable';
 import { AuditTimeline } from '../../components/UI/AuditTimeline';
-import { computeOverscan } from '../../config';
+import { computeOverscan, getOfflineMode } from '../../config';
 import { useI18n } from '../../components/I18nProvider';
 import { uniqueId } from '../../components/utils/uniqueId';
+import { apiListPR } from '../../services/api';
+import * as pillarStorage from '../../services/pillarStorage';
 
 type PRRow = { id: string; title: string; department: string; status: 'Draft' | 'Submitted' | 'Approved' | 'PO'; createdAt: string; actions?: string };
 
@@ -14,21 +16,45 @@ export default function PRList() {
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const [rows, setRows] = useState<PRRow[]>(() => {
-    const now = new Date().toISOString();
-    return [
-      { id: 'PR-443', title: 'Hydraulic Hoses', department: 'Mining Ops', status: 'PO', createdAt: now, actions: '' },
-      { id: 'PR-444', title: 'Excavator Bucket', department: 'Maintenance', status: 'Approved', createdAt: now, actions: '' },
-      { id: 'PR-445', title: 'Safety Helmets', department: 'Logistics', status: 'Submitted', createdAt: now, actions: '' },
-    ];
-  });
+  const [rows, setRows] = useState<PRRow[]>([]);
+  const offline = getOfflineMode();
+
+  // When offline, hydrate list from mock store via API layer
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!offline) {
+        // Keep the original demo rows when online
+        const now = new Date().toISOString();
+        if (!cancelled) setRows([
+          { id: 'PR-443', title: 'Hydraulic Hoses', department: 'Mining Ops', status: 'PO', createdAt: now, actions: '' },
+          { id: 'PR-444', title: 'Excavator Bucket', department: 'Maintenance', status: 'Approved', createdAt: now, actions: '' },
+          { id: 'PR-445', title: 'Safety Helmets', department: 'Logistics', status: 'Submitted', createdAt: now, actions: '' },
+        ]);
+        return;
+      }
+      try {
+        const res = await apiListPR();
+        const mapped: PRRow[] = (res.rows ?? []).map((r: any) => ({
+          id: String(r.id),
+          title: r.title || 'Untitled',
+          department: r.department || 'Procurement',
+          status: (r.status || 'Draft') as PRRow['status'],
+          createdAt: r.need_date || new Date().toISOString(),
+          actions: '',
+        }));
+        if (!cancelled) setRows(mapped);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [offline]);
 
   const insertedDraftRef = useRef(false);
   useEffect(() => {
     if (insertedDraftRef.current) return; // Guard against React StrictMode double-invoke
     insertedDraftRef.current = true;
     try {
-      const draft = localStorage.getItem('mpsone_pr_draft');
+      const draft = pillarStorage.getItem('mpsone_pr_draft');
       if (draft) {
         const d = JSON.parse(draft);
         const id = uniqueId('PR');
@@ -56,12 +82,12 @@ export default function PRList() {
 
   function logAudit(entry: { entity: 'PR'; id: string; action: string; actorRole: string | null; actorType: string | null; at: number; comment?: string }) {
     try {
-      const map = JSON.parse(localStorage.getItem('mpsone_audit_trail') || '{}');
+      const map = JSON.parse(pillarStorage.getItem('mpsone_audit_trail') || '{}');
       const key = `PR:${entry.id}`;
       const list = Array.isArray(map[key]) ? map[key] : [];
       list.push(entry);
       map[key] = list;
-      localStorage.setItem('mpsone_audit_trail', JSON.stringify(map));
+      pillarStorage.setItem('mpsone_audit_trail', JSON.stringify(map));
     } catch {}
   }
 
@@ -85,16 +111,16 @@ export default function PRList() {
   function sendToSuppliers(prId: string) {
     const pr = rows.find(r => r.id === prId);
     if (!pr || pr.status !== 'Approved') {
-      alert('Only Approved PRs can be sent to suppliers. Please get Finance/Admin approval first.');
+      alert(t('gating.approval_required_send') || 'Only Approved PRs can be sent to suppliers. Please get Finance/Admin approval first.');
       return;
     }
     try {
-      const suppliers = JSON.parse(localStorage.getItem('mpsone_suppliers') || '[]');
+      const suppliers = JSON.parse(pillarStorage.getItem('mpsone_suppliers') || '[]');
       const now = Date.now();
       const sent = suppliers.map((s: any) => ({ supplierId: s.id, at: now }));
-      const map = JSON.parse(localStorage.getItem('mpsone_pr_sent') || '{}');
+      const map = JSON.parse(pillarStorage.getItem('mpsone_pr_sent') || '{}');
       map[prId] = sent;
-      localStorage.setItem('mpsone_pr_sent', JSON.stringify(map));
+      pillarStorage.setItem('mpsone_pr_sent', JSON.stringify(map));
       logAudit({ entity: 'PR', id: prId, action: 'sent_to_suppliers', actorRole: role, actorType: userType, at: now, comment: `Sent to ${sent.length} suppliers` });
       alert(`Sent PR ${prId} to ${sent.length} suppliers`);
     } catch {}
@@ -102,7 +128,7 @@ export default function PRList() {
 
   function countSent(prId: string): number {
     try {
-      const map = JSON.parse(localStorage.getItem('mpsone_pr_sent') || '{}');
+      const map = JSON.parse(pillarStorage.getItem('mpsone_pr_sent') || '{}');
       return Array.isArray(map[prId]) ? map[prId].length : 0;
     } catch { return 0; }
   }
@@ -119,7 +145,7 @@ export default function PRList() {
           <button className="btn" onClick={() => exportCSV(rows)} aria-label={t('action.export_csv') || 'Export CSV'}>{t('action.export_csv') || 'Export CSV'}</button>
         </div>
       </div>
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 16, fontSize: 14, lineHeight: 1.4 }}>
         <DataTable
           data={rows}
           columns={[
@@ -129,27 +155,25 @@ export default function PRList() {
             { key: 'status', header: t('pr.status'), render: v => <span className="status-badge info">{v}</span> },
             { key: 'createdAt', header: t('pr.created') },
             { key: 'actions', header: 'Actions', render: (_v, row) => (
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {row.status === 'Draft' && (
-                  <button className="btn" onClick={() => submitPR(row.id)}>Submit PR</button>
+                  <button className="btn sm" onClick={() => submitPR(row.id)}>{t('action.submit_pr')}</button>
                 )}
                 {(row.status === 'Submitted' && (role === 'PIC Finance' || role === 'Admin')) && (
                   <>
-                    <button className="btn success" onClick={() => approvePR(row.id)}>Approve</button>
-                    <button className="btn danger" onClick={() => rejectPR(row.id)}>Reject</button>
+                    <button className="btn success sm" onClick={() => approvePR(row.id)}>{t('action.approve') || 'Approve'}</button>
+                    <button className="btn danger sm" onClick={() => rejectPR(row.id)}>{t('action.reject') || 'Reject'}</button>
                   </>
                 )}
-                <button className="btn outline" onClick={() => sendToSuppliers(row.id)} disabled={row.status !== 'Approved'} title={row.status !== 'Approved' ? 'Only Approved PRs can be sent' : undefined}>Send PR to suppliers</button>
-                <a className={`btn${row.status !== 'Approved' ? ' disabled' : ''}`} aria-disabled={row.status !== 'Approved'} href={row.status === 'Approved' ? `/client/quotes/${encodeURIComponent(row.id)}` : undefined} onClick={e => { if (row.status !== 'Approved') { e.preventDefault(); alert('Approve PR to compare quotes.'); } }}>Compare quotes</a>
+                <button className="btn outline sm" onClick={() => sendToSuppliers(row.id)} disabled={row.status !== 'Approved'} title={row.status !== 'Approved' ? (t('gating.approval_required_send') || 'Only Approved PRs can be sent') : undefined}>{t('action.send_pr_to_suppliers')}</button>
+                <a className={`btn sm${row.status !== 'Approved' ? ' disabled' : ''}`} aria-disabled={row.status !== 'Approved'} href={row.status === 'Approved' ? `/client/quotes/${encodeURIComponent(row.id)}` : undefined} onClick={e => { if (row.status !== 'Approved') { e.preventDefault(); alert(t('gating.approval_required_compare') || 'Approve PR to compare quotes.'); } }}>{t('action.compare_quotes') || 'Compare quotes'}</a>
                 {countSent(row.id) > 0 && (
                   <span className="status-badge info">Sent to {countSent(row.id)}</span>
                 )}
               </div>
             ) },
           ]}
-          virtualize
-          height={360}
-          rowHeight={48}
+          virtualize={false}
           overscan={computeOverscan('prList')}
         />
       </div>

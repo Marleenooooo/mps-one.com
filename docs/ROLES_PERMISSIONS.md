@@ -15,6 +15,7 @@ Roles: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 ## Notes
 - Maintain audit trail for each transition: actor, timestamp, comment.
 - Enforce approval gating in UI and APIs: only approved PRs visible to suppliers and convertible to quotes.
+ - Mode-aware dashboards: Client Dashboard (`/client`) is accessible only when acting as Client; Supplier Admin routes (`/supplier/admin`, `/supplier/reporting`, `/supplier/email`, `/admin/invitations`, `/admin/people`) require acting as Supplier and appropriate role. Supplier Admin dashboard surfaces supplier-relevant actions (New Quote) and hides client-only actions.
 
 ## Workflow Alignment Policy
 - Front-end enforces role-based access according to procurement lifecycle.

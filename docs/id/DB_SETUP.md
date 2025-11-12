@@ -132,6 +132,41 @@ VITE_API_BASE=/api
 
 Gunakan URL penuh jika perlu: `https://api.domain-anda.com`.
 
+---
+
+## Migrasi & Verifikasi — subject di email_thread
+
+Proyek ini memiliki file migrasi SQL di `db/migrations/`. Untuk fitur Komunikasi (paritas Gmail), kami menambahkan kolom `subject` ke tabel `email_thread`.
+
+- File migrasi: `db/migrations/0018_email_thread_subject.sql`
+- Kolom: `subject VARCHAR(255) NULL`
+
+### Impor & Verifikasi (WSL)
+1. Impor migrasi:
+   ```bash
+   bash scripts/import-migrations.sh
+   ```
+2. Verifikasi skema:
+   ```bash
+   bash scripts/verify-db.sh
+   ```
+3. Cek via MySQL/phpMyAdmin:
+   ```sql
+   SHOW COLUMNS FROM email_thread;
+   ```
+   Pastikan kolom `subject` ada dan dapat diakses.
+
+### Penyesuaian Backend/API
+- Setelah migrasi, restart backend agar query menggunakan kolom baru.
+- Endpoint terdampak:
+  - `POST /api/email/thread` — menerima `subject` opsional.
+  - `GET /api/email/thread/:id` — mengembalikan `subject`.
+  - `GET /api/email/threads` — menyertakan `subject` per thread.
+
+### Penyesuaian Frontend/UI
+- Composer mengirim `subject` saat membuat thread baru.
+- Subject ditampilkan di header thread pada halaman Komunikasi.
+
 ## Catatan Keamanan
 - Jangan menaruh `DB_HOST`, `DB_USER`, `DB_PASSWORD` di frontend.
 - Gunakan user DB least-privilege dan rotasi password berkala.
@@ -248,6 +283,13 @@ bash scripts/import-migrations.sh
 
 Skrip memastikan kontainer aktif dan mengimpor seluruh SQL di `db/migrations/` menggunakan `mysql --force` sehingga aman untuk dijalankan berulang.
 
+### Fase 4 — Tabel Email & Kurir
+- Migrasi baru:
+  - `db/migrations/0015_email_oauth.sql` — menambah `email_account` dan `email_sync_state`.
+  - `db/migrations/0016_courier_tracking.sql` — menambah `shipment_tracking` dengan `vendor`, `tracking_no`, `status`, `events_json`.
+- Import di WSL: jalankan ulang `bash scripts/import-migrations.sh` lalu `bash scripts/verify-db.sh`.
+- Verifikasi di phpMyAdmin: tabel muncul; jalankan select cepat untuk melihat insert dari API.
+
 ### Verifikasi Skema
 
 ```
@@ -260,3 +302,18 @@ Pemeriksaan mencakup jumlah data demo dan keberadaan kolom & indeks penting pada
 - Buka `http://localhost:8081/`
 - Login dengan `mpsone_dev` / `devpass` atau `root` / `rootpass`
 - Gunakan Import untuk uji satu‑off; untuk konsistensi, lebih baik jalankan lewat skrip.
+## 0019 — Preferensi Pengguna dan Notifikasi
+
+Menambahkan tabel `user_preferences` dan `notifications` untuk mendukung halaman Pengaturan dan Pusat Notifikasi.
+
+Skema
+- `user_preferences(user_id FK, theme ENUM(light|dark|system), language ENUM(en|id), notify_inapp BOOL, notify_email BOOL, updated_at TIMESTAMP)`
+- `notifications(id PK, user_id FK, module ENUM(procurement|finance|inventory|reports|alerts), title, body, type ENUM(info|warning|success|error), is_read BOOL, created_at TIMESTAMP)`
+
+Impor Migrasi (WSL)
+- Jalankan: `bash scripts/import-migrations.sh`
+- Verifikasi: `bash scripts/verify-db.sh` dan phpMyAdmin (cek tabel & indeks baru)
+
+Area Terpengaruh
+- Backend API: `GET/PUT /api/user/preferences`, `GET/POST/PUT /api/notifications`
+- Frontend UI: halaman `/settings` untuk tema/bahasa/preferensi notifikasi; halaman `/notifications` dengan jumlah belum dibaca dan aksi tandai baca.

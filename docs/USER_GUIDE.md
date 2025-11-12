@@ -15,6 +15,11 @@ This guide explains how to use the B2B Procurement Webapp end-to-end: initiating
 - Page header uses module color cues for orientation.
 - Topbar includes language toggle and theme switch.
 
+### Mode-Aware Navigation
+- Client Dashboard (`/client`) is visible and accessible only when you are acting as Client.
+- Supplier Admin dashboards (e.g., `/supplier/admin`, Reporting, Email) require acting as Supplier; non-admin suppliers are redirected to `/supplier/clients`.
+- The Supplier Admin dashboard surfaces supplier-relevant actions (like New Quote) and hides client-only actions.
+
 ### Role-Based Access & Workflow Alignment
 - Admin: Corporate Onboarding, invitations, and can generate PO from accepted quotes.
 - PIC Procurement: manage PRs, review supplier quotes, convert accepted quotes to POs.
@@ -102,6 +107,20 @@ State pipeline: `PR → Quote → PO → Processing → Shipped → Delivered �
 - Geolocation set wrong language? Toggle language in the topbar; preference is persisted.
 - Large documents? Use Document Manager bulk operations and versioning.
 - Preview build: use `npm run preview` to review production-like behavior.
+
+## Monitoring & Analytics
+- Error capture: global `window.error` and `unhandledrejection` events are recorded.
+- Route analytics: page views are tracked on each route change.
+- Enable backend collection by setting `VITE_ANALYTICS_URL` (e.g., a staging endpoint) before building.
+- Dev verification: open DevTools to see `[analytics]` logs; confirm route_view entries and errors are printed.
+- Privacy: only minimal event data (name, path, timestamp, URL, user agent) is sent.
+
+## Quick Start (Onboarding)
+- Start dev server: run `npm run dev` in the `webapp` folder.
+- Test login: use Client/Supplier login; user type persists in localStorage.
+- Navigate modules: Procurement, Finance, Inventory, Reports via the sidebar.
+- Theme & language: switch in the topbar; preferences persist.
+- Performance check: visit `/procurement/pr` and `/admin/people`; confirm smooth scroll and no errors.
 
 ## Notes
 - Current app is a front-end SPA ready for future API wiring; data workflows may use demo/sample data.

@@ -17,6 +17,18 @@ Rincian langkah demi langkah dengan peran, guard, dan invarian.
 - Audit: penerimaan dicatat beserta aktor & waktu.
  - Klien dapat mengirim satu PR ke banyak pemasok; quote dimiliki pemasok (klien meninjau/menyetujui, bukan menulis).
 
+### Persetujuan & Penolakan Quote (Klien)
+- Tindakan: Setujui atau Tolak versi quote pemasok tertentu.
+- Persistensi: transisi status disimpan dan ditampilkan sebagai badge UI (`accepted`, `rejected`, `pending`).
+- Audit: menulis entri ke audit trail dengan aktor, peran, timestamp, serta konteks pemasok/versi.
+- Guard: hanya PR yang `Approved` boleh membandingkan quote. Tombol yang dinonaktifkan menampilkan tooltip terlokalisasi.
+
+### Generate PO dari Quote yang Diterima
+- Titik masuk: dari quote berstatus `accepted`, tombol “Generate PO” aktif.
+- Route Guard: `/procurement/po/preview` membutuhkan konteks quote diterima; jika tidak ada/tidak cocok, diarahkan kembali ke Workflow atau Quote Comparison.
+- Prefill: pratinjau PO mengisi pemasok, PR, dan versi quote; item tetap contoh sampai backend terpasang.
+- Audit: menghasilkan PO mencatat event (entitas `PR`, aksi `po_generate`).
+
 ## Membuat Purchase Order (PO) dari Quote yang Diterima
 - Inisiasi: PIC Procurement atau Admin.
 - Prefill: pemasok, item, harga, pajak/diskon dari quote yang diterima.
@@ -51,3 +63,14 @@ Rincian langkah demi langkah dengan peran, guard, dan invarian.
 - PIC Procurement mengoperasikan PR dan konversi PO.
 - PIC Operational membuat PR dan menangani koreksi penerimaan.
 - PIC Finance menyetujui PR serta memproses invoice/pembayaran.
+
+### Guard UI + Rute (Klien & Pemasok)
+- Quote Builder (Pemasok):
+  - Guard rute: `/procurement/quote-builder` membutuhkan konteks pemasok dengan minimal satu PR `Approved` yang didistribusikan ke pemasok tersebut.
+  - Gating UI: Sidebar dan Topbar QuickSearch menonaktifkan tautan dengan tooltip sampai syarat terpenuhi.
+- Perbandingan Quote (Klien):
+  - Guard rute: `/client/quotes/:prId` membutuhkan PR `Approved`; jika tidak, diarahkan ke workflow.
+  - Gating UI: PR List menonaktifkan “Bandingkan penawaran” sampai `Approved`, dengan tooltip terlokalisasi.
+- Pratinjau PO:
+  - Guard rute: `/procurement/po/preview` membutuhkan konteks quote diterima (`mpsone_quote_accepted` + `mpsone_po_from_quote`).
+  - Redirect: Konteks hilang → Workflow; tidak cocok → kembali ke Quote Comparison.

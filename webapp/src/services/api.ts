@@ -73,7 +73,7 @@ export async function apiDeletePR(id: number, role: string = 'Admin') {
 }
 
 // --- Email Thread (send/receive)
-export async function apiCreateThread(input: { participants: any[]; messages?: any[] }, role: string = 'PIC_Procurement') {
+export async function apiCreateThread(input: { participants: any[]; messages?: any[]; subject?: string; pr_id?: number; po_id?: number }, role: string = 'PIC_Procurement') {
   if (OFFLINE) return mock.apiCreateThread(input, role);
   const res = await fetch(`${API_BASE}/email-thread`, {
     method: 'POST',
@@ -102,6 +102,17 @@ export async function apiAppendThreadMessage(id: number, message: any, role: str
   return res.json();
 }
 
+export async function apiUpdateThreadMeta(id: number, patch: { labels?: string[]; archived?: boolean }) {
+  if (OFFLINE) return mock.apiUpdateThreadMeta(id, patch);
+  const res = await fetch(`${API_BASE}/email-thread/${id}/meta`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error(`Update thread meta failed: ${res.status}`);
+  return res.json();
+}
+
 export async function apiListThreads(params: { pr_id?: number; po_id?: number }) {
   if (OFFLINE) return mock.apiListThreads(params);
   const qs = new URLSearchParams();
@@ -109,5 +120,150 @@ export async function apiListThreads(params: { pr_id?: number; po_id?: number })
   if (params.po_id != null) qs.set('po_id', String(params.po_id));
   const res = await fetch(`${API_BASE}/email-thread?${qs.toString()}`);
   if (!res.ok) throw new Error(`List threads failed: ${res.status}`);
+  return res.json();
+}
+
+// --- Documents upload/list
+export async function apiUploadDoc(input: { type: string; refId: number | null; url: string; canAccess?: string[]; storage_provider?: string; storage_key?: string; hash_sha256?: string }, role: string = 'PIC_Operational') {
+  if (OFFLINE) return mock.apiUploadDoc(input, role);
+  const res = await fetch(`${API_BASE}/docs/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-role': role },
+    body: JSON.stringify({
+      type: input.type,
+      refId: input.refId,
+      url: input.url,
+      canAccess: input.canAccess || ['Admin','PIC_Procurement','PIC_Operational'],
+      storage_provider: input.storage_provider || 'demo',
+      storage_key: input.storage_key,
+      hash_sha256: input.hash_sha256,
+    }),
+  });
+  if (!res.ok) throw new Error(`Upload doc failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiListDocs(params: { type?: string; refId?: number; limit?: number; offset?: number }) {
+  if (OFFLINE) return mock.apiListDocs(params);
+  const qs = new URLSearchParams();
+  if (params.type) qs.set('type', params.type);
+  if (params.refId != null) qs.set('ref_id', String(params.refId));
+  if (params.limit != null) qs.set('limit', String(params.limit));
+  if (params.offset != null) qs.set('offset', String(params.offset));
+  const res = await fetch(`${API_BASE}/docs?${qs.toString()}`);
+  if (!res.ok) throw new Error(`List docs failed: ${res.status}`);
+  return res.json();
+}
+
+// --- Social features: users, relationships, blocks, invites ---
+export async function apiListUsers() {
+  if (OFFLINE) return mock.apiListUsers();
+  const res = await fetch(`${API_BASE}/users`);
+  if (!res.ok) throw new Error(`List users failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiFollowUser(followerEmail: string, followeeEmail: string) {
+  if (OFFLINE) return mock.apiFollowUser(followerEmail, followeeEmail);
+  const res = await fetch(`${API_BASE}/users/follow`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ followerEmail, followeeEmail }),
+  });
+  if (!res.ok) throw new Error(`Follow failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiUnfollowUser(followerEmail: string, followeeEmail: string) {
+  if (OFFLINE) return mock.apiUnfollowUser(followerEmail, followeeEmail);
+  const res = await fetch(`${API_BASE}/users/unfollow`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ followerEmail, followeeEmail }),
+  });
+  if (!res.ok) throw new Error(`Unfollow failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiBlockUser(blockerEmail: string, blockedEmail: string) {
+  if (OFFLINE) return mock.apiBlockUser(blockerEmail, blockedEmail);
+  const res = await fetch(`${API_BASE}/users/block`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ blockerEmail, blockedEmail }),
+  });
+  if (!res.ok) throw new Error(`Block failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiUnblockUser(blockerEmail: string, blockedEmail: string) {
+  if (OFFLINE) return mock.apiUnblockUser(blockerEmail, blockedEmail);
+  const res = await fetch(`${API_BASE}/users/unblock`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ blockerEmail, blockedEmail }),
+  });
+  if (!res.ok) throw new Error(`Unblock failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiListRelationships(email: string) {
+  if (OFFLINE) return mock.apiListRelationships(email);
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(email)}/relationships`);
+  if (!res.ok) throw new Error(`Relationships failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiListBlocks(email: string) {
+  if (OFFLINE) return mock.apiListBlocks(email);
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(email)}/blocks`);
+  if (!res.ok) throw new Error(`Blocks failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiInviteUser(fromEmail: string, toEmail: string) {
+  if (OFFLINE) return mock.apiInviteUser(fromEmail, toEmail);
+  const res = await fetch(`${API_BASE}/users/invite`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromEmail, toEmail }),
+  });
+  if (!res.ok) throw new Error(`Invite failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiIsConversationBlocked(participants: { email?: string }[]) {
+  if (OFFLINE) return mock.apiIsConversationBlocked(participants);
+  const res = await fetch(`${API_BASE}/users/conv-blocked`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ participants }),
+  });
+  if (!res.ok) throw new Error(`Conversation block check failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiListInvites(email: string) {
+  if (OFFLINE) return mock.apiListInvites(email);
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(email)}/invites`);
+  if (!res.ok) throw new Error(`List invites failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiRespondInvite(id: string, status: 'accepted'|'declined') {
+  if (OFFLINE) return mock.apiRespondInvite(id, status);
+  const res = await fetch(`${API_BASE}/users/invites/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error(`Respond invite failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiCancelInvite(id: string) {
+  if (OFFLINE) return mock.apiCancelInvite(id);
+  const res = await fetch(`${API_BASE}/users/invites/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Cancel invite failed: ${res.status}`);
   return res.json();
 }

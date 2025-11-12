@@ -22,3 +22,28 @@ Bahasa: [English](../FAQ.md) | [Bahasa Indonesia](FAQ.md)
 
 ## Bagaimana cara reset tema/bahasa?
 - Hapus key `mpsone_lang` / `lang` di localStorage. Refresh halaman.
+
+## Troubleshooting Onboarding
+
+### Error Playwright: `winldd` tidak ditemukan
+- Instal dependency loader Windows: `npx playwright install winldd`, lalu jalankan `npx playwright test`.
+
+### Instalasi browser Playwright macet
+- Batalkan proses, kemudian jalankan ulang: `npx playwright install` → `npx playwright test`.
+- Jika terjadi lock, tutup terminal dan coba instal ulang.
+
+### Preview Vite blank di deep route
+- Build dengan base eksplisit: `npm run build -- --base=/`.
+- Lalu `npm run preview` dan buka `http://localhost:4173`.
+
+### Error proxy ke `/api/*` saat preview/test
+- Ini wajar saat backend belum berjalan; test memakai data yang di-seed di `localStorage`.
+- Abaikan pesan `http proxy error` untuk `/api/analytics`, `/api/notifications`, dll.
+
+### Port dan konflik
+- Dev server `5173`, Preview `4173`, Backend proxy `3001`.
+- Hentikan proses yang bentrok atau ubah port sesuai kebutuhan.
+
+### Docker tidak tersedia di Windows PowerShell
+- Pakai WSL saja: `wsl -d Ubuntu-20.04`, lalu jalankan perintah Docker di dalam WSL.
+- Lihat SOP di `.trae/rules/project_rules.md`.

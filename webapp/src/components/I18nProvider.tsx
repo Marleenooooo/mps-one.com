@@ -75,6 +75,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.email_dashboard': 'Email Dashboard',
     'nav.reporting': 'Reporting',
     'nav.help': 'Help Center',
+    'nav.people': 'People',
+    'nav.invitations': 'Invitations',
 
     // Topbar
     'topbar.light': 'Light',
@@ -89,6 +91,12 @@ const translations: Record<Language, Record<string, string>> = {
     'topbar.lang.en': 'English',
     'topbar.lang.id': 'Bahasa Indonesia',
     'topbar.help': 'Help',
+    'topbar.theme_toggle': 'Toggle theme',
+    'topbar.language_toggle': 'Toggle language',
+    'topbar.settings': 'Settings',
+    'topbar.logout': 'Logout',
+    'topbar.logged_in_as': 'Logged in as {name}',
+    'topbar.offline_mock': 'Offline Mock',
 
     // Admin Dashboard
     'admin.title': 'Admin Dashboard',
@@ -224,6 +232,11 @@ const translations: Record<Language, Record<string, string>> = {
     'comms.threads': 'Threads',
     'comms.unread': 'Unread: {n}',
     'comms.input_placeholder': 'Type a message. Use @mentions',
+    'comms.to': 'To',
+    'comms.cc': 'Cc',
+    'comms.bcc': 'Bcc',
+    'comms.subject': 'Subject',
+    'comms.hint_mentions': 'Use @ to mention participants',
     'comms.email_integration': 'Email Integration',
     'comms.email_sync_desc': 'Two-way sync is visualized here. CC/BCC rules per client type are applied automatically.',
     'comms.connected_to': 'Connected to: {email}',
@@ -233,12 +246,39 @@ const translations: Record<Language, Record<string, string>> = {
     'comms.status.sent': 'Sent',
     'comms.status.delivered': 'Delivered',
     'comms.status.read': 'Read',
+    'comms.blocked_banner': 'Messaging disabled: one or more participants are blocked.',
 
     // Reporting
     'reports.title': 'Reporting',
     'reports.spending_analytics': 'Spending Analytics',
     'reports.vendor_performance': 'Vendor Performance',
     'reports.budget_utilization': 'Budget Utilization',
+    // Delivery Notes (Inventory)
+    'delivery.title': 'Delivery Notes',
+    'delivery.header_desc': 'Confirm receipts and record corrections; invoices must respect corrected quantities.',
+    'delivery.po_label': 'PO',
+    'delivery.delivered_amount': 'Delivered Amount',
+    'delivery.table.item': 'Item',
+    'delivery.table.ordered': 'Ordered',
+    'delivery.table.shipped': 'Shipped',
+    'delivery.table.received': 'Received',
+    'delivery.table.correction': 'Correction',
+    'delivery.table.available_to_invoice': 'Available to Invoice',
+    'delivery.invariant': 'Invariant: sum(delivery.qty) ≤ sum(po.qty). Corrections adjust available-to-invoice quantities; invoices must respect corrected quantities.',
+    'delivery.correction_aria': 'Correction for {name}',
+
+    // Reporting (Supplier) — Invoicing Gate
+    'reporting.create_invoice': 'Create Invoice',
+    'reporting.remaining_deliverable': 'Remaining deliverable',
+    'reporting.delivery_references': 'Delivery References',
+    'reporting.no_delivery_records': 'No delivery records found for this PO.',
+    'reporting.insufficient_delivered_amount': 'Insufficient delivered amount',
+    // Reporting — Payment Status Labels
+    'reporting.status.paid': 'Paid',
+    'reporting.status.over_due': 'Over-due',
+    'reporting.status.waiting': 'Waiting payment',
+    'reporting.status.next': 'Next payment',
+    'reporting.status.neutral': 'Neutral',
     'reports.monthly_procurement': 'Monthly Procurement',
     // Help Center
     'help.title': 'Help Center',
@@ -297,6 +337,29 @@ const translations: Record<Language, Record<string, string>> = {
     'time.hours': 'hours',
     'time.minutes': 'minutes',
     'action.upload': 'Upload',
+
+    // Gating messages / actions
+    'gating.quote_builder_disabled': 'Approve PRs and send to suppliers to build quotes',
+    'gating.approval_required_send': 'Only Approved PRs can be sent to suppliers. Please get Finance/Admin approval first.',
+    'gating.approval_required_compare': 'Approve PR to compare quotes.',
+    'action.compare_quotes': 'Compare quotes',
+    'action.send_pr_to_suppliers': 'Send PR to suppliers',
+    'action.approve': 'Approve',
+    'action.reject': 'Reject',
+
+    // Quote actions & labels
+    'action.approve_quote': 'Approve Quote',
+    'action.reject_quote': 'Reject Quote',
+    'po.generate_from_quote': 'Generate PO',
+    'quote.version': 'Version',
+    'quote.valid_until': 'Valid Until',
+    'status.label': 'Status',
+    'actions.label': 'Actions',
+    'quotes.title': 'Quote Comparison',
+    'quotes.subtitle': 'Compare quotes for PR {pr}',
+    'quotes.none_hint': 'No quotes yet. Use "Send PR to suppliers" from PR List, then check back.',
+    'quote.approved_alert': 'Approved quote v{version} from {supplier}. You can now generate a PO.',
+    'quote.rejected_alert': 'Rejected quote v{version} from {supplier}.',
 
     // PR List / Create
     'pr.header': 'Purchase Requests',
@@ -424,6 +487,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.email_dashboard': 'Dasbor Email',
     'nav.reporting': 'Laporan',
     'nav.help': 'Pusat Bantuan',
+    'nav.people': 'Orang',
+    'nav.invitations': 'Undangan',
 
     // Topbar
     'topbar.light': 'Terang',
@@ -438,6 +503,12 @@ const translations: Record<Language, Record<string, string>> = {
     'topbar.lang.en': 'English',
     'topbar.lang.id': 'Bahasa Indonesia',
     'topbar.help': 'Bantuan',
+    'topbar.theme_toggle': 'Ganti tema',
+    'topbar.language_toggle': 'Ganti bahasa',
+    'topbar.settings': 'Pengaturan',
+    'topbar.logout': 'Keluar',
+    'topbar.logged_in_as': 'Masuk sebagai {name}',
+    'topbar.offline_mock': 'Mock Offline',
 
     // Admin Dashboard
     'admin.title': 'Dasbor Admin',
@@ -574,6 +645,11 @@ const translations: Record<Language, Record<string, string>> = {
     'comms.threads': 'Thread',
     'comms.unread': 'Belum dibaca: {n}',
     'comms.input_placeholder': 'Ketik pesan. Gunakan @mention',
+    'comms.to': 'Kepada',
+    'comms.cc': 'Cc',
+    'comms.bcc': 'Bcc',
+    'comms.subject': 'Subjek',
+    'comms.hint_mentions': 'Gunakan @ untuk menyebut peserta',
     'comms.email_integration': 'Integrasi Email',
     'comms.email_sync_desc': 'Sinkronisasi dua-arah divisualisasikan di sini. Aturan CC/BCC per tipe klien diterapkan otomatis.',
     'comms.connected_to': 'Terhubung ke: {email}',
@@ -583,6 +659,7 @@ const translations: Record<Language, Record<string, string>> = {
     'comms.status.sent': 'Terkirim',
     'comms.status.delivered': 'Tersampaikan',
     'comms.status.read': 'Dibaca',
+    'comms.blocked_banner': 'Mengirim pesan dinonaktifkan: satu atau lebih peserta diblokir.',
 
     // Reporting
     'reports.title': 'Laporan',
@@ -590,6 +667,32 @@ const translations: Record<Language, Record<string, string>> = {
     'reports.vendor_performance': 'Performa Vendor',
     'reports.budget_utilization': 'Pemanfaatan Anggaran',
     'reports.monthly_procurement': 'Pengadaan Bulanan',
+    // Catatan Pengiriman (Inventory)
+    'delivery.title': 'Catatan Pengiriman',
+    'delivery.header_desc': 'Konfirmasi penerimaan dan catat koreksi; faktur harus mengikuti jumlah yang telah dikoreksi.',
+    'delivery.po_label': 'PO',
+    'delivery.delivered_amount': 'Jumlah Terkirim',
+    'delivery.table.item': 'Item',
+    'delivery.table.ordered': 'Dipesan',
+    'delivery.table.shipped': 'Dikirim',
+    'delivery.table.received': 'Diterima',
+    'delivery.table.correction': 'Koreksi',
+    'delivery.table.available_to_invoice': 'Tersedia untuk Penagihan',
+    'delivery.invariant': 'Invariant: jumlah(qty pengiriman) ≤ jumlah(qty PO). Koreksi menyesuaikan jumlah tersedia untuk penagihan; faktur harus mengikuti jumlah yang dikoreksi.',
+    'delivery.correction_aria': 'Koreksi untuk {name}',
+
+    // Pelaporan (Supplier) — Gerbang Penagihan
+    'reporting.create_invoice': 'Buat Faktur',
+    'reporting.remaining_deliverable': 'Sisa yang dapat ditagihkan',
+    'reporting.delivery_references': 'Referensi Pengiriman',
+    'reporting.no_delivery_records': 'Tidak ada catatan pengiriman untuk PO ini.',
+    'reporting.insufficient_delivered_amount': 'Jumlah terkirim tidak mencukupi',
+    // Pelaporan — Label Status Pembayaran
+    'reporting.status.paid': 'Dibayar',
+    'reporting.status.over_due': 'Terlambat',
+    'reporting.status.waiting': 'Menunggu pembayaran',
+    'reporting.status.next': 'Pembayaran berikutnya',
+    'reporting.status.neutral': 'Netral',
     // Help Center
     'help.title': 'Pusat Bantuan',
     'help.sub': 'Panduan, alur kerja, dan tautan cepat',
@@ -707,6 +810,14 @@ const translations: Record<Language, Record<string, string>> = {
     'action.close_preview': 'Tutup Pratinjau',
     'action.send_quote': 'Kirim Penawaran',
     'quote.preview_hint': 'Ini adalah pratinjau templat. Konten akan mengikuti gaya terpilih.',
+    // Gating messages / actions
+    'gating.quote_builder_disabled': 'Setujui PR dan kirim ke pemasok untuk menyusun penawaran',
+    'gating.approval_required_send': 'Hanya PR Disetujui yang bisa dikirim ke pemasok. Mohon minta persetujuan Finance/Admin terlebih dahulu.',
+    'gating.approval_required_compare': 'Setujui PR untuk membandingkan penawaran.',
+    'action.compare_quotes': 'Bandingkan penawaran',
+    'action.send_pr_to_suppliers': 'Kirim PR ke pemasok',
+    'action.approve': 'Setujui',
+    'action.reject': 'Tolak',
   },
 };
 
@@ -729,6 +840,17 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     // Persist both legacy and new keys
     localStorage.setItem('lang', language);
     setPreferredLanguage(language);
+  }, [language]);
+
+  // Keep <html lang> aligned with current language for accessibility (WCAG)
+  useEffect(() => {
+    try {
+      const html = document.documentElement;
+      const langCode = language === 'id' ? 'id' : 'en';
+      html.setAttribute('lang', langCode);
+      // Explicitly set direction for clarity; both EN and ID are LTR
+      html.setAttribute('dir', 'ltr');
+    } catch {}
   }, [language]);
 
   // On first load, if no stored preference, hint language using IP geo (free, cached)

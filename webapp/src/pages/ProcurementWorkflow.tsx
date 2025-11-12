@@ -3,6 +3,22 @@ import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
 
 export default function ProcurementWorkflow() {
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+  const hasApprovedPR = (() => {
+    try {
+      const mapRaw = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_pr_sent') : null) || '{}';
+      const sentMap = JSON.parse(mapRaw);
+      const supplierId = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_id') : null);
+      if (!supplierId) return false;
+      const prIds = Object.keys(sentMap || {});
+      for (const prId of prIds) {
+        const list = Array.isArray(sentMap[prId]) ? sentMap[prId] : [];
+        if (list.some((x: any) => String(x.supplierId) === String(supplierId))) {
+          return true;
+        }
+      }
+      return false;
+    } catch { return false; }
+  })();
   const steps = [
     {
       key: 'PR',
@@ -72,7 +88,11 @@ export default function ProcurementWorkflow() {
               {(s.key === 'Quote' && userType !== 'supplier') ? (
                 <span className="btn outline" aria-label="Await supplier quotes">Await supplier quotes</span>
               ) : (
-                <a className="btn" href={s.link.href} aria-label={s.link.label}>{s.link.label}</a>
+                <a className={`btn${(s.key === 'Quote' && !hasApprovedPR) ? ' disabled' : ''}`}
+                   aria-disabled={(s.key === 'Quote' && !hasApprovedPR) ? true : undefined}
+                   href={(s.key === 'Quote' && !hasApprovedPR) ? undefined : s.link.href}
+                   title={(s.key === 'Quote' && !hasApprovedPR) ? 'Approve PRs and send to suppliers to build quotes' : undefined}
+                   aria-label={s.link.label}>{s.link.label}</a>
               )}
               <button className="btn outline tooltip" data-tip="View docs" onClick={() => {
                 const file = 'docs/WORKFLOWS.md';
@@ -90,7 +110,13 @@ export default function ProcurementWorkflow() {
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Quick Actions</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <a className="btn" href="/procurement/pr/new">New PR</a>
-          {userType === 'supplier' && (<a className="btn" href="/procurement/quote-builder">Build Quote</a>)}
+          {userType === 'supplier' && (
+            <a className={`btn${!hasApprovedPR ? ' disabled' : ''}`}
+               aria-disabled={!hasApprovedPR ? true : undefined}
+               href={!hasApprovedPR ? undefined : '/procurement/quote-builder'}
+               title={!hasApprovedPR ? 'Approve PRs and send to suppliers to build quotes' : undefined}
+            >Build Quote</a>
+          )}
           <a className="btn" href="/procurement/po/preview">Generate PO</a>
           <a className="btn" href="/supply/order-tracker">Track Delivery</a>
           <a className="btn" href="/supplier/reporting">Invoice & Payments</a>

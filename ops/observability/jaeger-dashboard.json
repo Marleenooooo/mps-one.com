@@ -1,0 +1,16 @@
+{
+  "title": "MPSOne SPA Traces",
+  "description": "Basic view for client-side spans (route_navigation, action)",
+  "queries": [
+    {
+      "name": "Route Navigation",
+      "service": "mpsone-webapp",
+      "operation": "route_navigation"
+    },
+    {
+      "name": "Actions",
+      "service": "mpsone-webapp",
+      "operation": "action"
+    }
+  ]
+}

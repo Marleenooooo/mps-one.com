@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import * as pillarStorage from '../services/pillarStorage';
 import { POLayoutA } from '../components/po/POLayoutA';
 import { POLayoutB } from '../components/po/POLayoutB';
 import { POLayoutC } from '../components/po/POLayoutC';
@@ -19,6 +20,7 @@ export default function POPreview() {
   const [splitTotal, setSplitTotal] = useState(20);
   const [supplierNick, setSupplierNick] = useState('MBERKAH@');
   const [revision, setRevision] = useState<'A'|''>('');
+  const [fromQuote, setFromQuote] = useState<{ prId: string; supplierId: string; version: number } | null>(null);
 
   const sampleIssuer = {
     name: 'PT MPS One Indonesia',
@@ -65,11 +67,33 @@ export default function POPreview() {
     return `${prNumber}-${split}-${supplierNick}${revPart}`;
   }, [prNumber, splitIndex, splitTotal, supplierNick, revision]);
 
+  // Prefill from accepted quote context
+  useEffect(() => {
+    try {
+      const seedRaw = pillarStorage.getItem('mpsone_po_from_quote');
+      if (seedRaw) {
+        const seed = JSON.parse(seedRaw);
+        if (seed && seed.prId && seed.supplierId) {
+          setFromQuote({ prId: String(seed.prId), supplierId: String(seed.supplierId), version: Number(seed.version || 1) });
+          setPrNumber(String(seed.prId));
+          setSupplierNick(String(seed.supplierId));
+          setShowPRNumber(true);
+          setLayout('B');
+        }
+      }
+    } catch {}
+  }, []);
+
   return (
     <div className="page" style={{ padding: 16 }}>
       <div className="page-header" style={{ marginBottom: 12 }}>
         <h2 style={{ margin: 0 }}>PO Preview</h2>
         <div style={{ color: 'var(--text-secondary)' }}>Optimize for A4 portrait, print/PDF ready.</div>
+        {fromQuote && (
+          <div style={{ marginTop: 6, color: 'var(--text-secondary)' }}>
+            From accepted quote v{fromQuote.version} — PR <strong>{fromQuote.prId}</strong>, Supplier <strong>{fromQuote.supplierId}</strong>
+          </div>
+        )}
       </div>
       <div className="card" style={{ padding: 12, marginBottom: 12 }}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>PO Numbering Scheme Preview</div>

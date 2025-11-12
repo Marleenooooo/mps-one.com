@@ -22,3 +22,28 @@ Language: [English](FAQ.md) | [Bahasa Indonesia](id/FAQ.md)
 
 ## How do I reset theme/language?
 - Clear local storage keys `mpsone_lang` / `lang`. Refresh the page.
+
+## Onboarding Troubleshooting
+
+### Playwright error: `winldd` missing
+- Install the Windows dependency loader: `npx playwright install winldd`, then run `npx playwright test`.
+
+### Playwright browsers hang during install
+- Cancel the install, then re-run: `npx playwright install` → `npx playwright test`.
+- If a lock occurs, close the terminal and retry the install.
+
+### Vite preview shows blank page on deep routes
+- Build with explicit base: `npm run build -- --base=/`.
+- Then `npm run preview` and open `http://localhost:4173`.
+
+### Proxy errors to `/api/*` during preview/tests
+- These are expected when backend is not running; tests use seeded `localStorage`.
+- Ignore `http proxy error` messages for `/api/analytics`, `/api/notifications`, etc.
+
+### Ports and conflicts
+- Dev server `5173`, Preview `4173`, Backend proxy `3001`.
+- Stop conflicting processes or change ports if needed.
+
+### Docker not available in Windows PowerShell
+- Use WSL only: `wsl -d Ubuntu-20.04` then run Docker commands inside WSL.
+- See SOP in `.trae/rules/project_rules.md`.

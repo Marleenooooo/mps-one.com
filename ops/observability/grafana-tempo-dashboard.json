@@ -1,0 +1,25 @@
+{
+  "title": "MPSOne SPA Observability",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Route Navigation p95 (ms)",
+      "targets": [{"expr": "quantile_over_time(0.95, route_navigation_duration_ms)"}]
+    },
+    {
+      "type": "graph",
+      "title": "Route Navigation Duration",
+      "targets": [{"expr": "route_navigation_duration_ms"}]
+    },
+    {
+      "type": "graph",
+      "title": "Action Duration",
+      "targets": [{"expr": "action_duration_ms"}]
+    },
+    {
+      "type": "stat",
+      "title": "Errors per 1000 views",
+      "targets": [{"expr": "errors_per_1000_views"}]
+    }
+  ]
+}

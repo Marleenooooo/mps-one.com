@@ -158,6 +158,31 @@ docker compose up -d
 
 Services:
 - `mpsone-db` (MySQL 8) on `localhost:3306`
+
+---
+
+## Migrations & Verification — email_thread.subject
+
+Migrations live under `db/migrations/`. For Communications (Gmail-like parity), we added a `subject` column to `email_thread`.
+
+- Migration file: `db/migrations/0018_email_thread_subject.sql`
+- Column: `subject VARCHAR(255) NULL`
+
+### Import & Verify (WSL)
+1. Import migrations:
+   ```bash
+   bash scripts/import-migrations.sh
+   ```
+2. Verify schema:
+   ```bash
+   bash scripts/verify-db.sh
+   ```
+3. Check via MySQL/phpMyAdmin:
+   ```sql
+   SHOW COLUMNS FROM email_thread;
+   ```
+   Confirm `subject` exists.
+
 - `mpsone-phpmyadmin` at `http://localhost:8081/`
 
 Local credentials (development only):
@@ -189,3 +214,92 @@ Checks include demo counts and presence of PR columns and indexes (`title`, `des
 - Open `http://localhost:8081/`
 - Login with `mpsone_dev` / `devpass` or `root` / `rootpass`
 - Prefer scripts for repeatable imports; phpMyAdmin Import is useful for one-off tests.
+
+### WSL-only Backend (Docker Engine SOP)
+When Docker Engine is available only inside WSL, run the backend in WSL so it can reach MySQL on `localhost:3306`.
+
+WSL (Ubuntu) steps:
+
+```
+# 1) Open WSL (Ubuntu)
+wsl -d Ubuntu-20.04
+
+# 2) Install nvm and Node (once)
+export NVM_DIR="$HOME/.nvm"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+. "$NVM_DIR/nvm.sh"
+nvm install 20
+nvm use 20
+
+# 3) Import migrations and verify DB (from project root)
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+bash scripts/verify-db.sh
+
+# 4) Start backend with local dev env
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/webapp
+export DB_HOST=127.0.0.1; export DB_PORT=3306; export DB_NAME=mpsone_dev; export DB_USER=mpsone_dev; export DB_PASSWORD=devpass
+npm ci
+npm run server
+```
+
+Frontend can run from Windows PowerShell:
+
+```
+cd D:\ProjectBuild\projects\mpsone\mpsone\webapp
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173/` and visit `/dev/db-status` to confirm proxying and DB connectivity.
+
+### Social Features Migrations
+
+Ensure the following migrations are present and imported:
+
+- `0011_social_features_fix.sql` — aligns social tables to singular `user` schema (creates `user_relationships`, `user_blocks`, `user_invites`; adds `nickname` and `status` to `user`).
+- `0012_invites_enum_declined.sql` — extends `user_invites.status` with `declined`.
+- `0013_invites_add_from_email.sql` — adds `from_email` to `user_invites` for sent/received views.
+
+After import, confirm tables exist and basic queries succeed:
+
+```
+SELECT COUNT(*) FROM user_relationships;
+SELECT COUNT(*) FROM user_blocks;
+SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='user_invites' AND COLUMN_NAME='status';
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='user_invites' AND COLUMN_NAME='from_email';
+```
+
+---
+
+## Phase 3 — Audit & Documents (Auth/RBAC, Audit Trail, AV Scan)
+
+### New Schema (0014)
+- `audit_log` table: captures actor, action, entity type/id, comment, timestamp.
+- `document` table: adds `hash_sha256`, `storage_provider`, `storage_key`, `scan_status`, `scan_vendor`, `scan_at`.
+
+### Verify
+- phpMyAdmin: check `audit_log` exists and `document` shows new columns.
+- API:
+  - `GET /api/auth/me` → returns role/email (dev mode)
+  - `GET /api/docs?type=Invoice&limit=10` → documents listing with pagination
+  - `POST /api/docs/upload` → stubs upload, marks `scan_status=scanned`, writes audit
+
+### Notes
+- Minimal Auth/RBAC: role parsed from `Authorization: Bearer dev.<type>.<role>.<code>` or `x-role`.
+- Core endpoints write audit entries for key actions.
+## 0019 — User Preferences and Notifications
+
+Adds `user_preferences` and `notifications` tables to support Settings and the Notification Center.
+
+Schema
+- `user_preferences(user_id FK, theme ENUM(light|dark|system), language ENUM(en|id), notify_inapp BOOL, notify_email BOOL, updated_at TIMESTAMP)`
+- `notifications(id PK, user_id FK, module ENUM(procurement|finance|inventory|reports|alerts), title, body, type ENUM(info|warning|success|error), is_read BOOL, created_at TIMESTAMP)`
+
+Import Migrations (WSL)
+- Run: `bash scripts/import-migrations.sh`
+- Verify: `bash scripts/verify-db.sh` and phpMyAdmin
+
+Impacted Areas
+- Backend API: `GET/PUT /api/user/preferences`, `GET/POST/PUT /api/notifications`
+- Frontend UI: `/settings`, `/notifications` pages

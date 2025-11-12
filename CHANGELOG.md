@@ -1,5 +1,456 @@
 # Changelog
 
+## v0.1.25 (2025-11-12)
+
+## v0.1.26 (2025-11-12)
+
+### Highlights
+- Motion & Accessibility for Interactions:
+  - Introduced motion variables (`--motion-fast`, `--motion-medium`, `--motion-slow`, `--ease-standard`, `--ease-emphasized`).
+  - Applied motion scale to cards, buttons, and sidebar transitions (transform, box-shadow, color/border changes).
+  - Added global `prefers-reduced-motion` media query to minimize animations/transitions and disable shimmer/fade heaviness for accessibility.
+
+### Affected Files
+- `webapp/src/index.css`
+
+### Notes
+- Verified on `/settings`, `/notifications`, and `/comms`; hover/active feel smooth and consistent.
+- Reduced-motion mode honored; heavy motion is suppressed while focus visibility remains intact.
+
+### Highlights
+- Layout Ergonomics & Navigation Clarity:
+  - Added accent border utility classes: `.accent-border`, `.accent-border-left`, `.accent-border-top` using module gradient border-image.
+  - Applied accent borders to Settings and Notifications main cards for clearer visual grouping.
+  - Refined sidebar ghost ergonomics with slight translate on hover and persistent focus-visible outlines.
+
+### Affected Files
+- `webapp/src/index.css`
+- `webapp/src/pages/Settings.tsx`, `webapp/src/pages/Notifications.tsx`
+
+### Notes
+- UI preview verified on `/settings` and `/notifications` in light/dark modes; interactions feel smooth with clear accents.
+
+## v0.1.27 (2025-11-12)
+
+### Highlights
+- Pillar Separation kick-off (frontend):
+  - Added active Pillar context indicator to the topbar using module theme variables.
+  - Guarded QuickSearch suggestions by active pillar to minimize cross-pillar “social bleed”.
+  - Visually de-emphasized out-of-context sidebar items while preserving navigation and accessibility.
+  - Added client-only route guards for `/procurement/pr` and `/procurement/pr/new` to enforce mode separation.
+  - Introduced `PillarProvider` to derive pillar from routes and tag analytics spans/events.
+  - Extended procurement guards: client-only for `/procurement/workflow` and `/procurement/po/preview`; supplier-only for `/procurement/quote-builder`.
+ - Added pillar-scoped storage helper (`pillarStorage`) and adopted for gating keys: `mpsone_po_from_quote`, `mpsone_quote_accepted`, `mpsone_audit_trail`, `mpsone_pr_sent` (read via namespaced with legacy fallback; writes dual).
+
+### Storage Adoption Extension (pillar-scoped)
+- Extended `pillarStorage` adoption beyond initial gating keys to cover additional procurement and supplier caches:
+  - PR List: `mpsone_pr_draft`, `mpsone_audit_trail`, `mpsone_suppliers`, `mpsone_pr_sent`
+  - Navigation: `mpsone_pr_sent` in Topbar and Sidebar
+  - Order Tracking: `mpsone_po_from_quote`, `mpsone_available_to_invoice`
+  - Delivery Notes: dynamic `mpsone_delivery_notes_${poId}`, plus `mpsone_po_from_quote`, `mpsone_available_to_invoice`
+  - Supplier Reporting: `mpsone_available_to_invoice`, `mpsone_delivery_notes_${poId}`
+  - Client Quote Comparison: dynamic `mpsone_quotes_${prId}`, plus `mpsone_pr_sent`, `mpsone_audit_trail`
+
+### Affected Files (extension)
+- `webapp/src/pages/procurement/PRList.tsx`
+- `webapp/src/components/Layout/Topbar.tsx`
+- `webapp/src/components/Layout/Sidebar.tsx`
+- `webapp/src/pages/OrderTracker.tsx`
+- `webapp/src/pages/DeliveryNotes.tsx`
+- `webapp/src/pages/supplier/Reporting.tsx`
+- `webapp/src/pages/client/QuoteComparison.tsx`
+
+### Notes (verification)
+- Previewed `/procurement/pr`, `/procurement/workflow`, `/procurement/po/preview`, `/supply/order-tracker`, `/inventory/delivery-notes`, and `/supplier/reporting`; no browser or terminal errors observed.
+- Import style fixed to `import * as pillarStorage` across modules to match helper exports.
+
+### Tests
+- Playwright e2e coverage expanded:
+  - Guard redirects for `/procurement/po/preview` (missing seed) and `/procurement/quote-builder` (supplier without approved PR).
+  - Runs via `npm run test:e2e` against preview server; 9 tests passing locally.
+ - Analytics console verification is dev-only and validated manually during development sessions.
+
+### Affected Files
+- `webapp/src/components/Layout/Topbar.tsx`
+- `webapp/src/components/Layout/Sidebar.tsx`
+- `webapp/src/index.css`
+- `permissionsandpage.md`
+- `webapp/src/components/PillarProvider.tsx`
+- `webapp/src/App.tsx`
+ - `webapp/src/services/pillarStorage.ts`
+ - `webapp/src/pages/client/QuoteComparison.tsx`
+ - `webapp/src/pages/POPreview.tsx`
+
+### Notes
+- Previewed `/procurement/pr` to confirm indicator, QuickSearch filtering, and sidebar de-emphasis without console errors.
+- Verified client-only guards on `/procurement/pr` and `/procurement/pr/new` in dev.
+- Pillar-tagged analytics visible in dev console; no runtime errors.
+ - Verified guard behavior and storage isolation via previews on `/procurement/workflow`, `/procurement/po/preview`, and `/procurement/quote-builder`.
+
+### Highlights
+- Client/Supplier Mode Toggle & Context Reset:
+  - Added explicit segmented toggle in Topbar to switch `mpsone_user_type` between Client and Supplier.
+  - On switch, clears pillar-scoped procurement caches to prevent cross-mode bleed.
+  - Navigates to mode-specific landing to force a clean layout/state reset.
+ - Mode-Aware Navigation:
+   - QuickSearch gated by active mode — client-only entries shown in Client mode; supplier-only entries shown in Supplier mode.
+   - Sidebar hides client-only procurement items in Supplier mode to avoid redirect noise.
+
+### Affected Files
+- `webapp/src/components/Layout/Topbar.tsx`
+ - `webapp/src/components/Layout/Sidebar.tsx`
+
+### Notes
+- Previewed `/procurement/workflow` after adding the toggle; no browser or terminal errors observed.
+ - Previewed `/supplier/reporting` to verify Sidebar and QuickSearch mode gating; no errors observed.
+
+### Highlights
+- Mode-Aware Dashboards:
+  - Added mode-aware routing for dashboards: `/client` is accessible only in Client mode; Supplier mode redirects to `/supplier/admin`.
+  - Enforced Supplier mode requirement on supplier admin routes (Admin, Invitations, People, Reporting, Email).
+  - Simplified Supplier Admin dashboard actions to show only supplier-relevant action (New Quote); hid client-only actions (New PR, New PO).
+
+### Affected Files
+- `webapp/src/App.tsx`
+- `webapp/src/pages/supplier/AdminDashboard.tsx`
+
+### Notes
+- Previewed `/client` and `/supplier/admin`; dashboards render cleanly with mode-aware routing and actions. No browser or terminal errors observed.
+
+## v0.1.24 (2025-11-12)
+
+### Highlights
+- Joyful Layout Polish:
+  - Added card hover micro-interactions with subtle lift and shadow; dark mode glow refined.
+  - Introduced global ghost button hover/focus styles with soft fill and glow.
+  - Added reusable `page-title` gradient text class; removed inline styles in Settings and Notifications.
+  - Dev: suppressed notifications proxy calls when offline to avoid Vite proxy errors.
+
+### Affected Files
+- `webapp/src/index.css`
+- `webapp/src/pages/Settings.tsx`, `webapp/src/pages/Notifications.tsx`
+- `webapp/src/services/notifications.ts`
+
+### Notes
+- UI preview verified on `/notifications` and `/comms` with no browser errors.
+- Terminal proxy errors for `/api/notifications` are suppressed in offline mode via `getOfflineMode()` guard.
+
+## v0.1.22 (2025-11-12)
+
+### Highlights
+- Documentation modernization and onboarding polish:
+  - Added Developer Quickstart to `README.md` (dev, preview, E2E, WSL Docker SOP).
+  - Appended onboarding troubleshooting to `docs/FAQ.md` (Playwright `winldd`, deep route base, proxy errors, ports, WSL-only Docker).
+  - Mirrored troubleshooting entries to `docs/id/FAQ.md`.
+
+### Affected Files
+- `README.md`
+- `docs/FAQ.md`
+- `docs/id/FAQ.md`
+
+### Notes
+- Non-UI changes; no preview required.
+- Playwright tests verified locally (7 passed); deep-route preview uses `--base=/` per Quickstart.
+
+## v0.1.23 (2025-11-12)
+
+### Highlights
+- Observability Enhancements (Phase 7 start):
+  - Added minimal OpenTelemetry-like spans for route navigation and actions (behind env flags).
+  - Created `docs/OBSERVABILITY.md` with SLOs, setup, env flags, and verification.
+  - Added dashboard templates under `ops/observability/` for Grafana/Tempo and Jaeger.
+
+### Affected Files
+- `webapp/src/services/monitoring.ts`
+- `webapp/src/App.tsx`
+- `docs/OBSERVABILITY.md`
+- `ops/observability/grafana-tempo-dashboard.json`
+- `ops/observability/jaeger-dashboard.json`
+
+### Notes
+- Instrumentation is optional; enable with `VITE_OTEL_ENABLED=true` and set `VITE_OTEL_EXPORT_URL`.
+- Verified dev navigation on `/comms` and `/procurement/pr` with no console errors.
+
+## v0.1.21 (2025-11-12)
+
+### Highlights
+- Security & Access: Created `permissionsandpage.md` as the single source of truth (SSOT) for routes, features, required permissions, roles, mode constraints, and pillar tagging.
+- Roadmap: Marked the matrix file as created; future PRs must reference matrix row IDs.
+
+### Affected Files
+- `permissionsandpage.md`
+- `roadmap.md`
+
+### Notes
+- Non-UI change; no preview required. Aligns with current roles (Admin, PIC Operational, PIC Procurement, PIC Finance; Supplier Admin, Supplier PIC Procurement, Supplier PIC Finance) and key routes.
+- QA and PR templates should start referencing matrix IDs for new features/routes.
+
+## v0.1.20 (2025-11-12)
+
+### Highlights
+- Offline parity & sync reconciliation for Communications and core routes.
+  - Added client-side offline queue for documents and messages; idempotency via SHA-256.
+  - Extended mock services to include thread metadata (`labels`, `archived`) and persisted `/api/docs` list/upload flows for parity.
+  - Wired `/comms` to enqueue when offline or network down, with optimistic UI updates and auto-flush on `online`.
+  - Reconciliation status badge displayed on `/comms` showing pending items.
+
+### Affected Files
+- `webapp/src/services/offlineQueue.ts`
+- `webapp/src/services/mock.ts`
+- `webapp/src/services/api.ts`
+- `webapp/src/pages/CommunicationHub.tsx`
+
+### Notes
+- UI preview verified: `/comms`, `/procurement/pr`, `/notifications`, `/settings`.
+- Dev analytics endpoint may 404; non-blocking and does not affect functionality.
+
+## v0.1.19 (2025-11-12)
+
+### Highlights
+- Communications: attachments persistence and rich editor serialization.
+  - Frontend: composer now uploads attachments via `POST /api/docs/upload` with `type="EmailAttachment"` and links them to the current thread; shows pre-send removable chips and upload progress.
+  - Frontend: rich editor serializes to a safe HTML subset (bold, italic, underline, links, mentions, line breaks) and renders as HTML; formatting survives reload.
+  - Frontend: labels and archive toggles added; archived threads are hidden by default with a “Show” toggle.
+  - Services: added `apiUploadDoc` and `apiListDocs` in `webapp/src/services/api.ts` with offline parity in `webapp/src/services/mock.ts`.
+
+### Affected Files
+- `webapp/src/pages/CommunicationHub.tsx`
+- `webapp/src/services/api.ts`, `webapp/src/services/mock.ts`
+
+### Notes
+- UI preview verified on `/comms` in light/dark modes; no console or terminal errors observed.
+- Backend schema unchanged; labels/archive persisted client-side for now per roadmap scope.
+
+## v0.1.18 (2025-11-12)
+
+### Highlights
+- Theme & Accessibility (Neon VNS): refined disabled states for buttons to align with Neon SOP (reduced opacity, pointer-events disabled, theme-specific bases for dark/light). Verified global focus indicators, button variants, sidebar active/hover, and module page headers.
+
+### Affected Files
+- `webapp/src/index.css`
+
+### Notes
+- UI preview verified on `/settings`, `/notifications`, and `/procurement/pr` in light/dark modes. No console or terminal errors observed.
+
+## v0.1.17 (2025-11-12)
+
+### Highlights
+- Communications (Gmail-like parity, step 2):
+  - Database: added `subject` column to `email_thread` via `0018_email_thread_subject.sql`.
+  - Backend: thread endpoints now accept and return `subject` (`POST /api/email/thread`, `GET /api/email/thread/:id`, `GET /api/email/threads`).
+  - Frontend: composer sends `subject` on thread creation; subject displays in thread header. Composer enhanced with toolbar, mentions, drag-and-drop, and shortcuts.
+  - i18n: added English/Indonesian keys for `Cc`, `Bcc`, and `Subject`.
+- Docs: DB Setup updated (EN/ID and public mirrors) with migration import/verify steps for `email_thread.subject`.
+
+### Affected Files
+- `db/migrations/0018_email_thread_subject.sql`
+- `webapp/server/index.mjs`
+- `webapp/src/pages/CommunicationHub.tsx`
+- `webapp/src/services/api.ts`, `webapp/src/services/mock.ts`
+- `webapp/src/components/I18nProvider.tsx`
+- `docs/DB_SETUP.md`, `docs/id/DB_SETUP.md`
+- `webapp/public/docs/DB_SETUP.md`, `webapp/public/docs/id/DB_SETUP.md`
+
+### Ops
+- WSL: `bash scripts/import-migrations.sh` then `bash scripts/verify-db.sh`; confirm `subject VARCHAR(255)` exists on `email_thread` via phpMyAdmin.
+- Restart backend after applying migration to ensure new column is available to queries.
+
+### Notes
+- UI preview verified the Communications page loads with subject field, Cc/Bcc toggles, toolbar, mentions hints, and drag-and-drop attachments.
+- Further Gmail parity items (rich editor, full attachments flow, thread metadata) are queued per roadmap.
+
+## v0.1.16 (2025-11-12)
+
+### Highlights
+- Phase 6 (Release & Scale) kick-off:
+  - Deployment: added a Staging Verification Checklist and a practical Rollback Playbook to `DEPLOY.md`.
+  - Monitoring: introduced lightweight client-side error capture and route view analytics.
+  - Docs: updated `USER_GUIDE.md` with Monitoring & Analytics setup and verification steps.
+
+### Affected Files
+- `DEPLOY.md`
+- `webapp/src/services/monitoring.ts`
+- `webapp/src/main.tsx`
+- `webapp/src/App.tsx`
+- `docs/USER_GUIDE.md`
+
+### Ops
+- Optional: set `VITE_ANALYTICS_URL` in `.env.production` (or staging env) to POST minimal event payloads.
+- Verify in dev: open DevTools to observe `[analytics]` logs on route changes and error events.
+
+### Notes
+- Monitoring hooks are lightweight and dev-friendly; they log to console in development and POST if an endpoint is configured.
+- No visual/UI changes; verified app loads and routes continue to function under instrumentation.
+
+## v0.1.15 (2025-11-11)
+
+### Highlights
+- Email Integrations (Phase 4 start):
+  - Endpoints: `POST /api/email/oauth/start`, `GET /api/email/oauth/callback`, `GET /api/email/accounts`, `DELETE /api/email/accounts/:id`, `POST /api/email/sync`.
+  - Courier Webhooks: `POST /api/webhooks/courier/:vendor` upserts tracking status/events.
+- Database:
+  - `0015_email_oauth.sql` — `email_account` and `email_sync_state` tables.
+  - `0016_courier_tracking.sql` — `shipment_tracking` table with unique `(vendor, tracking_no)`.
+- Docs:
+  - `docs/EMAIL.md` and `docs/id/EMAIL.md` updated with OAuth, sync job, and courier webhook sections.
+  - `docs/DB_SETUP.md` and `docs/id/DB_SETUP.md` note new migrations and verification.
+
+### Affected Files
+- `webapp/server/index.mjs`
+- `db/migrations/0015_email_oauth.sql`
+- `db/migrations/0016_courier_tracking.sql`
+- `docs/EMAIL.md`, `docs/id/EMAIL.md`
+- `docs/DB_SETUP.md`, `docs/id/DB_SETUP.md`
+
+### Ops
+- WSL: `bash scripts/import-migrations.sh` then `bash scripts/verify-db.sh`; confirm tables in phpMyAdmin.
+- Smoke test endpoints locally on `http://localhost:3001` via Vite proxy or direct.
+
+### Notes
+- OAuth endpoints are dev stubs pending provider wiring; tokens stored in `token_json`.
+- Shipment tracking endpoint stores webhook events JSON and latest status; integrate provider mappings next.
+
+## v0.1.14 (2025-11-11)
+
+### Highlights
+- Backend Auth/RBAC: parsed bearer/dev tokens and attached `email`/`role`; `requireRole` now enforced across protected routes.
+- Audit Trail: introduced `audit_log` table and server-side audit inserts for PR, email thread, social, and invite actions.
+- Server-side tables: added pagination/filters on `/api/pr` and `/api/users` via `limit`, `offset`, `status`, `q`, and `sort`.
+- Document storage: `/api/docs` list with filters; `/api/docs/upload` stores `hash_sha256`, `storage_provider`, `storage_key`, and AV scan stub fields (`scan_status`, `scan_vendor`, `scan_at`).
+- Database: `0014_audit_and_doc_scan.sql` adds `audit_log` and document columns for secure storage and AV scan metadata.
+- Docs: updated DB Setup (root and in-app) with Phase 3 schema changes and verification steps.
+
+### Affected Files
+- `webapp/server/index.mjs`
+- `db/migrations/0014_audit_and_doc_scan.sql`
+- `docs/DB_SETUP.md`
+- `webapp/public/docs/DB_SETUP.md`
+
+### Ops
+- WSL: `bash scripts/import-migrations.sh` then `bash scripts/verify-db.sh`; verify via phpMyAdmin at `http://localhost:8081/`.
+- Restart the dev server to pick up auth middleware and new endpoints.
+
+### Notes
+- Auth parsing supports dev headers (`x-email`, `x-role`) and dev bearer pattern `Bearer dev.<type>.<role>.<code>` for local testing; production uses `mpsone_jwt`.
+- AV scan is stubbed; integrate ClamAV or vendor per roadmap when infra is ready.
+- Endpoints align with existing UI flows; frontend guards remain minimal and compatible.
+
+## v0.1.11 (2025-11-11)
+
+### Highlights
+- Backend API: implemented social features endpoints aligned to frontend contracts:
+  - `GET /api/users` — list users (name, email, role).
+  - `POST /api/users/follow` / `POST /api/users/unfollow` — follow/unfollow by email; respects block constraints.
+  - `POST /api/users/block` / `POST /api/users/unblock` — manage block relations; removes conflicting relationships.
+  - `GET /api/users/:email/relationships` — returns `following` and `followers` email arrays.
+  - `GET /api/users/:email/blocks` — returns `blocked` and `blockedBy` email arrays.
+  - `POST /api/users/invite` — create invite with token (7‑day expiry).
+  - `GET /api/users/:email/invites` — list invites for target email.
+  - `PUT /api/users/invites/:id` — update status (supports `accepted`, `expired`, `declined`).
+  - `DELETE /api/users/invites/:id` — cancel invite.
+  - `POST /api/users/conv-blocked` — check conversation participants for any block relation.
+- Database: added migrations for social features and enum alignment:
+  - `0011_social_features_fix.sql` — aligns to singular `user` schema; creates `user_relationships`, `user_blocks`, `user_invites`; extends `user` with `nickname` and `status`.
+  - `0012_invites_enum_declined.sql` — extends invite status enum with `declined`.
+- Docs: updated DB Setup (EN/ID) to include social migrations and verification queries; reinforced WSL import/verify steps.
+
+### Affected Files
+- `webapp/server/index.mjs`
+- `db/migrations/0011_social_features_fix.sql`
+- `db/migrations/0012_invites_enum_declined.sql`
+- `webapp/public/docs/DB_SETUP.md`
+- `webapp/public/docs/id/DB_SETUP.md`
+
+### Notes
+- Endpoints use email lookups against `user`; migrations ensure tables exist even if prior plural `users` schema isn’t present.
+- Follow requests are rejected when any block exists in either direction.
+- Invite status supports `declined` to mirror frontend behavior; existing records remain compatible.
+
+## v0.1.12 (2025-11-11)
+
+### Highlights
+- Database: `0013_invites_add_from_email.sql` adds `from_email` to `user_invites` plus index for efficient lookups.
+- Backend: invite endpoints updated to store inviter email and list invites in `{ sent, received }` shape for People Directory.
+- Docs: DB Setup (EN/ID) updated with 0013 and verification query.
+
+### Affected Files
+- `db/migrations/0013_invites_add_from_email.sql`
+- `webapp/server/index.mjs`
+- `webapp/public/docs/DB_SETUP.md`
+- `webapp/public/docs/id/DB_SETUP.md`
+
+### Notes
+- Existing invites remain valid; new invites will include `from_email`.
+- People Directory UI now aligns with backend without OFFLINE mocks.
+
+## v0.1.13 (2025-11-11)
+
+### Highlights
+- Database: Make `0009_email_thread_context.sql` idempotent (safe re-imports).
+- Database: Deprecate `0010_user_social_features.sql` to a no-op; social schema uses 0011+.
+- Ops: Full migration import now succeeds end-to-end; verification passes.
+
+### Affected Files
+- `db/migrations/0009_email_thread_context.sql`
+- `db/migrations/0010_user_social_features.sql`
+
+### Notes
+- `0011_social_features_fix.sql` and `0013_invites_add_from_email.sql` remain source of truth for social tables and invite fields.
+- If you previously ran 0010, ensure no duplicate tables exist; our scripts import idempotently going forward.
+
+## v0.1.10 (2025-11-11)
+
+### Highlights
+- PR Approval Gating (UI + Route Guards):
+  - Quote Builder link is disabled with tooltip for suppliers until an Approved PR is sent to them (Sidebar + Topbar QuickSearch).
+  - Client Quote Comparison (`/client/quotes/:prId`) guarded; redirects if PR not Approved.
+  - PR List actions gated: “Send PR to suppliers” requires Approved; “Compare quotes” disabled until Approved, with localized tooltips.
+  - Added i18n keys for gating messages (EN/ID) and “Compare quotes” label.
+- Enforced role-aware guards for `/docs` and `/comms`: requires `mpsone_user_type` (`client` or `supplier`), otherwise redirects to `/login/client`.
+- Added client-side guard for Quote Comparison: `/client/quotes/:prId` now requires the target PR to be `Approved`.
+- Minor: consolidated supplier guard helper; ensured `QuoteBuilder` remains restricted to suppliers with PR context.
+ - Prefilled PO Preview from accepted quote context: reads `mpsone_po_from_quote` and surfaces PR and supplier in header; switches to layout B and shows PR number column.
+- Added gated "Create Invoice" action in Supplier Reporting: button disabled with tooltip when `invoice.amount > deliveredAmount` per PO, reflecting Delivery Notes corrections.
+- Added invoice creation modal in Supplier Reporting: shows remaining deliverable (from Delivery Notes gate), enforces disabled submit when exceeding gate, and appends the new invoice to the current view.
+- Modal now includes Delivery References table sourced from `localStorage:mpsone_delivery_notes_${poId}` to show item-level context (received, correction, available).
+ - Accessibility: modal now traps focus, sets initial focus to the Amount field, supports Escape-to-close, and includes ARIA labelling for title and description.
+ - Accessibility: added global "Skip to Content" link anchored to `#main-content` to improve keyboard navigation and meet WCAG AA; verified focus-visible indicators in sidebar and inputs.
+ - Accessibility: `<html lang>` now reflects the active i18n language (EN/ID) via provider effect, improving screen reader behavior and SEO semantics.
+ - Accessibility: Sidebar navigation items now include descriptive `aria-label`s; active route retains `aria-current`, improving screen reader navigation.
+ - Accessibility: Breadcrumbs now use semantic `nav > ol > li` structure with `aria-current` on the final crumb for better assistive tech support.
+ - Accessibility: Forms now link errors via `aria-describedby` with `aria-invalid` across PR Create inputs; improves screen reader clarity and focus context.
+ - Accessibility: Supplier Reporting invoice modal adds inline validation for Amount and Due Date with `aria-describedby` error messages; submit disabled based on validation.
+ - Accessibility: Disabled contrast improved for buttons and inputs in `index.css` across light/dark themes using `--border` background and readable text colors.
+- Theme: Smooth theme switching added — backgrounds, borders, and text now transition (`background-color`, `color`, `border-color` at 0.3s) across key surfaces (body, sidebar, topbar, cards, headers, inputs). Topbar toggle persists preference and respects OS detection via `ThemeProvider`.
+- Minor: Topbar i18n — added translation keys for theme toggle, language toggle, settings, logout, logged‑in label, and offline mock badge (EN/ID); tooltips and aria‑labels now fully localized.
+ - UI Theme: Outline buttons now use module-specific gradients with hover micro‑interactions (scale 1.02, soft glow in light, neon glow in dark) and 20% opacity fill; aligns with Neon SOP across modules.
+ - UI Theme: Button variants (primary, secondary, success, danger) updated with Neon micro‑interactions — hover adds scale(1.02) with soft/neon glow; active uses darker state with scale(0.98); verified on `/procurement/pr-create` and `/procurement/workflow`.
+- Accessibility: Focus-visible parity for buttons — added :focus-visible styles for outline/primary/secondary/success/danger with appropriate glow across themes; verified on `/procurement/pr-create` and `/supplier/reporting`.
+
+- Delivery Notes: computed and persisted `available_to_invoice` and delivered amount per PO; UI labels localized (EN/ID) for headers and table columns.
+- Supplier Reporting: localized invoice creation modal (title, remaining deliverable, delivery references, empty state) and gated action tooltip; button text now uses i18n.
+
+- Quote Comparison: added "Reject Quote" action with audit logging and status badge update (`rejected`).
+- PO Preview: added route guard requiring accepted quote context; redirects to Workflow or Quote Comparison when missing/mismatched.
+- I18n: added translation keys for quote actions and PO generation labels (EN/ID).
+
+### Affected Files
+- `webapp/src/App.tsx`
+ - `webapp/src/pages/client/QuoteComparison.tsx`
+ - `webapp/src/pages/POPreview.tsx`
+ - `webapp/src/pages/supplier/Reporting.tsx`
+ - `webapp/src/components/Layout/Sidebar.tsx`
+ - `webapp/src/components/Layout/Topbar.tsx`
+ - `webapp/src/components/I18nProvider.tsx`
+ - `webapp/src/pages/procurement/PRCreate.tsx`
+ - `webapp/src/index.css`
+
+### Notes
+- Guards align with roadmap-driven lifecycle and roles/permissions; documents and communications are no longer accessible without a known user type.
+- Quote comparison respects procurement gating; non-approved PRs are redirected to the workflow overview.
+ - PO Preview now reflects conversion context from accepted quotes; sample items remain until backend provides item-level data.
+ - Supplier Reporting now enforces delivery → invoice gating at action level with a disabled state and tooltip for insufficient delivered totals.
+
 ## v0.1.9 (2025-11-10)
 
 ### Highlights
@@ -247,3 +698,79 @@ Technical
 
 Preview & QA
 - Dev server (Vite) diverifikasi berjalan di `http://localhost:5173/`; UI baru (icon-only dan indikator login) ditinjau tanpa error di browser.
+
+### Added
+- Playwright E2E tests for core routes (PR List, Quote Comparison, PO Preview, Delivery Notes, Order Tracker, Document Manager, Communication Hub).
+- CI workflow (`.github/workflows/e2e.yml`) builds the webapp and runs Playwright tests on push/PR.
+
+### Notes
+- E2E tests seed localStorage to satisfy route guards and assert structural selectors (e.g., `.main`, `.page-header`).
+
+## v0.1.12 (2025-11-11)
+
+### Highlights
+- Verified backend in WSL with Docker Engine: imported SQL migrations and validated DB contents via scripts and phpMyAdmin.
+- Confirmed live endpoints with real data: `/api/health` (db=true), `/api/pr` list/create/update, `/api/email-thread` create/list/append, `/api/docs` list.
+- Auditing integrated across PR, threads, and user actions; documents upload endpoint returns `scan_status: scanned` (demo stub).
+- Frontend dev server started and reachable at `http://localhost:5173/` via Vite proxy to backend.
+
+### Affected Files
+- `webapp/server/index.mjs` (routes verified: auth, PR, email-thread, users, docs)
+- `scripts/import-migrations.sh`, `scripts/verify-db.sh` (used for DB verification)
+- `db/migrations/0001–0014` (imported in WSL)
+- `docs/DB_SETUP.md` (WSL guidance referenced)
+
+### Deployment Notes
+- Backend runs inside WSL to reach MySQL on `localhost:3306` under Docker Engine.
+- Use `wsl` terminals to run Node via `nvm` and start the backend (`npm run server`) with dev DB env vars.
+- Frontend uses Vite proxy (`VITE_API_BASE=/api`) to route `/api/*` to `http://localhost:3001`.
+
+### Post-Deploy Checks
+- `GET /api/health` returns `{"ok":true,"version":"8.0.x","db":true}`.
+- `GET /api/pr?limit=5` returns rows; `POST /api/pr` and `PUT /api/pr/:id` succeed and write audit logs.
+- `POST /api/email-thread` and `POST /api/email-thread/:id/messages` succeed; `GET` shows updated `messages_json`.
+- `GET /api/docs` returns non-empty rows; `POST /api/docs/upload` creates a document entry with `scan_status`.
+## 2025-11-11 — Phase 4: FX Rates & Tax Utilities
+- Added DB migration `0017_fx_rates.sql` with `fx_rate(rate_date, base_ccy, quote_ccy, rate, source, created_at)` and unique constraint on `(rate_date, base_ccy, quote_ccy)`.
+- Implemented backend endpoints with caching and per‑day lock:
+  - `POST /api/fx/refresh` — dev/manual refresh to populate sample rates.
+  - `GET /api/fx/latest?base=IDR&quote=USD` — latest rate from DB or cache.
+  - `GET /api/fx/history?base=IDR&quote=USD&days=N` — historical series over N days.
+- Updated docs:
+  - `docs/DB_SETUP.md` and `docs/id/DB_SETUP.md` with migration, WSL import/verify steps, and sample queries.
+  - `docs/REPORTING.md` and `docs/id/REPORTING.md` with FX endpoints usage and caching/locking notes.
+- Verified stack:
+  - WSL Docker Compose started `mpsone-db` and `mpsone-phpmyadmin`; migrations imported via `bash scripts/import-migrations.sh`.
+  - Smoke tests extended in `scripts/smoke-test.mjs` and passed for FX endpoints and Phase 4 email/courier routes.
+## 2025-11-12 — Phase 5: Performance & Accessibility
+- Added `VirtualList` component for card/grid virtualization.
+- Refactored `PeopleDirectory` to use `VirtualList` (smooth scrolling for large lists).
+- Confirmed route-level code splitting via `React.lazy` in `App.tsx` for heavy pages.
+- Previewed `/admin/people` and `/procurement/pr`; no console errors; theme intact.
+- Accessibility: Added global `:focus-visible` outlines (2px, module color), enhanced skip-link styling, ARIA label for People search, and keyboard shortcut `/` to focus search.
+
+## 2025-11-12 — Phase 6: Analytics Collector (Dev)
+- Backend: added lightweight analytics endpoints for local verification
+  - `POST /api/analytics` ingests `{ name, data, ts, url, ua }` into an in-memory buffer
+  - `GET /api/analytics?limit=N` returns recent events (disabled in production)
+- Frontend: monitoring now defaults to `${VITE_API_BASE}/analytics` when `VITE_ANALYTICS_URL` is not set
+- Emissions: `app_boot` on startup and `route_view` on navigation
+- Docs: `DEPLOY.md` updated with an “Analytics Collector (Local Dev)” section and notes
+- Verified end-to-end: events appear via `GET /api/analytics?limit=5` after visiting `/procurement/pr`
+## 2025-11-12 — Phase 7 Kickoff: Settings & Notifications
+
+Added Settings page (`/settings`) with theme (Light/Dark/System), language (EN/ID), and notification preferences (in‑app/email). Implemented Notification Center (`/notifications`) with unread counts, module accents, and mark‑as‑read/unread actions. Extended ThemeProvider to support `system` mode following OS preference. Topbar now shows a dynamic notification bell with unread count and navigates to the Notification Center.
+
+Database
+- New migration `0019_user_preferences_and_notifications.sql` adds `user_preferences` and `notifications` tables with appropriate indexes and FKs.
+
+Docs
+- Updated `docs/DB_SETUP.md` and `docs/id/DB_SETUP.md` with schema details and import/verify steps. Mirrored updates in `webapp/public/docs`.
+
+Affected Files
+- `webapp/src/pages/Settings.tsx`
+- `webapp/src/pages/Notifications.tsx`
+- `webapp/src/components/ThemeProvider.tsx`
+- `webapp/src/components/Layout/Topbar.tsx`
+- `webapp/src/App.tsx`
+- `db/migrations/0019_user_preferences_and_notifications.sql`

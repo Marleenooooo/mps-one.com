@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useModule } from '../../components/useModule';
 import { useI18n } from '../../components/I18nProvider';
+import * as pillarStorage from '../../services/pillarStorage';
 
 type DataRow = Record<string, string | number>;
 
@@ -84,32 +85,121 @@ export default function Reporting() {
   ]), []);
 
   type Invoice = { id: string; poId: string; amount: number; dueDate: string; paidAt?: string | null };
-  const invoices = useMemo<Invoice[]>(() => ([
+  const [invoices, setInvoices] = useState<Invoice[]>([
     { id: 'INV-124', poId: 'PO-9821', amount: 50_000_000, dueDate: new Date(Date.now() + 5*24*3600*1000).toISOString(), paidAt: null },
     { id: 'INV-125', poId: 'PO-9821', amount: 75_000_000, dueDate: new Date(Date.now() - 3*24*3600*1000).toISOString(), paidAt: null },
     { id: 'INV-126', poId: 'PO-7777', amount: 40_000_000, dueDate: new Date(Date.now() + 15*24*3600*1000).toISOString(), paidAt: null },
     { id: 'INV-127', poId: 'PO-1200', amount: 20_000_000, dueDate: new Date(Date.now() - 1*24*3600*1000).toISOString(), paidAt: new Date().toISOString() },
-  ]), []);
+  ]);
+
+  // Modal state for creating a new invoice
+  const [invoiceModal, setInvoiceModal] = useState<{ poId: string; amount: number; due: string } | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const amountRef = useRef<HTMLInputElement | null>(null);
+
+  // Inline validation for invoice modal fields
+  const amountError = useMemo(() => {
+    if (!invoiceModal) return '';
+    if (invoiceModal.amount <= 0) return 'Amount must be greater than 0';
+    const remaining = remainingForPO(invoiceModal.poId);
+    if (invoiceModal.amount > remaining) return 'Amount exceeds remaining deliverable';
+    return '';
+  }, [invoiceModal]);
+
+  const dueError = useMemo(() => {
+    if (!invoiceModal) return '';
+    if (!invoiceModal.due) return 'Due date is required';
+    const dueDt = new Date(invoiceModal.due);
+    if (isNaN(dueDt.getTime())) return 'Invalid due date';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (dueDt < today) return 'Due date must not be in the past';
+    return '';
+  }, [invoiceModal]);
+
+  useEffect(() => {
+    if (!invoiceModal) return;
+    const el = modalRef.current;
+    const focusables = (): HTMLElement[] => {
+      const nodes = Array.from(
+        el?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') || []
+      );
+      const elems = nodes.filter((e): e is HTMLElement => e instanceof HTMLElement);
+      return elems.filter(e => !e.hasAttribute('disabled'));
+    };
+    const firstFocus = () => {
+      setTimeout(() => {
+        if (amountRef.current) amountRef.current.focus();
+        else focusables()[0]?.focus();
+      }, 0);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setInvoiceModal(null);
+      } else if (e.key === 'Tab') {
+        const f = focusables();
+        if (f.length === 0) return;
+        const active = document.activeElement as HTMLElement | null;
+        const idx = active ? f.indexOf(active) : -1;
+        if (e.shiftKey) {
+          if (idx <= 0) {
+            e.preventDefault();
+            f[f.length - 1].focus();
+          }
+        } else {
+          if (idx === f.length - 1) {
+            e.preventDefault();
+            f[0].focus();
+          }
+        }
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    firstFocus();
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [invoiceModal]);
 
   function derivePaymentStatus(inv: Invoice): { label: string; colorClass: string } {
-    if (inv.paidAt) return { label: 'paid', colorClass: 'success' };
+    if (inv.paidAt) return { label: t('reporting.status.paid'), colorClass: 'success' };
     const now = Date.now();
     const due = new Date(inv.dueDate).getTime();
-    if (now > due) return { label: 'over-due', colorClass: 'danger' };
+    if (now > due) return { label: t('reporting.status.over_due'), colorClass: 'danger' };
     const days = Math.ceil((due - now) / (24*3600*1000));
-    if (days <= 7) return { label: 'waiting payment', colorClass: 'warn' };
-    if (days <= 14) return { label: 'next payment', colorClass: 'success' };
-    return { label: 'neutral', colorClass: '' };
+    if (days <= 7) return { label: t('reporting.status.waiting'), colorClass: 'warn' };
+    if (days <= 14) return { label: t('reporting.status.next'), colorClass: 'success' };
+    return { label: t('reporting.status.neutral'), colorClass: '' };
   }
 
   function checkInvoiceGate(inv: Invoice): string | null {
     try {
-      const gate = JSON.parse(localStorage.getItem('mpsone_available_to_invoice') || '{}');
+      const gate = JSON.parse(pillarStorage.getItem('mpsone_available_to_invoice') || '{}');
       const g = gate[inv.poId];
       if (!g) return null;
       if (inv.amount > (g.deliveredAmount || 0)) return `Invoice exceeds delivered amount for ${inv.poId}`;
       return null;
     } catch { return null; }
+  }
+
+  function sumInvoicedForPO(poId: string): number {
+    return invoices.filter(i => i.poId === poId).reduce((acc, i) => acc + i.amount, 0);
+  }
+
+  function remainingForPO(poId: string): number {
+    try {
+      const gate = JSON.parse(pillarStorage.getItem('mpsone_available_to_invoice') || '{}');
+      const g = gate[poId];
+      const deliveredAmount = g ? Number(g.deliveredAmount) : 0;
+      return Math.max(0, deliveredAmount - sumInvoicedForPO(poId));
+    } catch { return 0; }
+  }
+
+  function getDeliveryItems(poId: string): { id: string; name: string; received: number; correction: number; available: number }[] {
+    try {
+      const key = `mpsone_delivery_notes_${poId}`;
+      const items = JSON.parse(pillarStorage.getItem(key) || '[]') as Array<{ id: string; name: string; receivedQty: number; correctionQty: number }>;
+      return items.map(it => ({ id: it.id, name: it.name, received: it.receivedQty, correction: it.correctionQty, available: Math.max(0, (it.receivedQty || 0) + (it.correctionQty || 0)) }));
+    } catch { return []; }
   }
 
   const exportSection = (key: string, rows: DataRow[], type: 'csv' | 'pdf' = 'csv') => {
@@ -136,7 +226,7 @@ export default function Reporting() {
                 className="btn"
                 onClick={() => exportSection('spending_analytics', spendingData, 'csv')}
                 aria-busy={exporting === 'spending_analytics'}
-                title="Export CSV"
+                title={t('datatable.export_csv')}
               >
                 {exporting === 'spending_analytics' ? '...' : 'CSV'}
               </button>
@@ -144,7 +234,7 @@ export default function Reporting() {
                 className="btn outline"
                 onClick={() => exportSection('spending_analytics', spendingData, 'pdf')}
                 aria-busy={exporting === 'spending_analytics'}
-                title="Export PDF"
+                title={t('datatable.export_pdf')}
               >
                 {exporting === 'spending_analytics' ? '...' : 'PDF'}
               </button>
@@ -339,7 +429,7 @@ export default function Reporting() {
         </div>
         <table className="table" style={{ width: '100%', marginTop: 8 }}>
           <thead>
-            <tr><th>Invoice</th><th>PO</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Gate</th></tr>
+            <tr><th>Invoice</th><th>PO</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Gate</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {invoices.filter(inv => {
@@ -366,6 +456,8 @@ export default function Reporting() {
             }).map(inv => {
               const st = derivePaymentStatus(inv);
               const gateWarn = checkInvoiceGate(inv);
+              const remaining = remainingForPO(inv.poId);
+              const canCreate = remaining > 0;
               return (
                 <tr key={inv.id}>
                   <td>{inv.id}</td>
@@ -374,11 +466,119 @@ export default function Reporting() {
                   <td>{new Date(inv.dueDate).toLocaleDateString()}</td>
                   <td><span className={`status-badge ${st.colorClass}`}>{st.label}</span></td>
                   <td>{gateWarn ? <span className="status-badge warn">{gateWarn}</span> : '-'}</td>
+                  <td>
+                    <span className={canCreate ? '' : 'tooltip'} data-tip={canCreate ? undefined : t('reporting.insufficient_delivered_amount')}>
+                      <button
+                        className="btn primary"
+                        disabled={!canCreate}
+                        aria-disabled={!canCreate}
+                        onClick={() => {
+                          if (!canCreate) return;
+                          const defaultDue = new Date(Date.now() + 30*24*3600*1000).toISOString().slice(0,10);
+                          const suggested = Math.min(remaining, 10_000_000); // suggest up to 10M or remaining
+                          setInvoiceModal({ poId: inv.poId, amount: suggested, due: defaultDue });
+                        }}
+                      >
+                        {t('reporting.create_invoice')}
+                      </button>
+                    </span>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+        {invoiceModal && (
+          <div role="dialog" aria-modal="true" aria-labelledby="create-invoice-title" aria-describedby="create-invoice-desc" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'grid', placeItems: 'center' }}>
+            <div ref={modalRef} className="card" style={{ width: 640, padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 id="create-invoice-title" style={{ margin: 0 }}>{t('reporting.create_invoice')}</h3>
+                <button className="btn ghost" aria-label="Close" onClick={() => setInvoiceModal(null)}>✕</button>
+              </div>
+              <div style={{ marginTop: 8, display: 'grid', gap: 8 }}>
+                <div><span style={{ color: 'var(--text-secondary)' }}>PO</span> <strong>{invoiceModal.poId}</strong></div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>{t('reporting.remaining_deliverable')}</span> {' '}
+                  <span className="status-badge info">Rp {remainingForPO(invoiceModal.poId).toLocaleString('id-ID')}</span>
+                </div>
+                <div className="card" style={{ padding: 12 }} aria-label="Delivery References">
+                  <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('reporting.delivery_references')}</div>
+                  <table className="table" style={{ width: '100%' }}>
+                    <thead>
+                      <tr><th>{t('delivery.table.item')}</th><th>{t('delivery.table.received')}</th><th>{t('delivery.table.correction')}</th><th>{t('delivery.table.available_to_invoice')}</th></tr>
+                    </thead>
+                    <tbody>
+                      {getDeliveryItems(invoiceModal.poId).map(ref => (
+                        <tr key={ref.id}>
+                          <td>{ref.name}</td>
+                          <td>{ref.received}</td>
+                          <td>{ref.correction}</td>
+                          <td><span className="status-badge success">{ref.available}</span></td>
+                        </tr>
+                      ))}
+                      {getDeliveryItems(invoiceModal.poId).length === 0 && (
+                        <tr><td colSpan={4} style={{ color: 'var(--text-secondary)' }}>{t('reporting.no_delivery_records')}</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Amount</span>
+                  <input
+                    className="input"
+                    type="number"
+                    min={0}
+                    ref={amountRef}
+                    value={invoiceModal.amount}
+                    onChange={e => setInvoiceModal(m => m ? { ...m, amount: Number(e.target.value || 0) } : m)}
+                    aria-invalid={Boolean(amountError)}
+                    aria-describedby={amountError ? 'inv-amount-err' : undefined}
+                  />
+                  {amountError && (
+                    <div id="inv-amount-err" role="alert" style={{ color: 'var(--secondary-gradient-start)', fontSize: 12 }}>
+                      {amountError}
+                    </div>
+                  )}
+                </label>
+                <label style={{ display: 'grid', gap: 6 }}>
+                  <span>Due Date</span>
+                  <input
+                    className="input"
+                    type="date"
+                    value={invoiceModal.due}
+                    onChange={e => setInvoiceModal(m => m ? { ...m, due: e.target.value } : m)}
+                    aria-invalid={Boolean(dueError)}
+                    aria-describedby={dueError ? 'inv-due-err' : undefined}
+                  />
+                  {dueError && (
+                    <div id="inv-due-err" role="alert" style={{ color: 'var(--secondary-gradient-start)', fontSize: 12 }}>
+                      {dueError}
+                    </div>
+                  )}
+                </label>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+                <button className="btn" onClick={() => setInvoiceModal(null)}>Cancel</button>
+                <button
+                  className="btn primary"
+                  disabled={Boolean(amountError || dueError)}
+                  aria-disabled={Boolean(amountError || dueError)}
+                  onClick={() => {
+                    const dueISO = new Date(invoiceModal.due).toISOString();
+                    const newId = 'INV-' + Math.floor(Math.random() * 900 + 100);
+                    setInvoices(prev => ([...prev, { id: newId, poId: invoiceModal.poId, amount: invoiceModal.amount, dueDate: dueISO, paidAt: null }]));
+                    setInvoiceModal(null);
+                  }}
+                >
+                  Create
+                </button>
+              </div>
+              <div id="create-invoice-desc" style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
+                Invoices must not exceed delivered totals. Partial invoices are allowed. Press Escape to close.
+              </div>
+            </div>
+          </div>
+        )}
         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
           Payment status follows 30-day calendar logic; invoice gating enforces sum(invoice.amount) ≤ sum(delivered.amount).
         </div>

@@ -158,6 +158,41 @@ $env:DB_HOST="srv1631.hstgr.io"; $env:DB_PORT="3306"; $env:DB_NAME="u485208858_m
 
 2) Start frontend (another terminal in `webapp`):
 
+---
+
+## Migrations & Verification — email_thread.subject
+
+This project ships SQL migrations under `db/migrations/`. For Communications (Gmail-like parity), we added a `subject` column to the `email_thread` table.
+
+- Migration file: `db/migrations/0018_email_thread_subject.sql`
+- Column: `subject VARCHAR(255) NULL`
+
+### Import & Verify (WSL)
+1. Import migrations:
+   ```bash
+   bash scripts/import-migrations.sh
+   ```
+2. Verify schema:
+   ```bash
+   bash scripts/verify-db.sh
+   ```
+3. Check via MySQL/phpMyAdmin:
+   ```sql
+   SHOW COLUMNS FROM email_thread;
+   ```
+   Ensure a `subject` column exists and is accessible.
+
+### Backend/API Alignment
+- After migration, restart the backend server so queries pick up the new column.
+- Endpoints affected:
+  - `POST /api/email/thread` — accepts optional `subject`.
+  - `GET /api/email/thread/:id` — returns `subject`.
+  - `GET /api/email/threads` — includes `subject` per thread.
+
+### Frontend/UI Alignment
+- Composer passes `subject` on new thread creation.
+- Subject renders in the thread header on the Communications page.
+
 ```
 npm run dev
 ```
@@ -169,6 +204,51 @@ http://localhost:5173/dev/db-status
 ```
 
 This page calls `/api/health`, `/api/po/summary`, and `/api/invoice/status` through the proxy and renders results.
+
+### WSL-only Backend (Docker Engine SOP)
+If Docker Engine is available only inside WSL, run the backend inside WSL so it can reach MySQL on `localhost:3306`.
+
+WSL (Ubuntu) steps:
+
+```
+# 1) Open WSL (Ubuntu)
+wsl -d Ubuntu-20.04
+
+# 2) Install nvm and Node (once)
+export NVM_DIR="$HOME/.nvm"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+. "$NVM_DIR/nvm.sh"
+nvm install 20
+nvm use 20
+
+# 3) Import migrations and verify DB (from project root)
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+bash scripts/verify-db.sh
+
+# 4) Start backend with local dev env
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone/webapp
+export DB_HOST=127.0.0.1; export DB_PORT=3306; export DB_NAME=mpsone_dev; export DB_USER=mpsone_dev; export DB_PASSWORD=devpass
+npm ci
+npm run server
+```
+
+Frontend can still run from Windows PowerShell:
+
+```
+cd D:\ProjectBuild\projects\mpsone\mpsone\webapp
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173/` and visit `/dev/db-status` to confirm proxying and DB connectivity.
+
+### Phase 4 — Email & Courier Tables
+- New migrations:
+  - `db/migrations/0015_email_oauth.sql` — adds `email_account` and `email_sync_state`.
+  - `db/migrations/0016_courier_tracking.sql` — adds `shipment_tracking` with `vendor`, `tracking_no`, `status`, `events_json`.
+- Import in WSL: re-run `bash scripts/import-migrations.sh` then `bash scripts/verify-db.sh`.
+- Verify in phpMyAdmin: tables exist; run quick selects to confirm inserts from API.
 
 ## Security Notes
 - Do NOT put `DB_HOST`, `DB_USER`, `DB_PASSWORD` in the frontend.
@@ -333,3 +413,76 @@ This page calls `/api/health`, `/api/po/summary`, and `/api/invoice/status` via 
 - Open `http://localhost:8081/`
 - Login with `mpsone_dev` / `devpass` or `root` / `rootpass`
 - Prefer scripts for repeatable imports; phpMyAdmin Import is useful for one-off tests.
+
+---
+
+## Phase 3 — Audit & Documents (Auth/RBAC, Audit Trail, AV Scan)
+
+### New Schema (0014)
+- `audit_log` table:
+  - Columns: `actor_email`, `action`, `entity_type`, `entity_id`, `comment`, `created_at`.
+  - Indexes: actor, entity, action.
+- `document` table augmented with:
+  - `hash_sha256`: content hash for deduplication/integrity.
+  - `storage_provider` / `storage_key`: object storage pointer (R2/Supabase/MinIO).
+  - `scan_status` (`pending|scanned|infected|error`), `scan_vendor`, `scan_at`.
+
+### Import & Verify (WSL)
+1) Import migrations:
+```
+cd /mnt/d/ProjectBuild/projects/mpsone/mpsone
+bash scripts/import-migrations.sh
+```
+2) Verify schema:
+```
+SELECT COUNT(*) FROM audit_log;
+DESCRIBE document; -- confirm new columns exist
+```
+3) API checks:
+```
+GET /api/auth/me
+GET /api/docs?type=Invoice&limit=10
+POST /api/docs/upload { type, refId, url }
+```
+
+### Notes
+- Auth/RBAC is minimal: role is parsed from `Authorization: Bearer dev.<type>.<role>.<code>` or header `x-role`.
+- Key endpoints write audit entries: PR create/update/delete, follows/blocks, invites, email-thread changes, document upload.
+### Phase 4 — FX Rates Table
+
+New migration: `db/migrations/0017_fx_rates.sql`
+
+- Table: `fx_rate`
+  - `rate_date DATE NOT NULL`
+  - `base_ccy CHAR(3) NOT NULL`
+  - `quote_ccy CHAR(3) NOT NULL`
+  - `rate DECIMAL(18,8) NOT NULL`
+  - `source VARCHAR(64)`
+  - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+  - `UNIQUE KEY uq_fx (rate_date, base_ccy, quote_ccy)`
+
+WSL import & verify:
+
+1) Import migrations:
+   - `bash scripts/import-migrations.sh`
+2) Verify via helper and phpMyAdmin:
+   - `bash scripts/verify-db.sh`
+   - Check `fx_rate` table exists; insert sample rows via API `/api/fx/refresh`.
+3) Query samples:
+   - Latest: `SELECT rate_date, rate FROM fx_rate WHERE base_ccy='IDR' AND quote_ccy='USD' ORDER BY rate_date DESC LIMIT 1;`
+   - History: `SELECT rate_date, rate FROM fx_rate WHERE base_ccy='IDR' AND quote_ccy='USD' AND rate_date >= CURDATE() - INTERVAL 30 DAY ORDER BY rate_date ASC;`
+## 0019 — User Preferences and Notifications
+
+Adds `user_preferences` and `notifications` tables to support Settings and the Notification Center.
+
+Schema
+- `user_preferences(user_id FK, theme ENUM(light|dark|system), language ENUM(en|id), notify_inapp BOOL, notify_email BOOL, updated_at TIMESTAMP)`
+- `notifications(id PK, user_id FK, module ENUM(procurement|finance|inventory|reports|alerts), title, body, type ENUM(info|warning|success|error), is_read BOOL, created_at TIMESTAMP)`
+
+Import Migrations (WSL)
+- Run: `bash scripts/import-migrations.sh`
+- Verify: `bash scripts/verify-db.sh` and phpMyAdmin (check new tables and indexes)
+
+Impacted Areas
+- Backend API: `GET/PUT /api/user/preferences`, `GET/POST/PUT /api/notifications`
+- Frontend UI: `/settings` page for theme/language/notification preferences; `/notifications` page with unread counts and mark‑as‑read.

@@ -140,10 +140,9 @@ export default function AdminDashboard() {
               </li>
             ))}
           </ul>
+          {/* Mode-aware actions: supplier dashboard shows only supplier-relevant actions */}
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button className="btn" aria-label={t('admin.new_pr')}>{t('admin.new_pr')}</button>
-            <button className="btn" aria-label={t('admin.new_quote')}>{t('admin.new_quote')}</button>
-            <button className="btn" aria-label={t('admin.new_po')}>{t('admin.new_po')}</button>
+            <button className="btn primary" aria-label={t('admin.new_quote')}>{t('admin.new_quote')}</button>
           </div>
         </div>
       </div>

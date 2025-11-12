@@ -3,6 +3,7 @@ import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 import { StatusPipeline } from '../components/UI/StatusPipeline';
 import { uniqueId } from '../components/utils/uniqueId';
+import * as pillarStorage from '../services/pillarStorage';
 
 const pipeline: ('pr'|'quote'|'po'|'processing'|'shipped'|'delivered'|'invoiced'|'paid')[] = ['pr','quote','po','processing','shipped','delivered','invoiced','paid'];
 
@@ -34,14 +35,14 @@ export default function OrderTracker() {
   // Tie DeliveryNotes entries into the pipeline by reading available-to-invoice gate
   const poId = useMemo(() => {
     try {
-      const seed = JSON.parse(localStorage.getItem('mpsone_po_from_quote') || '{}');
+      const seed = JSON.parse(pillarStorage.getItem('mpsone_po_from_quote') || '{}');
       return seed?.poId || 'PO-9821';
     } catch { return 'PO-9821'; }
   }, []);
 
   const deliveryGate = useMemo(() => {
     try {
-      const gate = JSON.parse(localStorage.getItem('mpsone_available_to_invoice') || '{}');
+      const gate = JSON.parse(pillarStorage.getItem('mpsone_available_to_invoice') || '{}');
       return gate[poId] || null;
     } catch { return null; }
   }, [poId]);

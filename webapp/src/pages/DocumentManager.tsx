@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 
@@ -33,14 +33,18 @@ const overscanRows = overscan;
   const endRow = Math.min(totalRows, startRow + visibleRowCount);
   const startIndex = startRow * columns;
   const endIndex = Math.min(docs.length, endRow * columns);
-  const visibleDocs = docs.slice(startIndex, endIndex);
+  const visibleDocs = useMemo(() => docs.slice(startIndex, endIndex), [docs, startIndex, endIndex]);
+
+  const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop((e.target as HTMLDivElement).scrollTop);
+  }, []);
 
   useEffect(() => { const tm = setTimeout(() => setMounting(false), 400); return () => clearTimeout(tm); }, []);
 
   const role = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_role') : null);
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
 
-  function canToggle(d: Doc): boolean {
+  const canToggle = useCallback((d: Doc): boolean => {
     if (role === 'Admin') return true;
     if (role === 'PIC Finance') return d.type === 'Invoice' || d.type === 'Payment';
     if (role === 'PIC Procurement') return d.type === 'PR' || d.type === 'PO' || d.type === 'Quote';
@@ -48,19 +52,19 @@ const overscanRows = overscan;
     // Suppliers can toggle only their Quotes
     if (userType === 'supplier') return d.type === 'Quote';
     return false;
-  }
+  }, [role, userType]);
 
-  function toggleAccess(id: number) {
+  const toggleAccess = useCallback((id: number) => {
     setDocs(d => d.map(x => x.id === id ? { ...x, canAccess: !x.canAccess } : x));
-  }
+  }, []);
 
-  function toggleExpanded(id: number) {
+  const toggleExpanded = useCallback((id: number) => {
     setExpanded(e => ({ ...e, [id]: !e[id] }));
-  }
+  }, []);
 
-  function toggleSelect(id: number) {
+  const toggleSelect = useCallback((id: number) => {
     setSelected(s => ({ ...s, [id]: !s[id] }));
-  }
+  }, []);
 
   function bulkDownload() {
     const ids = Object.entries(selected).filter(([_, v]) => v).map(([k]) => Number(k));
@@ -94,7 +98,7 @@ const overscanRows = overscan;
     setTimeout(() => setBanner(null), 1200);
     bulkDeleteBtnRef.current?.focus();
   }
-  function downloadDoc(d: Doc) {
+  const downloadDoc = useCallback((d: Doc) => {
     const blob = new Blob([`Dummy content for ${d.name} (v${d.version})`], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -104,7 +108,7 @@ const overscanRows = overscan;
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  }
+  }, []);
 
   const selectedCount = useMemo(() => Object.values(selected).filter(Boolean).length, [selected]);
 
@@ -137,7 +141,7 @@ const overscanRows = overscan;
             t('docs.selected').replace('{n}', String(selectedCount))
           )}
         </div>
-        <div ref={scrollRef} onScroll={e => setScrollTop((e.target as HTMLDivElement).scrollTop)} style={{ marginTop: 12, height, overflowY: 'auto' }}>
+        <div ref={scrollRef} onScroll={onScroll} style={{ marginTop: 12, height, overflowY: 'auto' }}>
           {mounting ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="card" style={{ padding: 12 }}>
@@ -150,51 +154,18 @@ const overscanRows = overscan;
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 12 }}>
               <div style={{ gridColumn: `1 / span ${columns}`, height: startRow * rowHeight }} />
               {visibleDocs.map(d => (
-                <div key={d.id} className="card" style={{ padding: 12, transition: 'all 0.2s ease' }}
-                     onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 10px var(--module-color), 0 0 20px var(--module-color)')}
-                     onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input type="checkbox" checked={!!selected[d.id]} onChange={() => toggleSelect(d.id)} aria-label={`Select ${d.name}`} />
-                    <span style={{ fontWeight: 600 }}>{d.name}</span>
-                  </label>
-                  <div aria-label={t('docs.thumbnail')} style={{ height: 100, borderRadius: 8, position: 'relative', background: 'linear-gradient(135deg, var(--surface2), var(--surface))' }}>
-                    <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.1)', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}>
-                      {d.name.split('.').pop()?.toUpperCase()}
-                    </div>
-                    <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
-                  </div>
-                  <div style={{ marginTop: 6 }}>
-                    <span className={`status-badge ${d.canAccess ? 'success' : ''}`}>{t('docs.access')}: {d.canAccess ? 'Allowed' : 'Denied'}</span>
-                  </div>
-                  <div style={{ color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{d.type}{d.refId ? ` · ${d.refId}` : ''}</span>
-                    <label className="btn" style={{ justifyContent: 'space-between' }}>
-                      {t('docs.access')}
-                      <input type="checkbox" checked={d.canAccess} onChange={() => toggleAccess(d.id)} disabled={!canToggle(d)} />
-                    </label>
-                  </div>
-                  {!canToggle(d) && (
-                    <div className="status-badge" style={{ marginTop: 8 }}>View-only: Access changes restricted for your role</div>
-                  )}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    <button className="btn" onClick={() => downloadDoc(d)}>{t('docs.download')}</button>
-                    <button className="btn" onClick={() => toggleExpanded(d.id)}>{expanded[d.id] ? t('docs.hide_history') : t('docs.show_history')}</button>
-                  </div>
-                  {expanded[d.id] && (
-                    <div className="card" style={{ padding: 8, marginTop: 8 }}>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version_history')}</div>
-                      <ul style={{ margin: 0, paddingLeft: 16 }}>
-                        {(d.versions ?? ([] as { v: number; when: string }[])).map((v: { v: number; when: string }) => (
-                          <li key={v.v}>
-                            {t('docs.version').replace('{n}', String(v.v))}
-                            <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>{v.when}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+                <DocCard
+                  key={d.id}
+                  d={d}
+                  selected={!!selected[d.id]}
+                  expanded={!!expanded[d.id]}
+                  t={t}
+                  canToggle={canToggle}
+                  onToggleSelect={toggleSelect}
+                  onToggleAccess={toggleAccess}
+                  onDownload={downloadDoc}
+                  onToggleExpanded={toggleExpanded}
+                />
               ))}
               <div style={{ gridColumn: `1 / span ${columns}`, height: Math.max(0, (totalRows - endRow)) * rowHeight }} />
             </div>
@@ -204,6 +175,57 @@ const overscanRows = overscan;
     </div>
   );
 }
+
+const DocCard = React.memo(function DocCard({ d, selected, expanded, t, canToggle, onToggleSelect, onToggleAccess, onDownload, onToggleExpanded }:
+  { d: Doc; selected: boolean; expanded: boolean; t: any; canToggle: (d: Doc) => boolean; onToggleSelect: (id: number) => void; onToggleAccess: (id: number) => void; onDownload: (d: Doc) => void; onToggleExpanded: (id: number) => void }) {
+  return (
+    <div className="card" style={{ padding: 12, transition: 'all 0.2s ease' }}
+         onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 10px var(--module-color), 0 0 20px var(--module-color)')}
+         onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <input type="checkbox" checked={!!selected} onChange={() => onToggleSelect(d.id)} aria-label={`Select ${d.name}`} />
+        <span style={{ fontWeight: 600 }}>{d.name}</span>
+      </label>
+      <div aria-label={t('docs.thumbnail')} style={{ height: 100, borderRadius: 8, position: 'relative', background: 'linear-gradient(135deg, var(--surface2), var(--surface))' }}>
+        <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.1)', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}>
+          {d.name.split('.').pop()?.toUpperCase()}
+        </div>
+        <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
+      </div>
+      <div style={{ marginTop: 6 }}>
+        <span className={`status-badge ${d.canAccess ? 'success' : ''}`}>{t('docs.access')}: {d.canAccess ? 'Allowed' : 'Denied'}</span>
+      </div>
+      <div style={{ color: 'var(--text-secondary)' }}>{t('docs.version').replace('{n}', String(d.version))}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{d.type}{d.refId ? ` · ${d.refId}` : ''}</span>
+        <label className="btn" style={{ justifyContent: 'space-between' }}>
+          {t('docs.access')}
+          <input type="checkbox" checked={d.canAccess} onChange={() => onToggleAccess(d.id)} disabled={!canToggle(d)} />
+        </label>
+      </div>
+      {!canToggle(d) && (
+        <div className="status-badge" style={{ marginTop: 8 }}>View-only: Access changes restricted for your role</div>
+      )}
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <button className="btn" onClick={() => onDownload(d)}>{t('docs.download')}</button>
+        <button className="btn" onClick={() => onToggleExpanded(d.id)}>{expanded ? t('docs.hide_history') : t('docs.show_history')}</button>
+      </div>
+      {expanded && (
+        <div className="card" style={{ padding: 8, marginTop: 8 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('docs.version_history')}</div>
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            {(d.versions ?? ([] as { v: number; when: string }[])).map((v: { v: number; when: string }) => (
+              <li key={v.v}>
+                {t('docs.version').replace('{n}', String(v.v))}
+                <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>{v.when}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+});
 
 function exportDocsCSV(docs: { id: number; name: string; version: number; canAccess: boolean }[]) {
   const headers = ['ID','Name','Version','Access'];

@@ -158,6 +158,31 @@ docker compose up -d
 
 Layanan:
 - `mpsone-db` (MySQL 8) di `localhost:3306`
+
+---
+
+## Migrasi & Verifikasi — subject di email_thread
+
+File migrasi berada di `db/migrations/`. Untuk fitur Komunikasi (paritas Gmail), kami menambahkan kolom `subject` ke `email_thread`.
+
+- File migrasi: `db/migrations/0018_email_thread_subject.sql`
+- Kolom: `subject VARCHAR(255) NULL`
+
+### Impor & Verifikasi (WSL)
+1. Impor migrasi:
+   ```bash
+   bash scripts/import-migrations.sh
+   ```
+2. Verifikasi skema:
+   ```bash
+   bash scripts/verify-db.sh
+   ```
+3. Cek via MySQL/phpMyAdmin:
+   ```sql
+   SHOW COLUMNS FROM email_thread;
+   ```
+   Pastikan `subject` ada.
+
 - `mpsone-phpmyadmin` di `http://localhost:8081/`
 
 Kredensial lokal (khusus development):
@@ -189,3 +214,35 @@ Pemeriksaan mencakup jumlah data demo dan keberadaan kolom & indeks penting pada
 - Buka `http://localhost:8081/`
 - Login dengan `mpsone_dev` / `devpass` atau `root` / `rootpass`
 - Gunakan Import untuk uji satu‑off; untuk konsistensi, lebih baik jalankan lewat skrip.
+
+### Migrasi Fitur Sosial
+
+Pastikan migrasi berikut tersedia dan sudah diimpor:
+
+- `0011_social_features_fix.sql` — menyelaraskan tabel sosial ke skema `user` (membuat `user_relationships`, `user_blocks`, `user_invites`; menambah kolom `nickname` dan `status` pada `user`).
+- `0012_invites_enum_declined.sql` — menambah nilai `declined` pada ENUM `user_invites.status`.
+- `0013_invites_add_from_email.sql` — menambah kolom `from_email` pada `user_invites` untuk tampilan undangan terkirim/diterima.
+
+Setelah import, verifikasi tabel dan query dasar:
+
+```
+SELECT COUNT(*) FROM user_relationships;
+SELECT COUNT(*) FROM user_blocks;
+SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='user_invites' AND COLUMN_NAME='status';
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='user_invites' AND COLUMN_NAME='from_email';
+```
+## 0019 — Preferensi Pengguna dan Notifikasi
+
+Menambahkan tabel `user_preferences` dan `notifications` untuk mendukung halaman Pengaturan dan Pusat Notifikasi.
+
+Skema
+- `user_preferences(user_id FK, theme ENUM(light|dark|system), language ENUM(en|id), notify_inapp BOOL, notify_email BOOL, updated_at TIMESTAMP)`
+- `notifications(id PK, user_id FK, module ENUM(procurement|finance|inventory|reports|alerts), title, body, type ENUM(info|warning|success|error), is_read BOOL, created_at TIMESTAMP)`
+
+Impor Migrasi (WSL)
+- Jalankan: `bash scripts/import-migrations.sh`
+- Verifikasi: `bash scripts/verify-db.sh` dan phpMyAdmin
+
+Area Terpengaruh
+- Backend API: `GET/PUT /api/user/preferences`, `GET/POST/PUT /api/notifications`
+- Frontend UI: halaman `/settings` dan `/notifications`

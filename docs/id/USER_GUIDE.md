@@ -103,6 +103,20 @@ Pipeline status: `PR → Quote → PO → Processing → Shipped → Delivered �
 - Dokumen besar? Gunakan operasi bulk & versi di Document Manager.
 - Preview produksi: jalankan `npm run preview` untuk perilaku seperti produksi.
 
+## Pemantauan & Analitik
+- Penangkapan error: event global `window.error` dan `unhandledrejection` direkam.
+- Analitik rute: page view dilacak pada setiap perpindahan rute.
+- Aktifkan pengiriman ke backend dengan set `VITE_ANALYTICS_URL` (mis. endpoint staging) sebelum build.
+- Verifikasi dev: buka DevTools untuk melihat log `[analytics]`; pastikan `route_view` dan error tampil.
+- Privasi: hanya data minimal (nama event, path, timestamp, URL, user agent) yang dikirim.
+
+## Mulai Cepat (Onboarding)
+- Jalankan dev server: `npm run dev` di folder `webapp`.
+- Login uji: gunakan menu Login Client/Supplier; tipe pengguna disimpan di localStorage.
+- Navigasi modul: Procurement, Finance, Inventory, Reports via sidebar.
+- Tema & bahasa: ubah dari topbar; preferensi persistent (disimpan lokal).
+- Cek performa: buka `/procurement/pr` dan `/admin/people`; pastikan scroll halus dan tanpa error.
+
 ## Catatan
 - Aplikasi saat ini adalah SPA front-end siap integrasi API; sejumlah alur menggunakan data demo hingga backend terhubung.
 - Alur email & integrasi backend dirancang namun mungkin disimulasikan hingga tersambung.

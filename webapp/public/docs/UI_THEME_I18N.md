@@ -11,8 +11,8 @@ Corporate neon palette with dark/light themes, accessibility targets, and micro�
 ## Interactions
 - Button hover: scale(1.02), glow, box‑shadow.
 - Card hover: translateY(-2px), elevated shadow.
+- Pillar indicator in topbar shows active module; QuickSearch filtered by pillar; sidebar de‑emphasizes out‑of‑context links.
 
 ## I18N
 - Languages: English (`en`), Indonesian (`id`).
 - Persistent preference via localStorage; OS detection; manual toggle.
-
