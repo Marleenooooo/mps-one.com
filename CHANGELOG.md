@@ -116,6 +116,7 @@
 
 ### Notes
 - Previewed `/client` and `/supplier/admin`; dashboards render cleanly with mode-aware routing and actions. No browser or terminal errors observed.
+ - Verified Client Dashboard shows only client-specific actions (Quick PR, budget utilization, documents, invoice overview); no supplier-only actions appear.
 
 ## v0.1.24 (2025-11-12)
 

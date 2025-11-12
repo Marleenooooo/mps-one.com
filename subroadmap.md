@@ -191,3 +191,4 @@ Tasks
 
 Notes
 - Verified via preview; dashboards render correctly with mode-aware routing and actions; no errors observed.
+ - Client Dashboard verification: Only client-specific actions are present (Quick PR, budget, documents, invoice overview). No supplier-only actions (e.g., New Quote, Quote Builder) appear.

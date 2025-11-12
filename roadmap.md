@@ -115,7 +115,7 @@ Phase 7 — Post-Release Polishing (100–120%)
   - [~] Navigation, sidebar, dashboard, and available actions completely change based on active mode
     - [x] Dashboards gated by active mode: `/client` only in Client mode; supplier admin family routes require Supplier mode.
     - [x] Supplier Admin dashboard shows only supplier-relevant action (New Quote); hides client-only actions (New PR, New PO).
-    - [ ] Client dashboard action set becomes client-specific only (future: disable supplier-only items).
+    - [x] Client dashboard actions are client-specific only (no supplier-only items shown).
   - [ ] Strict separation enforced by backend: a user in Supplier mode cannot access “Create Tender” or “Evaluate Bids”, and vice versa
   - [ ] All mode-sensitive actions logged with current mode context
 
