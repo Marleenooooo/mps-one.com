@@ -137,7 +137,7 @@ Tasks
 Notes
 - Uses existing demo rows and mock storage; avoids backend dependencies.
 - Gate keys: `mpsone_pr_sent`, `mpsone_quotes_{prId}`, `mpsone_po_from_quote`, `mpsone_available_to_invoice`, `mpsone_delivery_notes_{poId}`.
-
+============================
 
 # Subroadmap — Phase 7: Pillar Separation — Route Guards & State Isolation
 
