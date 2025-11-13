@@ -27,6 +27,10 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const Reporting = lazy(() => import('./pages/supplier/Reporting'));
 const PRList = lazy(() => import('./pages/procurement/PRList'));
 const PRCreate = lazy(() => import('./pages/procurement/PRCreate'));
+const EnhancedPRCreation = lazy(() => import('./pages/procurement/EnhancedPRCreation'));
+const EnhancedRFQCreation = lazy(() => import('./pages/procurement/EnhancedRFQCreation'));
+const EnhancedSupplierManagement = lazy(() => import('./pages/supplier/EnhancedSupplierManagement'));
+const EnhancedInvoiceMatching = lazy(() => import('./pages/finance/EnhancedInvoiceMatching'));
 const EmailDashboard = lazy(() => import('./pages/supplier/EmailDashboard'));
 const POPreview = lazy(() => import('./pages/POPreview'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
@@ -224,8 +228,12 @@ export default function App() {
                     <Route path="/supplier/reporting" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
                     <Route path="/supplier/email" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
                     <Route path="/supplier/clients" element={(localStorage.getItem('mpsone_user_type') === 'supplier') ? <ClientDirectory /> : <Navigate to="/procurement/workflow" replace />} />
+                    <Route path="/supplier/enhanced" element={<ClientOnlyProcurement><EnhancedSupplierManagement /></ClientOnlyProcurement>} />
                   <Route path="/procurement/pr" element={<ClientOnlyProcurement><PRList /></ClientOnlyProcurement>} />
                   <Route path="/procurement/pr/new" element={<ClientOnlyProcurement><PRCreate /></ClientOnlyProcurement>} />
+                  <Route path="/procurement/pr/enhanced" element={<ClientOnlyProcurement><EnhancedPRCreation /></ClientOnlyProcurement>} />
+                  <Route path="/procurement/rfq/enhanced" element={<ClientOnlyProcurement><EnhancedRFQCreation /></ClientOnlyProcurement>} />
+                  <Route path="/finance/invoice-matching" element={<ClientOnlyProcurement><EnhancedInvoiceMatching /></ClientOnlyProcurement>} />
                   <Route path="/procurement/po/preview" element={<ClientOnlyProcurement><POPreviewGuard /></ClientOnlyProcurement>} />
                   <Route path="/procurement/quote-builder" element={(
                     (localStorage.getItem('mpsone_user_type') === 'supplier' && hasApprovedPRForSupplier())

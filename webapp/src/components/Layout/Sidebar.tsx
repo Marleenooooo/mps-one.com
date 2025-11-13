@@ -84,11 +84,11 @@ export function Sidebar() {
   })();
   return (
     <aside className="sidebar" role="navigation" aria-label="Primary">
-      <div style={{ padding: 16, borderBottom: '1px solid var(--border)' }}>
+      <div className="pad-16 border-b">
         <div style={{ fontWeight: 700 }}>MPSOne</div>
-        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Procurement Suite</div>
+        <div className="text-secondary" style={{ fontSize: 12 }}>Procurement Suite</div>
       </div>
-      <nav>
+      <nav className="pad-8 stack-8">
         {items.map(item => (
           <NavLink
             key={item.to}
@@ -100,7 +100,6 @@ export function Sidebar() {
               const contextual = isInContext(item.to) ? '' : ' out-of-context';
               return base + contextual;
             }}
-            style={{ display: 'block', margin: 8 }}
             aria-label={t(item.key)}
             aria-disabled={item.to === '/procurement/quote-builder' && !canBuildQuote ? true : undefined}
             title={item.to === '/procurement/quote-builder' && !canBuildQuote ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined}
@@ -109,7 +108,7 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div style={{ padding: 16, marginTop: 'auto', fontSize: 12, color: 'var(--text-secondary)' }}>
+      <div className="pad-16 text-secondary" style={{ marginTop: 'auto', fontSize: 12 }}>
         © {new Date().getFullYear()} MPSOne
       </div>
     </aside>

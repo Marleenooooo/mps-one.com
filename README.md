@@ -1,5 +1,9 @@
-MPSOne — Two Pillars, One Experience
+** MPSOne — Two Pillars, One Experience**
+Pillars 1:
+ MPSCommunty (linkedin/facebook like to connect companies and people meaningfully); WARNING!: THIS PILLAR IS JUST INFO, THE DEVELOPMENT IS UNDER GOING BY ANOTHER PARTY SO DONT DEVELOP THIS HERE!
 
+ Pillars 2: (WE FOCUS ON THIS PILLAR)
+ MPSOne for procurement, wich is being develop inthis folder (to make transactions happen, repeatedly and reliably, through procurement)
 ---
 
 Essentials

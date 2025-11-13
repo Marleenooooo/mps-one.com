@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
+import { Breadcrumbs } from '../components/Layout/Topbar';
 
 type Client = { id: string; name: string; domain?: string; email?: string; contact?: string; status?: 'connected' | 'pending' };
 
@@ -43,9 +43,10 @@ export default function ClientDirectory() {
 
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
+      {/* Use global Topbar from App; only render page header here */}
+      <div className="page-crumbs" aria-label="Breadcrumbs" style={{ marginBottom: 8 }}>
         <Breadcrumbs items={["Supplier", "Clients"]} />
-      </Topbar>
+      </div>
 
       <div className="page-header procurement" role="region" aria-label="Client Directory Header">
         <h1 style={{ margin: 0 }}>Client Directory</h1>

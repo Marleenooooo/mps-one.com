@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import * as pillarStorage from '../../services/pillarStorage';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Topbar, Breadcrumbs } from '../../components/Layout/Topbar';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 import { AuditTimeline } from '../../components/UI/AuditTimeline';
 import { formatIDR } from '../../components/utils/format';
 import { useI18n } from '../../components/I18nProvider';
@@ -97,10 +97,10 @@ export default function QuoteComparison() {
 
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
-        <Breadcrumbs items={["Client", "Quote Comparison"]} />
-      </Topbar>
       <div className="page-header procurement" role="region" aria-label="Quote Comparison Header">
+        <div style={{ marginTop: 4, color: 'var(--text-secondary)' }}>
+          <Breadcrumbs items={["Client", "Quote Comparison"]} />
+        </div>
         <h1 style={{ margin: 0 }}>{t('quotes.title') || 'Quote Comparison'}</h1>
         <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>
           {t('quotes.subtitle').replace('{pr}', String(prId)) || `Compare quotes per supplier for PR ${String(prId)}, review versions, totals, tax/discount, validity, and accept.`}

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../../components/I18nProvider';
 import { useModule } from '../../components/useModule';
-import { Topbar, Breadcrumbs } from '../../components/Layout/Topbar';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 import { apiListUsers, apiFollowUser, apiUnfollowUser, apiBlockUser, apiUnblockUser, apiInviteUser, apiListRelationships, apiListBlocks, apiListInvites, apiRespondInvite, apiCancelInvite } from '../../services/api';
 import { VirtualList } from '../../components/UI/VirtualList';
 
@@ -90,10 +90,10 @@ export default function PeopleDirectory() {
 
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
-        <Breadcrumbs items={["Admin", "People"]} />
-      </Topbar>
       <div className="page-header procurement">
+        <div style={{ marginTop: 4, color: 'var(--text-secondary)' }}>
+          <Breadcrumbs items={["Admin", "People"]} />
+        </div>
         <h1 style={{ margin: 0 }}>Admin People Directory</h1>
       </div>
       <div className="card" style={{ padding: 16 }}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
+import { Breadcrumbs } from '../components/Layout/Topbar';
 
 type Invite = { code: string; role: string; department: string; created_at: number };
 
@@ -36,9 +36,9 @@ export default function AdminInvitations() {
 
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
+      <div className="page-crumbs" aria-label="Breadcrumbs" style={{ marginBottom: 8 }}>
         <Breadcrumbs items={["Admin", "Invitations"]} />
-      </Topbar>
+      </div>
       <div className="page-header procurement" role="region" aria-label="Invitations Header">
         <h1 style={{ margin: 0 }}>Invitations</h1>
         <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>

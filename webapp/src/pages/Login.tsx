@@ -95,23 +95,21 @@ export default function Login() {
   }
 
   return (
-    <div className="main" role="main" style={{ display: 'grid', placeItems: 'center', minHeight: 'calc(100vh - 120px)' }}>
-      <div className="card" style={{ width: 520, padding: 0, overflow: 'hidden', transition: 'transform .2s ease' }}
-           onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => (e.currentTarget.style.transform = 'translateY(-2px)')}
-           onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => (e.currentTarget.style.transform = 'translateY(0)')}>
-        <div style={{ padding: 16, background: headerGradient, borderBottom: '1px solid var(--border)' }}>
+    <div className="main center-grid" role="main" style={{ minHeight: 'calc(100vh - 120px)' }}>
+      <div className="card container-sm pad-0" style={{ overflow: 'hidden' }}>
+        <div className="header-gradient border-b pad-16" style={{ background: headerGradient }}>
           <h1 style={{ margin: 0 }}>{t('auth.login_title')}</h1>
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{t('auth.login_subtitle')}</p>
+          <p className="text-secondary" style={{ margin: 0 }}>{t('auth.login_subtitle')}</p>
         </div>
-        <form onSubmit={onSubmit} style={{ padding: 16 }}>
-          <div style={{ display: 'grid', gap: 12 }}>
+        <form onSubmit={onSubmit} className="pad-16">
+          <div className="stack-12">
             {!userType && (
-              <div role="group" aria-label={t('auth.choose_who')} className="card" style={{ padding: 12 }}>
+              <div role="group" aria-label={t('auth.choose_who')} className="card pad-12">
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('auth.choose_who')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <button
                     type="button"
-                    className="btn primary"
+                    className="btn-primary"
                     aria-label={t('auth.i_am_supplier')}
                     onClick={() => chooseUserType('supplier')}
                   >
@@ -119,16 +117,14 @@ export default function Login() {
                   </button>
                   <button
                     type="button"
-                    className="btn secondary"
+                    className="btn-secondary"
                     aria-label={t('auth.i_am_client')}
                     onClick={() => chooseUserType('client')}
                   >
                     {t('auth.i_am_client')}
                   </button>
                 </div>
-                <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 12 }}>
-                  {t('auth.role_explain')}
-                </div>
+                <div className="text-secondary" style={{ marginTop: 8, fontSize: 12 }}>{t('auth.role_explain')}</div>
               </div>
             )}
             {userType && (
@@ -196,20 +192,8 @@ export default function Login() {
                   <div
                     role="tooltip"
                     aria-live="polite"
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      marginTop: 8,
-                      padding: 12,
-                      maxWidth: 460,
-                      borderRadius: 8,
-                      border: '1px solid var(--border)',
-                      background: theme === 'dark' ? '#1A1F3A' : '#F8FAFF',
-                      color: 'var(--text-secondary)',
-                      boxShadow: theme === 'dark' ? '0 0 10px var(--accent), 0 0 20px var(--accent)' : '0 0 5px rgba(0,119,255,0.3)',
-                      zIndex: 10
-                    }}
+                    className="card pad-12 radius-md"
+                    style={{ position: 'absolute', top: '100%', left: 0, marginTop: 8, maxWidth: 460, zIndex: 10 }}
                   >
                     {role === 'PIC Operational' && t('roles.pic_operational_desc')}
                     {role === 'PIC Procurement' && t('roles.pic_procurement_desc')}
@@ -224,22 +208,13 @@ export default function Login() {
                 {t('auth.supplier_admin_assumed')}
               </div>
             )}
-            <LoadingButton onClick={onSubmit} style={{
-              background: 'linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%)',
-              boxShadow: '0 0 10px var(--accent)',
-              transform: 'scale(1)',
-            }}
-            onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.transform = 'scale(1.02)')}
-            onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.transform = 'scale(1)')}
-            >{t('auth.sign_in')}</LoadingButton>
+            <LoadingButton onClick={onSubmit} className="btn-primary">{t('auth.sign_in')}</LoadingButton>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8 }}>
               <div style={{ height: 1, background: 'var(--border)' }}></div>
-              <div style={{ color: 'var(--text-secondary)' }}>{t('auth.or')}</div>
+              <div className="text-secondary">{t('auth.or')}</div>
               <div style={{ height: 1, background: 'var(--border)' }}></div>
             </div>
-            <button type="button" className="btn" onClick={() => toast.push({ type: 'info', message: t('auth.sso_hint') })} style={{
-              background: 'linear-gradient(135deg, var(--secondary-gradient-start) 0%, var(--secondary-gradient-end) 100%)'
-            }}>{t('auth.sso')}</button>
+            <button type="button" className="btn-secondary" onClick={() => toast.push({ type: 'info', message: t('auth.sso_hint') })}>{t('auth.sso')}</button>
             <div style={{ textAlign: 'center', marginTop: 8 }}>
               <a href="#" className="btn ghost" onClick={(e: React.MouseEvent<HTMLAnchorElement>) => { e.preventDefault(); navigate('/login/code'); }} aria-label={t('auth.use_code') || 'Use Code'}>
                 {t('auth.use_code') || 'Use Code'}
@@ -247,7 +222,7 @@ export default function Login() {
             </div>
           </div>
         </form>
-        <div style={{ padding: 12, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}>
+        <div className="pad-12 border-t text-secondary" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
           <span>{t('auth.security_notice')}</span>
           <span>{t('auth.version').replace('{v}', '0.1.0')}</span>
         </div>

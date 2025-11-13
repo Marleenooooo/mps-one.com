@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
+import { Breadcrumbs } from '../components/Layout/Topbar';
 
 type Supplier = { id: string; name: string; code?: string; domain?: string; email?: string; contact?: string; status?: 'connected' | 'pending' };
 
@@ -53,9 +53,10 @@ export default function SupplierDirectory() {
 
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
+      {/* Use global Topbar from App; only render page header here */}
+      <div className="page-crumbs" aria-label="Breadcrumbs" style={{ marginBottom: 8 }}>
         <Breadcrumbs items={["Procurement", "Suppliers"]} />
-      </Topbar>
+      </div>
 
       <div className="page-header procurement" role="region" aria-label="Supplier Directory Header">
         <h1 style={{ margin: 0 }}>Supplier Directory</h1>

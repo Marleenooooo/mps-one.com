@@ -109,7 +109,7 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
             borderRadius: 999,
             background: 'linear-gradient(90deg, var(--module-color) 0%, var(--module-gradient-end) 100%)',
             color: '#fff',
-            boxShadow: '0 0 8px color-mix(in srgb, var(--module-color) 30%, transparent)'
+            boxShadow: '0 0 4px color-mix(in srgb, var(--module-color) 15%, transparent)'
           }}
         >
           <span style={{ fontWeight: 700 }}>{moduleLabel}</span>
@@ -132,30 +132,20 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
         {/* Client/Supplier mode toggle (explicit context switch) */}
         <div role="group" aria-label={t('topbar.mode_switch') || 'Mode Switch'} style={{ display: 'inline-flex', gap: 6 }}>
           <button
-            className="btn outline tooltip"
+            className={(userType === 'client' ? 'btn-primary' : 'btn outline') + ' tooltip'}
             data-tip={(t('user.client') || 'Client') + ' mode'}
             aria-pressed={userType === 'client'}
             aria-label={(t('user.client') || 'Client') + ' mode'}
             onClick={() => switchMode('client')}
-            style={userType === 'client' ? {
-              background: 'linear-gradient(135deg, var(--module-color) 0%, var(--module-gradient-end) 100%)',
-              color: '#fff',
-              boxShadow: '0 0 10px var(--module-color)'
-            } : undefined}
           >
             {(t('user.client') || 'Client')}
           </button>
           <button
-            className="btn outline tooltip"
+            className={(userType === 'supplier' ? 'btn-primary' : 'btn outline') + ' tooltip'}
             data-tip={(t('user.supplier') || 'Supplier') + ' mode'}
             aria-pressed={userType === 'supplier'}
             aria-label={(t('user.supplier') || 'Supplier') + ' mode'}
             onClick={() => switchMode('supplier')}
-            style={userType === 'supplier' ? {
-              background: 'linear-gradient(135deg, var(--module-color) 0%, var(--module-gradient-end) 100%)',
-              color: '#fff',
-              boxShadow: '0 0 10px var(--module-color)'
-            } : undefined}
           >
             {(t('user.supplier') || 'Supplier')}
           </button>
@@ -208,7 +198,7 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
                  className="card"
                  style={{ position: 'absolute', right: 0, top: '110%', minWidth: 320, padding: 12,
                           borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1',
-                          boxShadow: '0 8px 25px rgba(0,0,0,0.15)', zIndex: 60 }}>
+                          zIndex: 60 }}>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('settings.title') || 'Settings'}</div>
               <div style={{ marginTop: 10 }}>
                 <OverscanControl />

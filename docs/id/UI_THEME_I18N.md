@@ -21,6 +21,20 @@ Bahasa: [English](../UI_THEME_I18N.md) | [Bahasa Indonesia](UI_THEME_I18N.md)
  - Skip Link: terlihat saat fokus di kiri-atas; pengguna keyboard bisa lompat ke konten utama.
  - Pintasan keyboard: `/` fokus ke kolom pencarian People; Alt+Left/Right pindah halaman DataTable; Alt+P ekspor ke PDF.
 
+## Utilitas & Token Terstandar (Global)
+- Bentuk & jarak distandarkan agar tampilan rapi dan konsisten di seluruh halaman:
+  - Radius: `.radius-sm`, `.radius-md`, `.radius-lg`, `.radius-xl`, `.radius-pill`.
+  - Spasi: `.pad-0`, `.pad-8`, `.pad-12`, `.pad-16`, `.pad-24`.
+  - Tumpuk (gap): `.stack-8`, `.stack-12`, `.stack-16`.
+  - Kontainer: `.container-sm`, `.container-md`, `.container-lg`.
+  - Border/Teks: `.border-b`, `.border-t`, `.text-secondary`.
+  - Layout: `.center-grid`.
+  - Header: `.header-gradient` (gradasi header mengikuti warna modul).
+- Tombol gunakan kelas varian: `.btn-primary`, `.btn-secondary`, `.btn-success`, `.btn-danger`, `.btn ghost`, `.btn outline`.
+- Utamakan utilitas daripada gaya inline. Jika butuh pola baru, tambahkan utilitas di `webapp/src/index.css`.
+
+Lihat `immitation.md` untuk langkah implementasi dan daftar verifikasi.
+
 ## Preferensi Bahasa (i18n)
 - Didukung: Inggris (`en`) dan Indonesia (`id`).
 - Key penyimpanan: `mpsone_lang` (utama) dan `lang` (legacy) untuk kompatibilitas.

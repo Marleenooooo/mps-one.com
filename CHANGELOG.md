@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.1.40 (2025-11-12) — Theme: Global Standardization & Guide
+
+### Highlights
+- Docs: Added `immitation.md` guide describing how to imitate the clean theme globally.
+- Theme Docs: Updated `docs/UI_THEME_I18N.md` and `docs/id/UI_THEME_I18N.md` with standardized utilities and tokens.
+- CSS: Confirmed global tokens/utilities exist in `webapp/src/index.css` (radii, spacing, containers, header gradient, button variants).
+- UI: Began applying utilities across pages (Login, Topbar), with Sidebar refactor planned.
+
+### Verification
+- Preview dev server and verify:
+  - Header sections use `.header-gradient` and neat spacing.
+  - Buttons use `.btn-*` variants; glow reduced ~50%.
+  - Cards/tooltips leverage `.card` with standardized radius and padding.
+
+### Notes
+- Future work: Complete Sidebar and additional routes per SOP.
+- Once implementation is complete, the temporary `mpsone/components` can be removed as the patterns are codified.
+
 ## v0.1.39 (2025-11-12) — Security: Mode Guards Extension
 
 ### Highlights

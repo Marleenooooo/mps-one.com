@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
+import { Breadcrumbs } from '../components/Layout/Topbar';
 import { useModule } from '../components/useModule';
 import { useI18n } from '../components/I18nProvider';
 import * as pillarStorage from '../services/pillarStorage';
@@ -49,9 +49,9 @@ export default function DeliveryNotes() {
 
   return (
     <div className="main" data-module="inventory">
-      <Topbar>
+      <div className="page-crumbs" aria-label="Breadcrumbs" style={{ marginBottom: 8 }}>
         <Breadcrumbs items={["Inventory", t('delivery.title')]} />
-      </Topbar>
+      </div>
       <div className="page-header inventory" role="region" aria-label="Delivery Notes Header">
         <h1 style={{ margin: 0 }}>{t('delivery.title')}</h1>
         <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>{t('delivery.header_desc')}</p>

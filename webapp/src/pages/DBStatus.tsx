@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiHealth, apiPOSummary, apiInvoiceStatus, apiListPR } from '../services/api';
-import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
+import { Breadcrumbs } from '../components/Layout/Topbar';
 
 export default function DBStatus() {
   const [health, setHealth] = useState<any>(null);
@@ -29,11 +29,10 @@ export default function DBStatus() {
   const healthy = !!health && !error;
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
-        <Breadcrumbs items={["Dev", "DB Status"]} />
-      </Topbar>
-
       <div className="page-header procurement" role="region" aria-label="DB Status Header">
+        <div style={{ marginTop: 4, color: 'var(--text-secondary)' }}>
+          <Breadcrumbs items={["Dev", "DB Status"]} />
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h1 style={{ margin: 0 }}>Database Connectivity</h1>

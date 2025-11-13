@@ -161,7 +161,7 @@ export default function PRList() {
             { key: 'status', header: t('pr.status'), render: v => <span className="status-badge info">{v}</span> },
             { key: 'createdAt', header: t('pr.created') },
             { key: 'actions', header: 'Actions', render: (_v, row) => (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div className="btn-row">
                 {row.status === 'Draft' && (
                   <button
                     className={`btn sm${canPerform('create:pr') ? '' : ' disabled'}`}
@@ -199,7 +199,7 @@ export default function PRList() {
           ]}
           virtualize={true}
           height={480}
-          rowHeight={48}
+          rowHeight={88}
           overscan={computeOverscan('prList')}
         />
       </div>

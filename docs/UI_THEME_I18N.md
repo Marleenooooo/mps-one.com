@@ -27,6 +27,20 @@ Language: [English](UI_THEME_I18N.md) | [Bahasa Indonesia](id/UI_THEME_I18N.md)
  - Skip Link: visible on focus at top-left; keyboard users can jump to main content.
  - Keyboard shortcuts: `/` focuses People search; Alt+Left/Right moves DataTable pages; Alt+P exports to PDF.
 
+## Standardized Utilities & Tokens (Global)
+- Shapes & spacing are standardized to keep a neat, consistent look across pages:
+  - Radii: `.radius-sm`, `.radius-md`, `.radius-lg`, `.radius-xl`, `.radius-pill`.
+  - Spacing: `.pad-0`, `.pad-8`, `.pad-12`, `.pad-16`, `.pad-24`.
+  - Stacks: `.stack-8`, `.stack-12`, `.stack-16`.
+  - Containers: `.container-sm`, `.container-md`, `.container-lg`.
+  - Borders/Text: `.border-b`, `.border-t`, `.text-secondary`.
+  - Layout: `.center-grid`.
+  - Header: `.header-gradient` (module-aware gradient background).
+- Buttons use variant classes: `.btn-primary`, `.btn-secondary`, `.btn-success`, `.btn-danger`, `.btn ghost`, `.btn outline`.
+- Prefer utilities over inline styles. If you need a new pattern, add a utility in `webapp/src/index.css`.
+
+See `immitation.md` for detailed steps and verification checklist.
+
 ## Language Preferences (i18n)
 - Supported: English (`en`) and Indonesian (`id`).
 - Storage keys: new `mpsone_lang` (primary), legacy `lang` maintained for compatibility.

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useI18n } from '../../components/I18nProvider';
 import { useModule } from '../../components/useModule';
-import { Topbar, Breadcrumbs } from '../../components/Layout/Topbar';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 import { apiListUsers, apiListRelationships, apiListBlocks, apiFollowUser, apiUnfollowUser, apiBlockUser, apiUnblockUser } from '../../services/api';
 
 type User = { id: string; name: string; email: string; role: string; user_type: 'client'|'supplier'; nickname?: string; status?: string };
@@ -64,10 +64,10 @@ export default function UserProfile() {
   if (!user) {
     return (
       <div className="main" data-module="procurement">
-        <Topbar>
-          <Breadcrumbs items={["People", "Profile"]} />
-        </Topbar>
         <div className="page-header procurement">
+          <div style={{ marginTop: 4, color: 'var(--text-secondary)' }}>
+            <Breadcrumbs items={["People", "Profile"]} />
+          </div>
           <h1 style={{ margin: 0 }}>User Profile</h1>
         </div>
         <div className="card" style={{ padding: 16 }}>
@@ -79,10 +79,10 @@ export default function UserProfile() {
 
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
-        <Breadcrumbs items={["People", user.name]} />
-      </Topbar>
       <div className="page-header procurement">
+        <div style={{ marginTop: 4, color: 'var(--text-secondary)' }}>
+          <Breadcrumbs items={["People", user.name]} />
+        </div>
         <h1 style={{ margin: 0 }}>{user.name}</h1>
       </div>
       <div className="card" style={{ padding: 16 }}>

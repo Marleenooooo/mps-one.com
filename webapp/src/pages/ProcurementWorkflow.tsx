@@ -1,5 +1,5 @@
 import React from 'react';
-import { Topbar, Breadcrumbs } from '../components/Layout/Topbar';
+import { Breadcrumbs } from '../components/Layout/Topbar';
 
 export default function ProcurementWorkflow() {
   const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
@@ -59,9 +59,9 @@ export default function ProcurementWorkflow() {
 
   return (
     <div className="main" data-module="procurement">
-      <Topbar>
+      <div className="page-crumbs" aria-label="Breadcrumbs" style={{ marginBottom: 8 }}>
         <Breadcrumbs items={["Procurement", "Workflow"]} />
-      </Topbar>
+      </div>
 
       <div className="page-header procurement" role="region" aria-label="Procurement Workflow Header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
