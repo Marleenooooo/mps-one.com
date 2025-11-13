@@ -5,6 +5,7 @@ import MetricCard from '../../components/MetricCard';
 import TrendChart from '../../components/TrendChart';
 import QuickActions from '../../components/QuickActions';
 import SupplierOverview from '../../components/SupplierOverview';
+import { StatusPipeline } from '../../components/UI/StatusPipeline';
 import { DollarSign, ShoppingCart, Users, CheckCircle, Clock, Target } from 'lucide-react';
 
 interface DashboardMetric {

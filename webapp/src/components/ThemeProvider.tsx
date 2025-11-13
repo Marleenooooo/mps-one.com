@@ -13,12 +13,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const THEME_KEY = 'mpsone_theme';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const persisted = localStorage.getItem(THEME_KEY) as any;
-    if (persisted === 'light' || persisted === 'dark' || persisted === 'system') return persisted as Theme;
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  });
+  const [theme, setTheme] = useState<Theme>(() => 'light');
 
   // Resolve actual theme to apply
   const resolved = useMemo<'light' | 'dark'>(() => {
@@ -33,6 +28,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute('data-theme', resolved);
     localStorage.setItem(THEME_KEY, theme);
   }, [resolved, theme]);
+
+  useEffect(() => {
+    try {
+      const persisted = localStorage.getItem(THEME_KEY) as any;
+      if (persisted === 'light' || persisted === 'dark' || persisted === 'system') {
+        setTheme(persisted as Theme);
+        return;
+      }
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light');
+    } catch {}
+  }, []);
 
   // When in system mode, listen to OS changes
   useEffect(() => {

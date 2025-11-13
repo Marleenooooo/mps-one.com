@@ -824,17 +824,24 @@ const translations: Record<Language, Record<string, string>> = {
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 function detectDefaultLanguage(): Language {
-  const legacy = localStorage.getItem('lang') as Language | null;
-  const stored = localStorage.getItem('mpsone_lang') as Language | null;
-  const pref = stored ?? legacy;
-  if (pref === 'en' || pref === 'id') return pref;
-  const nav = navigator?.language?.toLowerCase() ?? 'en';
-  if (nav.startsWith('id')) return 'id';
+  try {
+    const legacy = typeof localStorage !== 'undefined' ? (localStorage.getItem('lang') as Language | null) : null;
+    const stored = typeof localStorage !== 'undefined' ? (localStorage.getItem('mpsone_lang') as Language | null) : null;
+    const pref = stored ?? legacy;
+    if (pref === 'en' || pref === 'id') return pref;
+    const navLang = typeof navigator !== 'undefined' ? navigator.language.toLowerCase() : 'en';
+    if (navLang.startsWith('id')) return 'id';
+  } catch {}
   return 'en';
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(detectDefaultLanguage());
+  const [language, setLanguage] = useState<Language>('en');
+
+  useEffect(() => {
+    const next = detectDefaultLanguage();
+    setLanguage(next);
+  }, []);
 
   useEffect(() => {
     // Persist both legacy and new keys

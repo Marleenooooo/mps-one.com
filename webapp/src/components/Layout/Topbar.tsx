@@ -297,7 +297,7 @@ function QuickSearch() {
     // Only surface New PR in Procurement context to prevent cross-pillar bleed
     ...(typeof document !== 'undefined' && (document.documentElement.getAttribute('data-module') || 'procurement') === 'procurement'
       && (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') === 'client' : true)
-      ? [{ label: t('pr.new_pr') || 'New PR', path: '/procurement/pr/new', icon: '⚡', keywords: ['new', 'create', 'pr'], kind: 'action' }]
+      ? [{ label: t('pr.new_pr') || 'New PR', path: '/procurement/pr/new', icon: '⚡', keywords: ['new', 'create', 'pr'], kind: 'action' as const }]
       : [])
   ]), [t]);
 
@@ -323,21 +323,21 @@ function QuickSearch() {
     const base: Item[] = [];
     // Client-only items
     if (userType === 'client' || !userType) {
-      base.push({ label: t('nav.purchase_requests') || 'Purchase Requests', path: '/procurement/pr', icon: '📝', keywords: ['pr', 'purchase request', 'procurement', 'requests'], kind: 'link' });
-      base.push({ label: 'PO Preview', path: '/procurement/po/preview', icon: '📄', keywords: ['po', 'purchase order', 'preview'], kind: 'link' });
+      base.push({ label: t('nav.purchase_requests') || 'Purchase Requests', path: '/procurement/pr', icon: '📝', keywords: ['pr', 'purchase request', 'procurement', 'requests'], kind: 'link' as const });
+      base.push({ label: 'PO Preview', path: '/procurement/po/preview', icon: '📄', keywords: ['po', 'purchase order', 'preview'], kind: 'link' as const });
     }
     // Supplier-only items
     if (userType === 'supplier') {
-      base.push({ label: t('nav.quote_builder') || 'Quote Builder', path: '/procurement/quote-builder', icon: '💬', keywords: ['quote', 'penawaran', 'builder'], kind: 'link', disabled: (userType === 'supplier' && !canBuildQuote), tooltip: (userType === 'supplier' && !canBuildQuote) ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined });
-      base.push({ label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: '📊', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' });
+      base.push({ label: t('nav.quote_builder') || 'Quote Builder', path: '/procurement/quote-builder', icon: '💬', keywords: ['quote', 'penawaran', 'builder'], kind: 'link' as const, disabled: (userType === 'supplier' && !canBuildQuote), tooltip: (userType === 'supplier' && !canBuildQuote) ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined });
+      base.push({ label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: '📊', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' as const });
     }
     // Shared items
-    base.push({ label: t('nav.order_tracker') || 'Order Tracker', path: '/supply/order-tracker', icon: '🚚', keywords: ['delivery', 'tracking', 'order', 'shipment'], kind: 'link' });
-    base.push({ label: t('nav.docs') || 'Document Manager', path: '/docs', icon: '📁', keywords: ['documents', 'doc', 'versions', 'proof'], kind: 'link' });
-    base.push({ label: t('nav.help') || 'Help Center', path: '/help', icon: '❓', keywords: ['help', 'docs', 'guide'], kind: 'link' });
-    base.push({ label: (t('help.topicPOConversion') || 'Convert Quote → PO'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('convert quote')}` , icon: '🔀', keywords: ['convert', 'po', 'quote', 'guide'], kind: 'link' });
-    base.push({ label: (t('help.topicInvoicing') || 'Invoicing & Payments'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('invoice')}`, icon: '💵', keywords: ['invoice', 'payment', 'finance'], kind: 'link' });
-    base.push({ label: (t('help.topicLifecycle') || 'Procurement Lifecycle'), path: `/help/docs?file=${encodeURIComponent(docWorkflows)}#${encodeURIComponent('lifecycle')}`, icon: '📈', keywords: ['lifecycle', 'workflow', 'procurement'], kind: 'link' });
+    base.push({ label: t('nav.order_tracker') || 'Order Tracker', path: '/supply/order-tracker', icon: '🚚', keywords: ['delivery', 'tracking', 'order', 'shipment'], kind: 'link' as const });
+    base.push({ label: t('nav.docs') || 'Document Manager', path: '/docs', icon: '📁', keywords: ['documents', 'doc', 'versions', 'proof'], kind: 'link' as const });
+    base.push({ label: t('nav.help') || 'Help Center', path: '/help', icon: '❓', keywords: ['help', 'docs', 'guide'], kind: 'link' as const });
+    base.push({ label: (t('help.topicPOConversion') || 'Convert Quote → PO'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('convert quote')}` , icon: '🔀', keywords: ['convert', 'po', 'quote', 'guide'], kind: 'link' as const });
+    base.push({ label: (t('help.topicInvoicing') || 'Invoicing & Payments'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('invoice')}`, icon: '💵', keywords: ['invoice', 'payment', 'finance'], kind: 'link' as const });
+    base.push({ label: (t('help.topicLifecycle') || 'Procurement Lifecycle'), path: `/help/docs?file=${encodeURIComponent(docWorkflows)}#${encodeURIComponent('lifecycle')}`, icon: '📈', keywords: ['lifecycle', 'workflow', 'procurement'], kind: 'link' as const });
     const mod = (typeof document !== 'undefined' ? (document.documentElement.getAttribute('data-module') as string | null) : null) || 'procurement';
     const isGlobal = (p: string) => p.startsWith('/help') || p.startsWith('/docs');
     const inContext = (p: string) => {

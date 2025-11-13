@@ -311,7 +311,7 @@ Steps:
   2. `db/migrations/0002_seed_basics.sql` (optional demo data)
   3. `db/migrations/0003_items_tables.sql` (item-level tables)
   4. `db/migrations/0004_views_status.sql` (aggregation views)
-   5. `db/migrations/0005_seed_workflow.sql` (one-click demo workflow) — optional
+  5. `db/migrations/0005_seed_workflow.sql` (one-click demo workflow) — optional
 - Verify tables and views are created under the Structure tab.
 
 Troubleshooting:

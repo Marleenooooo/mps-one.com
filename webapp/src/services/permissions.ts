@@ -23,7 +23,7 @@ export type Action =
 
 function getMode(): Mode {
   const v = localStorage.getItem('mpsone_user_type');
-  return v === 'Supplier' ? 'Supplier' : 'Client';
+  return String(v).toLowerCase() === 'supplier' ? 'Supplier' : 'Client';
 }
 
 function getRole(): Role {
@@ -44,7 +44,7 @@ function getRole(): Role {
 }
 
 // Minimal permission matrix for frontend gating
-const POLICY: Record<Mode, Record<Role, Set<Action>>> = {
+const POLICY: Record<Mode, Partial<Record<Role, Set<Action>>>> = {
   Client: {
     'Client Admin': new Set<Action>([
       'switch:procurement-mode',
@@ -104,4 +104,3 @@ export function canPerform(action: Action): boolean {
 export function currentContext() {
   return { mode: getMode(), role: getRole() };
 }
-

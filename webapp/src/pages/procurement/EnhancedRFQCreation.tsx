@@ -30,7 +30,7 @@ export const EnhancedRFQCreation: React.FC = () => {
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const [items, setItems] = useState<RFQItem[]>([]);
   const [newItem, setNewItem] = useState({ description: '', quantity: 1, specifications: '', deliveryDate: '' });
-  const [rfqInfo, setRfqInfo] = useState({ title: '', description: '', category: '', urgency: 'medium' as const, deadline: '' });
+const [rfqInfo, setRfqInfo] = useState<{ title: string; description: string; category: string; urgency: 'low' | 'medium' | 'high'; deadline: string }>({ title: '', description: '', category: '', urgency: 'medium', deadline: '' });
 
   useEffect(() => {
     const savedSuppliers = localStorage.getItem('mpsone_suppliers');
