@@ -42,9 +42,13 @@ function getNavItems(role: Role, userType: UserType) {
       supplierAdmin.splice(3, 0, { to: '/admin/approval-workflows', key: 'nav.approval_workflows' });
       supplierAdmin.splice(4, 0, { to: '/admin/departmental-budgets', key: 'nav.departmental_budgets' });
       supplierAdmin.splice(5, 0, { to: '/admin/supplier-onboarding', key: 'nav.supplier_onboarding' });
-      supplierAdmin.splice(6, 0, { to: '/admin/contracts', key: 'nav.contracts' });
-      supplierAdmin.splice(7, 0, { to: '/admin/invoice-matching', key: 'nav.invoice_matching' });
-      supplierAdmin.splice(8, 0, { to: '/admin/payments', key: 'nav.payments' });
+      supplierAdmin.splice(6, 0, { to: '/admin/suppliers', key: 'nav.suppliers' });
+      supplierAdmin.splice(7, 0, { to: '/admin/contracts', key: 'nav.contracts' });
+      supplierAdmin.splice(8, 0, { to: '/admin/invoice-matching', key: 'nav.invoice_matching' });
+      supplierAdmin.splice(10, 0, { to: '/admin/payments', key: 'nav.payments' });
+      supplierAdmin.splice(11, 0, { to: '/admin/erp-connectors', key: 'nav.erp_connectors' });
+      supplierAdmin.splice(12, 0, { to: '/admin/document-integrations', key: 'nav.document_integrations' });
+      supplierAdmin.splice(13, 0, { to: '/admin/realtime', key: 'nav.realtime' });
       return supplierAdmin;
     }
     // Client Admin: full client menu, including onboarding

@@ -61,5 +61,11 @@ Catatan
 - Pastikan key baru tersedia di kamus `en` dan `id` pada `webapp/src/components/I18nProvider.tsx`.
 - State UI mengikuti interaksi neon: glow saat hover, scale, dan indikator fokus yang aksesibel.
 
+### Onboarding Supplier — Key
+- Ringkasan: `supplierOnboarding.title`, `supplierOnboarding.applications`, `supplierOnboarding.kycDocuments`, `supplierOnboarding.complianceChecks`, `supplierOnboarding.riskScoring`
+- Field umum: `supplierOnboarding.status`, `supplierOnboarding.vendor`, `supplierOnboarding.risk_score`
+- Aksi: `supplierOnboarding.actions.create`, `supplierOnboarding.actions.submit`, `supplierOnboarding.actions.approve`, `supplierOnboarding.actions.reject`, `supplierOnboarding.actions.upload`, `supplierOnboarding.actions.run`
+- Pemeliharaan: Hindari duplikasi key di kamus; pastikan paritas EN/ID.
+
 ## Troubleshooting
 - Untuk reset tema/bahasa, hapus key di localStorage lalu refresh.

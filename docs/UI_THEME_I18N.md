@@ -67,5 +67,11 @@ Notes
 - Ensure new keys are present in both `en` and `id` dictionaries within `webapp/src/components/I18nProvider.tsx`.
 - UI states follow neon interactions: hover glow, scale, and accessible focus indicators.
 
+### Supplier Onboarding Keys
+- Overview: `supplierOnboarding.title`, `supplierOnboarding.applications`, `supplierOnboarding.kycDocuments`, `supplierOnboarding.complianceChecks`, `supplierOnboarding.riskScoring`
+- Common fields: `supplierOnboarding.status`, `supplierOnboarding.vendor`, `supplierOnboarding.risk_score`
+- Actions: `supplierOnboarding.actions.create`, `supplierOnboarding.actions.submit`, `supplierOnboarding.actions.approve`, `supplierOnboarding.actions.reject`, `supplierOnboarding.actions.upload`, `supplierOnboarding.actions.run`
+- Maintenance: Avoid duplicate keys in dictionaries; ensure parity across EN/ID.
+
 ## Troubleshooting
 - To reset theme/language, clear local storage keys and refresh.

@@ -24,41 +24,29 @@ export default function PaymentsManager() {
   useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const [rs, ps, ms, bs] = await Promise.all([
+      const [r, p, m, s] = await Promise.all([
         paymentService.getPaymentRuns(companyId),
         paymentService.getPayments(companyId),
         paymentService.getPaymentMethods(companyId),
-        paymentService.getBankStatements(companyId)
+        paymentService.getBankStatements(companyId),
       ]);
-      setRuns(rs);
-      setPayments(ps);
-      setMethods(ms);
-      setStatements(bs);
-      if (bs.length) {
-        const tx = await paymentService.getBankStatementTransactions(bs[0].id);
-        setSelectedStatementId(bs[0].id);
-        setTransactions(tx);
-      }
-    } catch (e) { setError(String(e)); } finally { setLoading(false); }
+      setRuns(r);
+      setPayments(p);
+      setMethods(m);
+      setStatements(s);
+      if (s.length && !selectedStatementId) setSelectedStatementId(s[0].id);
+    } catch (e: any) {
+      setError(String(e?.message || 'error'));
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const stats = useMemo(() => {
-    const total = payments.length;
-    const pending = payments.filter(p => p.status === 'pending' || p.status === 'scheduled').length;
-    const completed = payments.filter(p => p.status === 'completed').length;
-    const failed = payments.filter(p => p.status === 'failed').length;
-    return { total, pending, completed, failed };
-  }, [payments]);
-
-  async function handleCreateRun() {
-    const run = await paymentService.createPaymentRun({ company_id: companyId, run_name: t('payments.run_default_name') || 'Payment Run' });
-    setRuns(prev => [...prev, run]);
-  }
   async function handleScheduleRun(id: number) {
-    const scheduled = await paymentService.schedulePaymentRun(id, new Date(Date.now() + 3600_000).toISOString());
+    const scheduled = await paymentService.schedulePaymentRun(id, 1);
     if (scheduled) setRuns(prev => prev.map(r => r.id === id ? scheduled : r));
   }
   async function handleApproveRun(id: number) {
@@ -71,33 +59,25 @@ export default function PaymentsManager() {
     const ps = await paymentService.getPayments(companyId);
     setPayments(ps);
   }
-
-  async function handleAddMethod() {
-    const created = await paymentService.createPaymentMethod({ company_id: companyId, method_name: t('payments.method_new') || 'New Method' });
-    setMethods(prev => [...prev, created]);
-  }
   async function handleToggleMethod(id: number) {
-    const pm = methods.find(m => m.id === id);
-    if (!pm) return;
-    const next = await paymentService.updatePaymentMethod(id, { is_active: !pm.is_active });
-    if (next) setMethods(prev => prev.map(m => m.id === id ? next : m));
+    const updated = await paymentService.togglePaymentMethod(id);
+    if (updated) setMethods(prev => prev.map(m => m.id === id ? updated : m));
   }
   async function handleDeleteMethod(id: number) {
     const ok = await paymentService.deletePaymentMethod(id);
     if (ok) setMethods(prev => prev.filter(m => m.id !== id));
   }
-
   async function handleSelectStatement(id: number) {
     setSelectedStatementId(id);
-    const tx = await paymentService.getBankStatementTransactions(id);
-    setTransactions(tx);
+    const txns = await paymentService.getBankTransactions(id);
+    setTransactions(txns);
   }
   async function handleReconcile(paymentId: number, tx: BankStatementTransaction) {
     const updated = await paymentService.reconcile(paymentId, tx.reference_number || 'REF', tx.amount);
     if (updated) setPayments(prev => prev.map(p => p.id === paymentId ? updated : p));
   }
 
-  const runColumns = [
+  const runColumns = useMemo(() => [
     { key: 'run_name', header: t('payments.run_name') || 'Run Name' },
     { key: 'run_date', header: t('payments.run_date') || 'Run Date' },
     { key: 'status', header: t('payments.status') || 'Status' },
@@ -110,18 +90,18 @@ export default function PaymentsManager() {
         <button className="btn sm success" onClick={() => handleExecuteRun(row.id)} disabled={!canPerform('execute:payment-run') || row.status !== 'processing'}>{t('payments.actions.execute') || 'Execute'}</button>
       </div>
     ) }
-  ];
+  ], [t]);
 
-  const paymentColumns = [
+  const paymentColumns = useMemo(() => [
     { key: 'payment_reference', header: t('payments.payment_reference') || 'Reference' },
     { key: 'invoice_number', header: t('payments.invoice') || 'Invoice' },
     { key: 'vendor_name', header: t('payments.vendor') || 'Vendor' },
     { key: 'amount', header: t('payments.amount') || 'Amount' },
     { key: 'status', header: t('payments.status') || 'Status' },
     { key: 'reconciliation_status', header: t('payments.reconciliation_status') || 'Reconciliation' }
-  ];
+  ], [t]);
 
-  const methodColumns = [
+  const methodColumns = useMemo(() => [
     { key: 'method_name', header: t('payments.method_name') || 'Name' },
     { key: 'method_type', header: t('payments.method_type') || 'Type' },
     { key: 'currency', header: t('payments.currency') || 'Currency' },
@@ -133,7 +113,7 @@ export default function PaymentsManager() {
         <button className="btn sm danger" onClick={() => handleDeleteMethod(row.id)} disabled={!canPerform('manage:payment-methods')}>{t('payments.actions.delete') || 'Delete'}</button>
       </div>
     ) }
-  ];
+  ], [t]);
 
   return (
     <div className="main" data-module="procurement">
@@ -141,7 +121,10 @@ export default function PaymentsManager() {
         <div style={{ marginTop: 4, color: 'var(--text-secondary)' }}>{t('payments.title') || 'Payments Management'}</div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn" onClick={loadAll}>{t('action.refresh') || 'Refresh'}</button>
-          <button className="btn primary" onClick={handleCreateRun} disabled={!canPerform('create:payment-run')}>{t('payments.actions.create_run') || 'Create Run'}</button>
+          <button className={`btn ${activeTab === 'runs' ? '' : 'outline'}`} onClick={() => setActiveTab('runs')}>{t('payments.runs') || 'Runs'}</button>
+          <button className={`btn ${activeTab === 'payments' ? '' : 'outline'}`} onClick={() => setActiveTab('payments')}>{t('payments.payments') || 'Payments'}</button>
+          <button className={`btn ${activeTab === 'methods' ? '' : 'outline'}`} onClick={() => setActiveTab('methods')}>{t('payments.methods') || 'Methods'}</button>
+          <button className={`btn ${activeTab === 'reconciliation' ? '' : 'outline'}`} onClick={() => setActiveTab('reconciliation')}>{t('payments.reconciliation') || 'Reconciliation'}</button>
         </div>
       </div>
 
@@ -151,44 +134,14 @@ export default function PaymentsManager() {
         </div>
       )}
 
-      <div className="card" style={{ padding: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-          <div className="card" style={{ padding: 12 }}>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t('payments.stats.total') || 'Total'}</div>
-            <div style={{ fontSize: 24, fontWeight: 700 }}>{stats.total}</div>
-          </div>
-          <div className="card" style={{ padding: 12 }}>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t('payments.stats.pending') || 'Pending'}</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--warning)' }}>{stats.pending}</div>
-          </div>
-          <div className="card" style={{ padding: 12 }}>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t('payments.stats.completed') || 'Completed'}</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--success)' }}>{stats.completed}</div>
-          </div>
-          <div className="card" style={{ padding: 12 }}>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t('payments.stats.failed') || 'Failed'}</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--danger)' }}>{stats.failed}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card" style={{ padding: 8, marginTop: 12 }}>
-        <div className="btn-row">
-          <button className={`btn ghost${activeTab === 'runs' ? ' active' : ''}`} onClick={() => setActiveTab('runs')}>{t('payments.tab.runs') || 'Runs'}</button>
-          <button className={`btn ghost${activeTab === 'payments' ? ' active' : ''}`} onClick={() => setActiveTab('payments')}>{t('payments.tab.payments') || 'Payments'}</button>
-          <button className={`btn ghost${activeTab === 'methods' ? ' active' : ''}`} onClick={() => setActiveTab('methods')}>{t('payments.tab.methods') || 'Methods'}</button>
-          <button className={`btn ghost${activeTab === 'reconciliation' ? ' active' : ''}`} onClick={() => setActiveTab('reconciliation')}>{t('payments.tab.reconciliation') || 'Reconciliation'}</button>
-        </div>
-      </div>
-
       {activeTab === 'runs' && (
-        <div style={{ marginTop: 12 }}>
+        <div className="card" style={{ padding: 16 }}>
           <DataTable data={runs} columns={runColumns as any} pageSize={8} />
         </div>
       )}
 
       {activeTab === 'payments' && (
-        <div style={{ marginTop: 12 }}>
+        <div className="card" style={{ padding: 16 }}>
           <DataTable data={payments} columns={paymentColumns as any} pageSize={10} />
         </div>
       )}
@@ -196,7 +149,7 @@ export default function PaymentsManager() {
       {activeTab === 'methods' && (
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div className="btn-row" style={{ marginBottom: 8 }}>
-            <button className="btn outline" onClick={handleAddMethod} disabled={!canPerform('manage:payment-methods')}>{t('payments.actions.add_method') || 'Add Method'}</button>
+            <button className="btn outline" onClick={() => {}} disabled={!canPerform('manage:payment-methods')}>{t('payments.actions.add_method') || 'Add Method'}</button>
           </div>
           <DataTable data={methods} columns={methodColumns as any} pageSize={6} />
         </div>

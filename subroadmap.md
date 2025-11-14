@@ -834,3 +834,36 @@ Notes
 - Server listening at `http://localhost:3001`; DB reachability via WSL `mpsone-db` container.
 - Guard behavior confirmed even when DB is down (403 for Supplier occurs pre-DB).
 --------------
+---
+
+# Subroadmap — Phase 8: Admin Managers Stabilization & i18n Cleanup
+
+Item: Stabilize admin pages (RealTime, Suppliers, Scorecards, ERP Connectors, Document Integrations) and clean i18n duplicates
+Status: Completed
+
+Acceptance Criteria
+- Admin pages compile cleanly with typed `DataTable` columns and no unsupported props.
+- RealTime Manager uses memoized columns; rendering unified; stats reflect `connection_status`.
+- Supplier Onboarding page exists and renders applications/KYC/compliance dashboards.
+- i18n dictionaries contain onboarding keys once per language; no duplicate entries.
+
+Plan & Alignment
+- Normalize `DataTable` usage (`key/render`) and remove `loading/pagination` props where not supported.
+- Replace brittle UI imports with stable adapters under `components/UI`.
+- Align service types and property names across ERP/Document integrations for table keys.
+- Add `SupplierOnboardingManager` to satisfy App import and route.
+- Update docs: `UI_THEME_I18N.md` (EN/ID) — document onboarding keys; `CHANGELOG.md` — log stabilization work.
+
+Tasks
+- [x] RealTime Manager: memoize columns, unify status badges, clean duplicates.
+- [x] Suppliers Manager: convert columns to `Column<T>`; fix badges/actions.
+- [x] Supplier Scorecards: normalize columns and badge variants.
+- [x] ERP Connectors: align keys (`success_count`, `last_triggered_at`, `processed_records`).
+- [x] Document Integrations: align keys (`last_modified_at`, `confidence_score`, `processed_files`).
+- [x] Add `SupplierOnboardingManager.tsx` with minimal dashboards and tables.
+- [x] Remove duplicate i18n keys; verify EN/ID parity.
+- [x] Update docs and changelog per SOP.
+
+Notes
+- No DB schema changes in this stabilization pass.
+- Verified `npx tsc --noEmit` succeeds; pages render without type errors.

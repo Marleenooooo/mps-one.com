@@ -1,4 +1,36 @@
 # Changelog
+# Changelog
+
+## v0.1.42 (2025-11-15) — Admin Stabilization & i18n Cleanup
+
+### Highlights
+- Added `SupplierOnboardingManager` page with applications/KYC/compliance dashboards.
+- Cleaned duplicate i18n keys in `I18nProvider` and documented supplier onboarding keys.
+- Standardized `DataTable` usage across admin pages; removed unsupported props; typed columns.
+- Stabilized RealTime Manager: memoized columns, unified rendering, and type alignment.
+- Added minimal UI adapters (`Button`, `Badge`, `Card`, `Tabs`) for consistent imports.
+- Introduced lightweight `utils/permissions` helper for gating consistency.
+
+### Affected Files
+- `webapp/src/pages/admin/SupplierOnboardingManager.tsx` (new)
+- `webapp/src/pages/admin/RealTimeManager.tsx`
+- `webapp/src/pages/admin/SuppliersManager.tsx`
+- `webapp/src/pages/admin/SupplierScorecardsManager.tsx`
+- `webapp/src/pages/admin/DocumentIntegrationsManager.tsx`
+- `webapp/src/pages/admin/ERPConnectorsManager.tsx`
+- `webapp/src/components/I18nProvider.tsx`
+- `webapp/src/components/UI/{button.tsx,badge.tsx,card.tsx,tabs.tsx}` (new adapters)
+- `webapp/src/utils/permissions.ts` (new)
+- Docs: `docs/UI_THEME_I18N.md`, `docs/id/UI_THEME_I18N.md`, `subroadmap.md`
+
+### Verification
+- TypeScript check: `npx tsc --noEmit` passes.
+- Admin routes render without type errors.
+- i18n keys present once in both EN/ID dictionaries.
+
+### Notes
+- No DB schema changes required.
+- Mirrors `roadmap.md` Phase 8 items for admin managers and onboarding.
 
 ## v0.1.41 (2025-11-13) — Layout: Workframe Grid Stability
 

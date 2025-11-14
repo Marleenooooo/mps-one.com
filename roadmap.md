@@ -57,13 +57,15 @@ Phase 7 — Post-Release Polishing (100–120%)
  - [x] Offline mode parity with mocks and sync reconciliation.
 - [x] Performance profiling and tuning (memoization, code splitting, bundle size checks).
 - [x] E2E tests and CI coverage for core workflows (PR → Quote → PO → Delivery → Invoice).
- - [x] E2E tests and CI coverage for core workflows (PR → Quote → PO → Delivery → Invoice).
 - [x] Docs modernization and onboarding polish (quickstart, gifs, troubleshooting).
  - [x] Observability enhancements (SLOs, tracing dashboards, error budgets).
 - [x] Joyful layout polish (micro-interactions, neon gradients/glow, card/bubble aesthetics, intuitive action placement and layout positions).
 - [x] Layout ergonomics & navigation clarity (sidebar active/hover states, page header gradients, accent borders).
 - [x] Motion & accessibility for interactions (smooth transitions, reduced-motion support, consistent focus/hover/active states).
 
+ 
+
+Phase 7 — Pillar Separation & Security Details
   Core Rule Enforcement — Pillar Separation (Procurement now; Social deferred)
  - [~] Enforce zero data/navigation/UI bleed between pillars; handoff is explicit from People Directory (/admin/people) or Client/Supplier Directory pages (/client/suppliers, /supplier/clients) once Social routes exist.
   - [x] Pillar namespacing: Procurement under `/procurement/*`; Social routes deferred (planned: `/feed`, `/post/:id`, `/company/:id`, `/messages`).
@@ -91,7 +93,6 @@ Phase 7 — Post-Release Polishing (100–120%)
   - [x] Virtualize long lists (PR List, People Directory, Documents)
   - [x] Image optimization (WebP/AVIF, srcset/sizes, native lazy loading)
   - [x] Bundle analysis + tree-shaking (visualizer integrated; report generated and verified)
-  - [ ] Proper caching (immutable assets, stale-while-revalidate for API where applicable)
   - [x] Proper caching (immutable assets, stale-while-revalidate for API where applicable)
   - [x] Aggressive caching + service worker (aligned with Vite build)
 
@@ -150,12 +151,12 @@ Phase 8 — Enterprise Parity & Scalability (120–160%)
 - [x] Departmental budgets, threshold routing, and escalations
 - [x] Contract repository with renewals, clauses, obligations tracking
 - [x] 3-way/4-way match with invoice OCR and exception workflows
-- [ ] Payments module: payment runs, scheduling, reconciliation integrations
-- [ ] Supplier onboarding/KYC/compliance workflow with risk scoring
-- [ ] Supplier performance scorecards and corrective action workflows
-- [ ] ERP connectors (SAP/Oracle/Netsuite/Dynamics) and webhook framework
-- [ ] Document management integrations (SharePoint/Box/S3 with lifecycle rules)
-- [ ] Real-time updates via WebSocket/SSE for orders, invoices, messages
+- [x] Payments module: payment runs, scheduling, reconciliation integrations
+- [x] Supplier onboarding/KYC/compliance workflow with risk scoring
+- [x] Supplier performance scorecards and corrective action workflows
+- [x] ERP connectors (SAP/Oracle/Netsuite/Dynamics) and webhook framework
+- [x] Document management integrations (SharePoint/Box/S3 with lifecycle rules)
+- [x] Real-time updates via WebSocket/SSE for orders, invoices, messages
 - [ ] Observability: OpenTelemetry traces/metrics/logs with dashboards
 - [ ] Analytics: funnels, drilldowns, cohorts, anomaly detection, forecasting
 - [ ] Accessibility WCAG 2.1/2.2 AA end-to-end audit and fixes

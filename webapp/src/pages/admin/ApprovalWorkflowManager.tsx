@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useModule } from '../../components/useModule';
 import { useI18n } from '../../components/I18nProvider';
-import { canPerform } from '../../services/permissions';
+import { canPerform } from '../../utils/permissions';
 import { DataTable } from '../../components/UI/DataTable';
 import { Plus, Settings, Clock, Users, AlertCircle } from 'lucide-react';
 import { apiGetApprovalWorkflows, ApprovalWorkflow as ApiApprovalWorkflow, ApprovalStep as ApiApprovalStep } from '../../services/approvalWorkflow';
@@ -175,7 +175,7 @@ export default function ApprovalWorkflowManager() {
     }
   };
 
-  if (!canPerform('view:audit-logs')) {
+  if (!canPerform('view:approval-workflow', 'procurement')) {
     return (
       <div className="main" role="main" aria-label={t('approval_workflow.title')}>
         <div className="page-header procurement">
@@ -205,7 +205,7 @@ export default function ApprovalWorkflowManager() {
         <button 
           className="btn primary"
           onClick={handleCreateWorkflow}
-          disabled={!canPerform('create:approval-workflow')}
+          disabled={!canPerform('create:approval-workflow', 'procurement')}
         >
           <Plus size={16} />
           {t('approval_workflow.create_workflow') || 'Create Workflow'}
@@ -238,7 +238,7 @@ export default function ApprovalWorkflowManager() {
               header: t('approval_workflow.department') || 'Department'
             },
             { 
-              key: 'amountRange', 
+              key: 'amountMin', 
               header: t('approval_workflow.amount_range') || 'Amount Range',
               render: (_v, row) => formatAmount(row.amountMin, row.amountMax)
             },
@@ -253,7 +253,7 @@ export default function ApprovalWorkflowManager() {
               )
             },
             { 
-              key: 'sla', 
+              key: 'steps', 
               header: t('approval_workflow.sla') || 'SLA',
               render: (_v, row) => {
                 const totalSLA = row.steps.reduce((sum, step) => sum + step.slaHours, 0);
@@ -275,21 +275,21 @@ export default function ApprovalWorkflowManager() {
               )
             },
             { 
-              key: 'actions', 
+              key: 'id', 
               header: t('action.actions') || 'Actions',
               render: (_v, row) => (
                 <div className="btn-row">
                   <button 
                     className="btn sm outline"
                     onClick={() => handleEditWorkflow(row)}
-                    disabled={!canPerform('edit:approval-workflow')}
+                    disabled={!canPerform('edit:approval-workflow', 'procurement')}
                   >
                     {t('action.edit') || 'Edit'}
                   </button>
                   <button 
                     className={`btn sm ${row.isActive ? 'warning' : 'success'}`}
                     onClick={() => handleToggleActive(row.id)}
-                    disabled={!canPerform('toggle:approval-workflow')}
+                    disabled={!canPerform('toggle:approval-workflow', 'procurement')}
                   >
                     {row.isActive ? t('action.deactivate') || 'Deactivate' : t('action.activate') || 'Activate'}
                   </button>
