@@ -1,5 +1,45 @@
 # Changelog
 
+## v0.1.42 (2025-11-14) — Icons: Lucide Audit Completion
+
+### Highlights
+- Completed project-wide audit to ensure Lucide icons are used consistently.
+- Replaced inline checkmark emoji in `OrderTracker` with `CheckCircle` from `lucide-react`.
+- Removed unused emoji-based metrics array from `EnterpriseDashboard` to prevent non-Lucene icon drift.
+
+### Affected Files
+- `webapp/src/pages/OrderTracker.tsx` (replace emoji with `CheckCircle`)
+- `webapp/src/pages/client/EnterpriseDashboard.tsx` (remove dormant emoji metrics array)
+- `subroadmap_icon_modernization.md` (add audit tasks and mark verified)
+
+### Verification
+- Built via `npm run build`; compilation succeeded with no type errors.
+- Scanned `webapp/src` for remaining emojis; none found outside `Topbar` mapping.
+- `Topbar` `renderIcon` remains the central mapping for emoji/string → Lucide components.
+
+### Notes
+- No theme, i18n, or DB changes required; minimal UI-only adjustments.
+- Future emoji codes can be added to `Topbar.renderIcon` when introduced in data sources.
+
+## v0.1.41 (2025-11-13) — Layout: Workframe Grid Stability
+
+### Highlights
+- Fixed the “workframe” layout issue by ensuring the grid fills the viewport and inner content can scroll without breaking the frame.
+
+### Affected Files
+- `webapp/src/index.css`
+
+### Verification
+- Dev server running at `http://localhost:5173/`.
+- Sidebar visible on desktop; responsive collapse behavior intact at 1024px and 768px.
+- Topbar alignment and Breadcrumbs rendering verified; no console errors.
+- Previewed `/client`, `/procurement/workflow`, `/procurement/pr`, and `/supplier/reporting`; no browser or terminal errors observed.
+
+### Notes
+- Minimal CSS-only change: added `min-height: 100vh` to `.layout` and `min-height: 0` to `.content`.
+- `html`, `body`, and `#app-root` already have `height: 100%`, so the grid now consistently fills the viewport.
+
+
 ## v0.1.40 (2025-11-12) — Theme: Global Standardization & Guide
 
 ### Highlights
