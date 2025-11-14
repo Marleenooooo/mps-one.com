@@ -5,7 +5,6 @@ import { StatusPipeline } from '../components/UI/StatusPipeline';
 import { uniqueId } from '../components/utils/uniqueId';
 import * as pillarStorage from '../services/pillarStorage';
 import { canPerform } from '../services/permissions';
-import { CheckCircle } from 'lucide-react';
 
 const pipeline: ('pr'|'quote'|'po'|'processing'|'shipped'|'delivered'|'invoiced'|'paid')[] = ['pr','quote','po','processing','shipped','delivered','invoiced','paid'];
 
@@ -182,10 +181,7 @@ export default function OrderTracker() {
                     </div>
                     {u.done && (
                       <div className="status-badge success" style={{ marginTop: 6 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          <CheckCircle className="w-4 h-4" />
-                          {t('order_tracker.upload_complete') || 'Upload complete'}
-                        </span>
+                        ✅ {t('order_tracker.upload_complete') || 'Upload complete'}
                       </div>
                     )}
                   </div>

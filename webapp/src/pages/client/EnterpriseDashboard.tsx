@@ -8,6 +8,14 @@ import SupplierOverview from '../../components/SupplierOverview';
 import { StatusPipeline } from '../../components/UI/StatusPipeline';
 import { DollarSign, ShoppingCart, Users, CheckCircle, Clock, Target } from 'lucide-react';
 
+interface DashboardMetric {
+  label: string;
+  value: string | number;
+  change?: number;
+  trend?: 'up' | 'down' | 'neutral';
+  icon?: string;
+}
+
 
 interface Order {
   id: string;
@@ -59,7 +67,51 @@ export default function EnterpriseDashboard() {
   const [company] = useState('Kalimantan Mining Group');
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   
-  
+  // Enhanced metrics with trend data
+  const metrics: DashboardMetric[] = useMemo(() => [
+    {
+      label: t('dashboard.total_spend'),
+      value: 'Rp 2.8M',
+      change: 12.5,
+      trend: 'up',
+      icon: '💰'
+    },
+    {
+      label: t('dashboard.pending_pos'),
+      value: 24,
+      change: -3,
+      trend: 'down',
+      icon: '📋'
+    },
+    {
+      label: t('dashboard.active_suppliers'),
+      value: 156,
+      change: 8,
+      trend: 'up',
+      icon: '🏢'
+    },
+    {
+      label: t('dashboard.approval_rate'),
+      value: '94%',
+      change: 2.1,
+      trend: 'up',
+      icon: '✅'
+    },
+    {
+      label: t('dashboard.avg_procurement_cycle'),
+      value: '14 days',
+      change: -1.2,
+      trend: 'down',
+      icon: '⚡'
+    },
+    {
+      label: t('dashboard.cost_savings'),
+      value: 'Rp 450K',
+      change: 15.8,
+      trend: 'up',
+      icon: '🎯'
+    }
+  ], [t]);
 
   // Enhanced orders with more details
   const orders: Order[] = useMemo(() => [
