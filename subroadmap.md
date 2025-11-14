@@ -833,3 +833,4 @@ Tasks
 Notes
 - Server listening at `http://localhost:3001`; DB reachability via WSL `mpsone-db` container.
 - Guard behavior confirmed even when DB is down (403 for Supplier occurs pre-DB).
+--------------
