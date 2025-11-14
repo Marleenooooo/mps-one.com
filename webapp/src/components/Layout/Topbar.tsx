@@ -1,3 +1,4 @@
+import { Bell, Sun, Moon, HelpCircle, LogOut, Settings, User, ShoppingCart, Tag, Folder, FileText, Truck, MessageSquare, Mail, BarChart2, Search, Wrench, FlaskConical, Zap, DollarSign, TrendingUp, Download, Shuffle } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../ThemeProvider';
@@ -29,6 +30,7 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
   const typeLabel = userType === 'supplier' ? (t('user.supplier') || 'Supplier') : userType === 'client' ? (t('user.client') || 'Client') : '';
   const identityLabel = [displayName || '', nickname ? `(${nickname})` : ''].filter(Boolean).join(' ');
   const loginLabel = [identityLabel, [typeLabel, role || ''].filter(Boolean).join(' ')].filter(Boolean).join(' — ');
+  const modeLabel = userType === 'supplier' ? (t('mode.selling') || 'Selling') : userType === 'client' ? (t('mode.buying') || 'Buying') : '';
 
   useEffect(() => {
     (async () => {
@@ -96,60 +98,32 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
   return (
     <header className="topbar" role="banner">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {/* Pillar context indicator */}
-        <div
-          className="pillar-indicator"
-          aria-label={`Active Module: ${moduleLabel}`}
-          title={`Active Module: ${moduleLabel}`}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '6px 10px',
-            borderRadius: 999,
-            background: 'linear-gradient(90deg, var(--module-color) 0%, var(--module-gradient-end) 100%)',
-            color: '#fff',
-            boxShadow: '0 0 4px color-mix(in srgb, var(--module-color) 15%, transparent)'
-          }}
-        >
-          <span style={{ fontWeight: 700 }}>{moduleLabel}</span>
-        </div>
+        {/* Mode icon toggle (compact) */}
+        {userType && (
+          <button
+            className="btn ghost"
+            aria-label={userType === 'client' ? (t('mode.toggle_to_supplier') || 'Switch to Supplier mode') : (t('mode.toggle_to_client') || 'Switch to Client mode')}
+            onClick={() => switchMode(userType === 'client' ? 'supplier' : 'client')}
+            style={{ marginLeft: 4 }}
+          >
+            {userType === 'client' ? <ShoppingCart className="w-4 h-4" /> : <Tag className="w-4 h-4" />}
+          </button>
+        )}
         {children}
       </div>
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
         <span className="btn ghost" aria-label={(t('topbar.logged_in_as') || 'Logged in as') + ": " + (loginLabel || (t('auth.unknown') || 'Unknown'))}>
-          👤 {(t('topbar.logged_in_as') || 'Logged in as')}: {loginLabel || (t('auth.unknown') || 'Unknown')}
+          <User className="w-4 h-4" /> {(t('topbar.logged_in_as') || 'Logged in as')}: {loginLabel || (t('auth.unknown') || 'Unknown')}
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <QuickSearch />
         {offline && (
-          <span className="status-badge info tooltip" data-tip={t('topbar.offline_mock') || 'Offline Mock Mode'} aria-label={t('topbar.offline_mock') || 'Offline Mock Mode'}>
-            🧪 Offline Mock
+          <span className="status-badge info tooltip" data-tip={t('topbar.offline_mock') || 'Offline Mock Mode'} aria-label={t('topbar.offline_mock') || 'Offline Mock Mode'} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <FlaskConical className="w-4 h-4" /> {t('topbar.offline_mock') || 'Offline Mock Mode'}
           </span>
         )}
         <NotificationBell count={unreadCount} onClick={() => navigate('/notifications')} />
-        {/* Client/Supplier mode toggle (explicit context switch) */}
-        <div role="group" aria-label={t('topbar.mode_switch') || 'Mode Switch'} style={{ display: 'inline-flex', gap: 6 }}>
-          <button
-            className={(userType === 'client' ? 'btn-primary' : 'btn outline') + ' tooltip'}
-            data-tip={(t('user.client') || 'Client') + ' mode'}
-            aria-pressed={userType === 'client'}
-            aria-label={(t('user.client') || 'Client') + ' mode'}
-            onClick={() => switchMode('client')}
-          >
-            {(t('user.client') || 'Client')}
-          </button>
-          <button
-            className={(userType === 'supplier' ? 'btn-primary' : 'btn outline') + ' tooltip'}
-            data-tip={(t('user.supplier') || 'Supplier') + ' mode'}
-            aria-pressed={userType === 'supplier'}
-            aria-label={(t('user.supplier') || 'Supplier') + ' mode'}
-            onClick={() => switchMode('supplier')}
-          >
-            {(t('user.supplier') || 'Supplier')}
-          </button>
-        </div>
         {/* Theme toggle button (light/dark) */}
         <button
           className="btn ghost tooltip"
@@ -157,7 +131,7 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
           aria-label={t('topbar.theme_toggle') || 'Toggle theme'}
           onClick={toggleTheme}
         >
-          {theme === 'light' ? '☀️' : '🌙'}
+          {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
         {/* Language toggle button (EN/ID) */}
         <button
@@ -174,7 +148,7 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
           onClick={() => navigate('/help')}
           aria-label={t('topbar.help') || 'Help'}
         >
-          ❓
+          <HelpCircle className="w-4 h-4" />
         </button>
         <button
           className="btn ghost tooltip"
@@ -182,7 +156,7 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
           onClick={clearSession}
           aria-label={t('topbar.logout') || 'Logout'}
         >
-          🚪
+          <LogOut className="w-4 h-4" />
         </button>
         <div style={{ position: 'relative' }}>
           <button
@@ -191,7 +165,7 @@ export function Topbar({ children }: { children?: React.ReactNode }) {
             onClick={() => setSettingsOpen(o => !o)}
             aria-label={t('topbar.settings') || 'Settings'}
           >
-            ⚙️
+            <Settings className="w-4 h-4" />
           </button>
           {settingsOpen && (
             <div onMouseLeave={() => setTimeout(() => setSettingsOpen(false), 140)}
@@ -297,7 +271,7 @@ function QuickSearch() {
     // Only surface New PR in Procurement context to prevent cross-pillar bleed
     ...(typeof document !== 'undefined' && (document.documentElement.getAttribute('data-module') || 'procurement') === 'procurement'
       && (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') === 'client' : true)
-      ? [{ label: t('pr.new_pr') || 'New PR', path: '/procurement/pr/new', icon: '⚡', keywords: ['new', 'create', 'pr'], kind: 'action' as const }]
+      ? [{ label: t('pr.new_pr') || 'New PR', path: '/procurement/pr/new', icon: 'zap', keywords: ['new', 'create', 'pr'], kind: 'action' as const }]
       : [])
   ]), [t]);
 
@@ -323,21 +297,21 @@ function QuickSearch() {
     const base: Item[] = [];
     // Client-only items
     if (userType === 'client' || !userType) {
-      base.push({ label: t('nav.purchase_requests') || 'Purchase Requests', path: '/procurement/pr', icon: '📝', keywords: ['pr', 'purchase request', 'procurement', 'requests'], kind: 'link' as const });
-      base.push({ label: 'PO Preview', path: '/procurement/po/preview', icon: '📄', keywords: ['po', 'purchase order', 'preview'], kind: 'link' as const });
+      base.push({ label: t('nav.purchase_requests') || 'Purchase Requests', path: '/procurement/pr', icon: 'file-text', keywords: ['pr', 'purchase request', 'procurement', 'requests'], kind: 'link' as const });
+      base.push({ label: 'PO Preview', path: '/procurement/po/preview', icon: 'file-text', keywords: ['po', 'purchase order', 'preview'], kind: 'link' as const });
     }
     // Supplier-only items
     if (userType === 'supplier') {
-      base.push({ label: t('nav.quote_builder') || 'Quote Builder', path: '/procurement/quote-builder', icon: '💬', keywords: ['quote', 'penawaran', 'builder'], kind: 'link' as const, disabled: (userType === 'supplier' && !canBuildQuote), tooltip: (userType === 'supplier' && !canBuildQuote) ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined });
-      base.push({ label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: '📊', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' as const });
+      base.push({ label: t('nav.quote_builder') || 'Quote Builder', path: '/procurement/quote-builder', icon: 'message-square', keywords: ['quote', 'penawaran', 'builder'], kind: 'link' as const, disabled: (userType === 'supplier' && !canBuildQuote), tooltip: (userType === 'supplier' && !canBuildQuote) ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined });
+      base.push({ label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: 'bar-chart-2', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' as const });
     }
     // Shared items
-    base.push({ label: t('nav.order_tracker') || 'Order Tracker', path: '/supply/order-tracker', icon: '🚚', keywords: ['delivery', 'tracking', 'order', 'shipment'], kind: 'link' as const });
-    base.push({ label: t('nav.docs') || 'Document Manager', path: '/docs', icon: '📁', keywords: ['documents', 'doc', 'versions', 'proof'], kind: 'link' as const });
-    base.push({ label: t('nav.help') || 'Help Center', path: '/help', icon: '❓', keywords: ['help', 'docs', 'guide'], kind: 'link' as const });
-    base.push({ label: (t('help.topicPOConversion') || 'Convert Quote → PO'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('convert quote')}` , icon: '🔀', keywords: ['convert', 'po', 'quote', 'guide'], kind: 'link' as const });
-    base.push({ label: (t('help.topicInvoicing') || 'Invoicing & Payments'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('invoice')}`, icon: '💵', keywords: ['invoice', 'payment', 'finance'], kind: 'link' as const });
-    base.push({ label: (t('help.topicLifecycle') || 'Procurement Lifecycle'), path: `/help/docs?file=${encodeURIComponent(docWorkflows)}#${encodeURIComponent('lifecycle')}`, icon: '📈', keywords: ['lifecycle', 'workflow', 'procurement'], kind: 'link' as const });
+    base.push({ label: t('nav.order_tracker') || 'Order Tracker', path: '/supply/order-tracker', icon: 'truck', keywords: ['delivery', 'tracking', 'order', 'shipment'], kind: 'link' as const });
+    base.push({ label: t('nav.docs') || 'Document Manager', path: '/docs', icon: 'folder', keywords: ['documents', 'doc', 'versions', 'proof'], kind: 'link' as const });
+    base.push({ label: t('nav.help') || 'Help Center', path: '/help', icon: 'help-circle', keywords: ['help', 'docs', 'guide'], kind: 'link' as const });
+    base.push({ label: (t('help.topicPOConversion') || 'Convert Quote → PO'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('convert quote')}` , icon: 'shuffle', keywords: ['convert', 'po', 'quote', 'guide'], kind: 'link' as const });
+    base.push({ label: (t('help.topicInvoicing') || 'Invoicing & Payments'), path: `/help/docs?file=${encodeURIComponent(docUserGuide)}#${encodeURIComponent('invoice')}`, icon: 'dollar-sign', keywords: ['invoice', 'payment', 'finance'], kind: 'link' as const });
+    base.push({ label: (t('help.topicLifecycle') || 'Procurement Lifecycle'), path: `/help/docs?file=${encodeURIComponent(docWorkflows)}#${encodeURIComponent('lifecycle')}`, icon: 'trending-up', keywords: ['lifecycle', 'workflow', 'procurement'], kind: 'link' as const });
     const mod = (typeof document !== 'undefined' ? (document.documentElement.getAttribute('data-module') as string | null) : null) || 'procurement';
     const isGlobal = (p: string) => p.startsWith('/help') || p.startsWith('/docs');
     const inContext = (p: string) => {
@@ -394,7 +368,7 @@ function QuickSearch() {
       return {
         label: `${language === 'id' ? 'Buat PR' : 'Create PR'}: ${dept}`,
         path: '/procurement/pr/new',
-        icon: '⚙️',
+        icon: 'settings',
         keywords: ['create','pr','department',dept],
         kind: 'action',
         group: 'Actions',
@@ -414,28 +388,28 @@ function QuickSearch() {
     if (nav) {
       const term = nav[2].toLowerCase();
       const map: Record<string, { path: string; label: string; icon: string }> = {
-        reporting: { path: '/supplier/reporting', label: language === 'id' ? 'Buka Pelaporan' : 'Open Reporting', icon: '📊' },
-        reports: { path: '/supplier/reporting', label: language === 'id' ? 'Buka Pelaporan' : 'Open Reporting', icon: '📊' },
-        pelaporan: { path: '/supplier/reporting', label: 'Buka Pelaporan', icon: '📊' },
-        laporan: { path: '/supplier/reporting', label: 'Buka Laporan', icon: '📊' },
-        docs: { path: '/docs', label: language === 'id' ? 'Buka Dokumen' : 'Open Documents', icon: '📁' },
-        documents: { path: '/docs', label: language === 'id' ? 'Buka Dokumen' : 'Open Documents', icon: '📁' },
-        dokumen: { path: '/docs', label: 'Buka Dokumen', icon: '📁' },
-        help: { path: '/help', label: language === 'id' ? 'Buka Bantuan' : 'Open Help', icon: '❓' },
-        bantuan: { path: '/help', label: 'Buka Bantuan', icon: '❓' },
-        email: { path: '/supplier/email', label: language === 'id' ? 'Buka Email Dashboard' : 'Open Email Dashboard', icon: '📧' },
-        comms: { path: '/comms', label: language === 'id' ? 'Buka Komunikasi' : 'Open Communication', icon: '💬' },
-        komunikasi: { path: '/comms', label: 'Buka Komunikasi', icon: '💬' },
-        communication: { path: '/comms', label: language === 'id' ? 'Buka Komunikasi' : 'Open Communication', icon: '💬' },
-        'order tracker': { path: '/supply/order-tracker', label: language === 'id' ? 'Buka Pelacakan Pesanan' : 'Open Order Tracker', icon: '🚚' },
-        'pelacakan pesanan': { path: '/supply/order-tracker', label: 'Buka Pelacakan Pesanan', icon: '🚚' },
-        tracker: { path: '/supply/order-tracker', label: language === 'id' ? 'Buka Pelacakan Pesanan' : 'Open Order Tracker', icon: '🚚' },
-        procurement: { path: '/procurement/pr', label: language === 'id' ? 'Buka Permintaan Pembelian' : 'Open Purchase Requests', icon: '📝' },
-        'purchase requests': { path: '/procurement/pr', label: language === 'id' ? 'Buka Permintaan Pembelian' : 'Open Purchase Requests', icon: '📝' },
-        'permintaan pembelian': { path: '/procurement/pr', label: 'Buka Permintaan Pembelian', icon: '📝' },
-        pr: { path: '/procurement/pr', label: language === 'id' ? 'Buka Permintaan Pembelian' : 'Open Purchase Requests', icon: '📝' },
-        'quote builder': { path: '/procurement/quote-builder', label: language === 'id' ? 'Buka Penyusun Penawaran' : 'Open Quote Builder', icon: '💬' },
-        'penyusun penawaran': { path: '/procurement/quote-builder', label: 'Buka Penyusun Penawaran', icon: '💬' },
+        reporting: { path: '/supplier/reporting', label: language === 'id' ? 'Buka Pelaporan' : 'Open Reporting', icon: 'bar-chart-2' },
+        reports: { path: '/supplier/reporting', label: language === 'id' ? 'Buka Pelaporan' : 'Open Reporting', icon: 'bar-chart-2' },
+        pelaporan: { path: '/supplier/reporting', label: 'Buka Pelaporan', icon: 'bar-chart-2' },
+        laporan: { path: '/supplier/reporting', label: 'Buka Laporan', icon: 'bar-chart-2' },
+        docs: { path: '/docs', label: language === 'id' ? 'Buka Dokumen' : 'Open Documents', icon: 'folder' },
+        documents: { path: '/docs', label: language === 'id' ? 'Buka Dokumen' : 'Open Documents', icon: 'folder' },
+        dokumen: { path: '/docs', label: 'Buka Dokumen', icon: 'folder' },
+        help: { path: '/help', label: language === 'id' ? 'Buka Bantuan' : 'Open Help', icon: 'help-circle' },
+        bantuan: { path: '/help', label: 'Buka Bantuan', icon: 'help-circle' },
+        email: { path: '/supplier/email', label: language === 'id' ? 'Buka Email Dashboard' : 'Open Email Dashboard', icon: 'mail' },
+        comms: { path: '/comms', label: language === 'id' ? 'Buka Komunikasi' : 'Open Communication', icon: 'message-square' },
+        komunikasi: { path: '/comms', label: 'Buka Komunikasi', icon: 'message-square' },
+        communication: { path: '/comms', label: language === 'id' ? 'Buka Komunikasi' : 'Open Communication', icon: 'message-square' },
+        'order tracker': { path: '/supply/order-tracker', label: language === 'id' ? 'Buka Pelacakan Pesanan' : 'Open Order Tracker', icon: 'truck' },
+        'pelacakan pesanan': { path: '/supply/order-tracker', label: 'Buka Pelacakan Pesanan', icon: 'truck' },
+        tracker: { path: '/supply/order-tracker', label: language === 'id' ? 'Buka Pelacakan Pesanan' : 'Open Order Tracker', icon: 'truck' },
+        procurement: { path: '/procurement/pr', label: language === 'id' ? 'Buka Permintaan Pembelian' : 'Open Purchase Requests', icon: 'file-text' },
+        'purchase requests': { path: '/procurement/pr', label: language === 'id' ? 'Buka Permintaan Pembelian' : 'Open Purchase Requests', icon: 'file-text' },
+        'permintaan pembelian': { path: '/procurement/pr', label: 'Buka Permintaan Pembelian', icon: 'file-text' },
+        pr: { path: '/procurement/pr', label: language === 'id' ? 'Buka Permintaan Pembelian' : 'Open Purchase Requests', icon: 'file-text' },
+        'quote builder': { path: '/procurement/quote-builder', label: language === 'id' ? 'Buka Penyusun Penawaran' : 'Open Quote Builder', icon: 'message-square' },
+        'penyusun penawaran': { path: '/procurement/quote-builder', label: 'Buka Penyusun Penawaran', icon: 'message-square' },
       };
       const mItem = map[term];
       if (mItem) {
@@ -464,7 +438,7 @@ function QuickSearch() {
       return {
         label: language === 'id' ? 'Ekspor PR CSV' : 'Export PRs CSV',
         path: '/procurement/pr?action=export',
-        icon: '⬇️',
+        icon: 'download',
         keywords: ['export','csv','pr'],
         kind: 'action',
         group: 'Actions',
@@ -505,6 +479,45 @@ function QuickSearch() {
     return () => clearTimeout(id);
   }, [query, debounceMs]);
 
+  function renderIcon(s: string) {
+    switch (s) {
+      case '📊':
+      case 'bar-chart-2': return <BarChart2 className="w-4 h-4" />;
+      case '📁':
+      case 'folder': return <Folder className="w-4 h-4" />;
+      case '❓':
+      case 'help-circle': return <HelpCircle className="w-4 h-4" />;
+      case '📧':
+      case 'mail': return <Mail className="w-4 h-4" />;
+      case '💬':
+      case 'message-square': return <MessageSquare className="w-4 h-4" />;
+      case '🚚':
+      case 'truck': return <Truck className="w-4 h-4" />;
+      case '📝':
+      case '📄':
+      case 'file-text': return <FileText className="w-4 h-4" />;
+      case '🏷️':
+      case 'tag': return <Tag className="w-4 h-4" />;
+      case '🔎':
+      case 'search': return <Search className="w-4 h-4" />;
+      case '🛠️':
+      case 'wrench': return <Wrench className="w-4 h-4" />;
+      case '⚡':
+      case 'zap': return <Zap className="w-4 h-4" />;
+      case '💵':
+      case 'dollar-sign': return <DollarSign className="w-4 h-4" />;
+      case '📈':
+      case 'trending-up': return <TrendingUp className="w-4 h-4" />;
+      case '⬇️':
+      case 'download': return <Download className="w-4 h-4" />;
+      case '⚙️':
+      case 'settings': return <Settings className="w-4 h-4" />;
+      case '🔀':
+      case 'shuffle': return <Shuffle className="w-4 h-4" />;
+      default: return <span aria-hidden>{s}</span>;
+    }
+  }
+
   const results = useMemo(() => {
     const qraw = debouncedQuery.trim();
     const q = qraw.toLowerCase();
@@ -512,7 +525,7 @@ function QuickSearch() {
       const recentItems: Item[] = recents
         .map(r => ({ label: r.label, path: r.path, icon: r.icon, keywords: [] as string[], kind: 'recent' as const, group: 'Recent Destinations' }))
         .filter(r => index.some(i => i.path === r.path) || r.path.startsWith('/'));
-      const searchItems: Item[] = recentSearches.map(s => ({ label: s.q, path: '', icon: '🔎', keywords: [] as string[], kind: 'search' as const, group: 'Recent Searches' }));
+      const searchItems: Item[] = recentSearches.map(s => ({ label: s.q, path: '', icon: 'search', keywords: [] as string[], kind: 'search' as const, group: 'Recent Searches' }));
       const shortcuts: Item[] = index.map(i => ({ ...i, group: 'Shortcuts' }));
       const qa: Item[] = quickActions.map(a => ({ ...a, group: 'Quick Actions' }));
       // Overscan preference quick toggle
@@ -523,7 +536,7 @@ function QuickSearch() {
       const overscanToggle: Item = {
         label: `${t('prefs.overscan') || 'Overscan'}: ${level}`,
         path: '',
-        icon: '🛠️',
+        icon: 'wrench',
         keywords: ['overscan','virtualize','smooth'],
         kind: 'action',
         group: 'Preferences',
@@ -556,7 +569,7 @@ function QuickSearch() {
         .map(d => ({
           label: `${language === 'id' ? 'Buat PR' : 'Create PR'}: ${d}`,
           path: '/procurement/pr/new',
-          icon: '🏷️',
+          icon: 'tag',
           keywords: [d,'department','pr'],
           kind: 'action',
           group: t('search.departments') || 'Departments',
@@ -682,7 +695,7 @@ function QuickSearch() {
               title={r.tooltip}
               aria-disabled={r.disabled ? true : undefined}
            >
-              <span aria-hidden>{r.icon}</span>
+              {renderIcon(r.icon)}
               <span>{/* highlight match in label */}
                 {(() => {
                   const q = query.trim();
@@ -731,7 +744,7 @@ function OverscanControl() {
     <div style={{ display: 'grid', gap: 10 }}>
       <div style={{ fontWeight: 500 }}>{t('prefs.overscan') || 'Overscan'}</div>
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span>📁 {t('prefs.docs_overscan') || 'Documents overscan'}</span>
+        <span><Folder className="w-4 h-4" /> {t('prefs.docs_overscan') || 'Documents overscan'}</span>
         <select className="select" value={docsLevel} onChange={e => setDocsLevel(e.target.value as any)}>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
@@ -739,7 +752,7 @@ function OverscanControl() {
         </select>
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span>📝 {t('prefs.pr_overscan') || 'PR list overscan'}</span>
+        <span><FileText className="w-4 h-4" /> {t('prefs.pr_overscan') || 'PR list overscan'}</span>
         <select className="select" value={prLevel} onChange={e => setPrLevel(e.target.value as any)}>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
@@ -757,7 +770,7 @@ function NotificationBell({ count, onClick }: { count: number, onClick?: () => v
   const { t } = useI18n();
   return (
     <button className="btn ghost tooltip" data-tip={t('topbar.notifications')} aria-label={t('topbar.notifications')} onClick={onClick}>
-      🔔
+      <Bell className="w-4 h-4" />
       {count > 0 && (
         <span aria-label={`${count} ${t('topbar.unread')}`} style={{
           background: 'var(--accent)', color: '#fff', borderRadius: 999, fontSize: 12,

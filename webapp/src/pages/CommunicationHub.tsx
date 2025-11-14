@@ -8,6 +8,7 @@ import { apiListThreads } from '../services/api';
 import { getOfflineMode } from '../config';
 import * as mock from '../services/mock';
 import { enqueue, subscribe, initQueueAutoFlush } from '../services/offlineQueue';
+import { Link as LinkIcon } from 'lucide-react';
 
 type Message = { id: string; from: string; body: string; status: 'sent'|'delivered'|'read'; when: string; attachments?: { name: string, size: number }[] };
 type AttachmentMeta = { name: string; size: number; url?: string; doc_id?: number };
@@ -485,7 +486,9 @@ export default function CommunicationHub() {
               <button type="button" className="btn ghost" onClick={() => applyFormat('bold')} title="Bold">B</button>
               <button type="button" className="btn ghost" onClick={() => applyFormat('italic')} title="Italic"><i>I</i></button>
               <button type="button" className="btn ghost" onClick={() => applyFormat('underline')} title="Underline"><u>U</u></button>
-              <button type="button" className="btn ghost" onClick={() => applyFormat('link')} title="Link">🔗</button>
+              <button type="button" className="btn ghost" onClick={() => applyFormat('link')} title="Link" aria-label="Insert link">
+                <LinkIcon className="w-4 h-4" />
+              </button>
             </div>
             {/* Pre-send attachments chips */}
             {files.length > 0 && (

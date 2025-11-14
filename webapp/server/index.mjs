@@ -189,7 +189,7 @@ app.get('/api/user/preferences', async (req, res) => {
   try {
     const userId = await resolveUserId(req?.auth?.email || null);
     if (!userId) return res.json({ ok: true, row: null });
-    const [rows] = await pool.query('SELECT user_id, theme, language, notify_inapp, notify_email, updated_at FROM user_preferences WHERE user_id=?', [userId]);
+    const [rows] = await pool.query('SELECT user_id, theme, language, default_mode, notify_inapp, notify_email, updated_at FROM user_preferences WHERE user_id=?', [userId]);
     const row = rows[0] || null;
     res.json({ ok: true, row });
   } catch (err) {
@@ -204,13 +204,14 @@ app.put('/api/user/preferences', async (req, res) => {
     const body = req.body || {};
     const theme = ['light','dark','system'].includes(body.theme) ? body.theme : 'light';
     const language = ['en','id'].includes(body.language) ? body.language : 'en';
+    const default_mode = ['client','supplier'].includes(body.default_mode) ? body.default_mode : null;
     const notify_inapp = body.notify_inapp ? 1 : 0;
     const notify_email = body.notify_email ? 1 : 0;
     await pool.query(
-      'INSERT INTO user_preferences (user_id, theme, language, notify_inapp, notify_email) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE theme=VALUES(theme), language=VALUES(language), notify_inapp=VALUES(notify_inapp), notify_email=VALUES(notify_email)'
-      , [userId, theme, language, notify_inapp, notify_email]
+      'INSERT INTO user_preferences (user_id, theme, language, default_mode, notify_inapp, notify_email) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE theme=VALUES(theme), language=VALUES(language), default_mode=VALUES(default_mode), notify_inapp=VALUES(notify_inapp), notify_email=VALUES(notify_email)'
+      , [userId, theme, language, default_mode, notify_inapp, notify_email]
     );
-    await logAudit({ actorEmail: req?.auth?.email, action: 'prefs.update', entityType: 'user_preferences', entityId: userId, comment: `${theme}/${language}`, activeMode: req?.auth?.mode });
+    await logAudit({ actorEmail: req?.auth?.email, action: 'prefs.update', entityType: 'user_preferences', entityId: userId, comment: `${theme}/${language}/${default_mode || '-'}`, activeMode: req?.auth?.mode });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });

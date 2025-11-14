@@ -97,7 +97,13 @@ const translations: Record<Language, Record<string, string>> = {
     'topbar.logout': 'Logout',
     'topbar.logged_in_as': 'Logged in as {name}',
     'topbar.offline_mock': 'Offline Mock',
-
+    // Added keys for Mode UX banner and labels
+    'topbar.operating_as': 'Operating as',
+    'mode.buying': 'Buying',
+    'mode.selling': 'Selling',
+    // Settings additions
+    'settings.default_mode': 'Default Mode',
+    'settings.default_mode_desc': 'Choose your default operating mode for sign-in and redirects',
     // Admin Dashboard
     'admin.title': 'Admin Dashboard',
     'admin.metrics.pending_quotes': 'Pending Quotes',
@@ -509,7 +515,13 @@ const translations: Record<Language, Record<string, string>> = {
     'topbar.logout': 'Keluar',
     'topbar.logged_in_as': 'Masuk sebagai {name}',
     'topbar.offline_mock': 'Mock Offline',
-
+    // Added keys for Mode UX banner and labels
+    'topbar.operating_as': 'Beroperasi sebagai',
+    'mode.buying': 'Pembelian',
+    'mode.selling': 'Penjualan',
+    // Settings additions
+    'settings.default_mode': 'Mode Default',
+    'settings.default_mode_desc': 'Pilih mode operasi default untuk masuk dan pengalihan',
     // Admin Dashboard
     'admin.title': 'Dasbor Admin',
     'admin.metrics.pending_quotes': 'Penawaran Tertunda',
@@ -810,14 +822,6 @@ const translations: Record<Language, Record<string, string>> = {
     'action.close_preview': 'Tutup Pratinjau',
     'action.send_quote': 'Kirim Penawaran',
     'quote.preview_hint': 'Ini adalah pratinjau templat. Konten akan mengikuti gaya terpilih.',
-    // Gating messages / actions
-    'gating.quote_builder_disabled': 'Setujui PR dan kirim ke pemasok untuk menyusun penawaran',
-    'gating.approval_required_send': 'Hanya PR Disetujui yang bisa dikirim ke pemasok. Mohon minta persetujuan Finance/Admin terlebih dahulu.',
-    'gating.approval_required_compare': 'Setujui PR untuk membandingkan penawaran.',
-    'action.compare_quotes': 'Bandingkan penawaran',
-    'action.send_pr_to_suppliers': 'Kirim PR ke pemasok',
-    'action.approve': 'Setujui',
-    'action.reject': 'Tolak',
   },
 };
 

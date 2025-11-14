@@ -9,6 +9,10 @@ export default function Settings() {
 
   const [notifyInApp, setNotifyInApp] = useState<boolean>(() => localStorage.getItem('mpsone_notify_inapp') === 'true');
   const [notifyEmail, setNotifyEmail] = useState<boolean>(() => localStorage.getItem('mpsone_notify_email') === 'true');
+  const [defaultMode, setDefaultMode] = useState<'client'|'supplier'>(() => {
+    const v = localStorage.getItem('mpsone_default_mode');
+    return (v === 'supplier' || v === 'client') ? v : 'client';
+  });
 
   useEffect(() => {
     localStorage.setItem('mpsone_notify_inapp', String(notifyInApp));
@@ -18,6 +22,11 @@ export default function Settings() {
     localStorage.setItem('mpsone_notify_email', String(notifyEmail));
     updateUserPreferences({ notify_email: notifyEmail });
   }, [notifyEmail]);
+  useEffect(() => {
+    // Persist default mode selection
+    try { localStorage.setItem('mpsone_default_mode', defaultMode); } catch {}
+    updateUserPreferences({ default_mode: defaultMode });
+  }, [defaultMode]);
 
   useEffect(() => {
     // Load initial preferences from backend if available
@@ -28,6 +37,10 @@ export default function Settings() {
         if (row.language && row.language !== language) setLanguage(row.language as any);
         setNotifyInApp(!!row.notify_inapp);
         setNotifyEmail(!!row.notify_email);
+        if (row.default_mode === 'client' || row.default_mode === 'supplier') {
+          setDefaultMode(row.default_mode);
+          try { localStorage.setItem('mpsone_default_mode', row.default_mode); } catch {}
+        }
         try {
           localStorage.setItem('mpsone_notify_inapp', String(!!row.notify_inapp));
           localStorage.setItem('mpsone_notify_email', String(!!row.notify_email));
@@ -75,6 +88,14 @@ export default function Settings() {
             <div style={{ display: 'flex', gap: 8 }}>
               <a href="/notifications" className="btn outline">{t('topbar.notifications') || 'Notifications'}</a>
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>{t('settings.default_mode') || 'Default Mode'}</span>
+              <select className="select" value={defaultMode} onChange={e => setDefaultMode(e.target.value as 'client'|'supplier')} aria-label={t('settings.default_mode') || 'Default Mode'}>
+                <option value="client">{t('mode.buying') || 'Buying'}</option>
+                <option value="supplier">{t('mode.selling') || 'Selling'}</option>
+              </select>
+            </label>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.default_mode_desc') || 'Choose your default operating mode for sign-in and redirects'}</div>
           </div>
         </div>
       </div>

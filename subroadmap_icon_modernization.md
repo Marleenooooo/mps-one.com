@@ -25,11 +25,7 @@ Tasks
 - [x] Replace App sidebar arrow emojis with Lucide chevrons.
 - [x] Replace CommunicationHub link emoji with Lucide Link.
 - [x] Run dev server and preview; verify no errors.
- - [x] Audit for inline emojis in pages and replace with Lucide (OrderTracker).
- - [x] Remove dormant emoji-based metrics array from EnterpriseDashboard.
- - [x] Build and scan for residual emojis; update CHANGELOG.
 
 Notes
 - Verified via local preview on Topbar and QuickSearch; no console/terminal errors observed.
 - Kept Item.icon as string source for QuickSearch to maintain simple data model while rendering with Lucide components.
- - Additional audit (2025-11-14): No remaining inline emojis outside `Topbar` mapping; `OrderTracker` and `EnterpriseDashboard` aligned to Lucide.

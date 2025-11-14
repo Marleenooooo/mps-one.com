@@ -1,26 +1,5 @@
 # Changelog
 
-## v0.1.42 (2025-11-14) — Icons: Lucide Audit Completion
-
-### Highlights
-- Completed project-wide audit to ensure Lucide icons are used consistently.
-- Replaced inline checkmark emoji in `OrderTracker` with `CheckCircle` from `lucide-react`.
-- Removed unused emoji-based metrics array from `EnterpriseDashboard` to prevent non-Lucene icon drift.
-
-### Affected Files
-- `webapp/src/pages/OrderTracker.tsx` (replace emoji with `CheckCircle`)
-- `webapp/src/pages/client/EnterpriseDashboard.tsx` (remove dormant emoji metrics array)
-- `subroadmap_icon_modernization.md` (add audit tasks and mark verified)
-
-### Verification
-- Built via `npm run build`; compilation succeeded with no type errors.
-- Scanned `webapp/src` for remaining emojis; none found outside `Topbar` mapping.
-- `Topbar` `renderIcon` remains the central mapping for emoji/string → Lucide components.
-
-### Notes
-- No theme, i18n, or DB changes required; minimal UI-only adjustments.
-- Future emoji codes can be added to `Topbar.renderIcon` when introduced in data sources.
-
 ## v0.1.41 (2025-11-13) — Layout: Workframe Grid Stability
 
 ### Highlights

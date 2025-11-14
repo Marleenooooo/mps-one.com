@@ -531,3 +531,305 @@ Tasks
 Notes
 - Server listening at `http://localhost:3001`; DB reachability via WSL `mpsone-db` container.
 - Guard behavior confirmed even when DB is down (403 for Supplier occurs pre-DB).
+
+# Subroadmap — Phase 7: Layout — Workframe Grid Stability
+
+Item: Ensure layout grid fills viewport and inner content scrolls correctly
+Status: Completed
+
+Acceptance Criteria
+- `.layout` fills the viewport height on all routes; no broken frame where content exceeds viewport.
+- `.content` allows inner grid/content to scroll without forcing overflow or collapsing the grid.
+- Preview `/client`, `/procurement/workflow`, `/procurement/pr`, and `/supplier/reporting` with no console or terminal errors.
+- Roadmap and changelog updated accordingly.
+
+Plan & Alignment
+- Minimal CSS fix in `webapp/src/index.css`: add `min-height: 100vh` to `.layout` and `min-height: 0` to `.content`.
+- Verify responsive behavior at 1024px (narrow sidebar) and 768px (sidebar hidden) breakpoints.
+- Confirm Topbar alignment and Breadcrumbs do not cause layout shift.
+
+Tasks
+- [x] Add `min-height: 100vh` to `.layout`.
+- [x] Add `min-height: 0` to `.content`.
+- [x] Run dev server and preview affected routes.
+- [x] Update `CHANGELOG.md` entry and mark this subroadmap item completed.
+
+Notes
+- `html`, `body`, and `#app-root` already have `height: 100%`; this change ensures the grid container participates fully in viewport sizing.
+- Verified via previews; no errors observed. Import style aligned to `import * as pillarStorage`.
+
+---
+
+# Subroadmap — Phase 7: Pillar Separation — E2E Guards & Analytics
+
+Item: Add minimal e2e checks for guard redirects and route analytics
+Status: Completed
+
+Acceptance Criteria
+- Guarded routes redirect as expected when preconditions are missing.
+- Route analytics emits a dev console payload on navigation.
+- Tests run via `npm run test:e2e` and pass locally.
+
+Plan & Alignment
+- Add Playwright tests covering:
+  - `/procurement/po/preview` redirects to workflow when seed is missing.
+  - `/procurement/quote-builder` redirects to client login when supplier has no approved PR.
+  - Route analytics logs `[analytics]` payload upon navigation to `/procurement/pr`.
+- Keep tests lightweight; rely only on localStorage seeding.
+
+Tasks
+- [x] Implement redirect tests for PO Preview and Quote Builder.
+- [x] Run e2e and confirm passing.
+
+---
+
+# Subroadmap — Phase 7: Security & Access Control — Route Guards + Mode Guard
+
+Item: Standardize frontend route guards and add backend mode enforcement
+Status: Completed
+
+Acceptance Criteria
+- Frontend protected routes redirect unauthorized users (mode/role) without errors.
+- Backend enforces `Client`/`Supplier` mode via headers; unauthorized calls return 403.
+- No regressions in PR CRUD and Docs upload flows.
+
+Plan & Alignment
+- Create `RouteGuard` component to centralize RBAC checks on routes.
+- Extend backend auth parsing with `mode` and implement `requireMode([Client|Supplier])`.
+- Apply `requireMode('Client')` to PR endpoints; update client requests to send `x-user-type`.
+- Preview `/client` and `/supplier/admin` to validate guard behavior.
+
+Tasks
+- [x] Create `RouteGuard.tsx` and wrap key routes.
+- [x] Update `server/index.mjs` with `mode` parsing and `requireMode`.
+- [x] Update `src/services/api.ts` to include `x-user-type` header.
+- [x] Preview `/client` and `/supplier/admin` for guard verification.
+- [x] Update `roadmap.md` and add `v0.1.35` in CHANGELOG.
+
+Notes
+- Verified in dev preview: `/client` and `/supplier/admin` load without errors under correct mode/role; unauthorized states redirect via `RouteGuard`.
+- Analytics console logs are dev-only; e2e runs in preview (production) mode, so analytics verification is manual in dev.
+
+---
+
+# Subroadmap — Phase 7: Pillar Separation — Mode Toggle & Context Reset
+
+Item: Add explicit Client/Supplier mode switch in Topbar with clean state reset
+Status: Completed
+
+Acceptance Criteria
+- Topbar shows a clear Client/Supplier toggle adhering to neon theme.
+- Switching mode updates `mpsone_user_type` and triggers a layout reset.
+- Pillar-scoped procurement caches are cleared on mode change to prevent cross-mode bleed.
+- No console or terminal errors upon preview of procurement routes.
+
+Plan & Alignment
+- Implement a segmented control in Topbar to switch Client/Supplier modes.
+- On toggle, clear key procurement caches via `pillarStorage.removeItem`.
+- Navigate to mode-specific landing: Client → `/client/quotes`, Supplier → `/supplier/reporting`.
+- Preview `/procurement/workflow` and client/supplier landings to verify.
+
+Tasks
+- [x] Add Topbar segmented toggle for Client/Supplier with accessible states.
+- [x] Clear procurement caches on mode change (`pr_draft`, `pr_sent`, `quote_accepted`, `audit_trail`, `suppliers`, `po_from_quote`, `available_to_invoice`).
+- [x] Navigate to mode-specific landing to reset layout.
+- [x] Preview UI to confirm no errors and proper visual cues.
+- [x] Update `CHANGELOG.md` after verification.
+
+Notes
+- Verified via preview on `/procurement/workflow`; mode toggle renders with gradient active state and no errors.
+
+---
+
+# Subroadmap — Phase 7: Pillar Separation — Mode-Aware Navigation
+
+Item: Gate QuickSearch and Sidebar items by active Client/Supplier mode
+Status: Completed
+
+Acceptance Criteria
+- QuickSearch only shows client-appropriate links/actions in Client mode and supplier-appropriate in Supplier mode.
+- Sidebar hides client-only procurement items in Supplier mode (e.g., Workflow, PR list, PO Preview).
+- No console or terminal errors upon preview on procurement and supplier routes.
+
+Plan & Alignment
+- Filter QuickSearch index by `mpsone_user_type` for client-only and supplier-only entries.
+- Remove client-only entries from Supplier menu in Sidebar to reduce redirect noise.
+- Preview `/procurement/workflow` and `/supplier/reporting` to validate.
+
+Tasks
+- [x] Gate Topbar QuickSearch actions/links by mode.
+- [x] Hide client-only items from Supplier Sidebar.
+- [x] Preview affected routes for errors.
+- [x] Update `CHANGELOG.md`.
+
+Notes
+- Verified via preview on `/procurement/workflow` and `/supplier/reporting`; no errors observed; QuickSearch and Sidebar reflect mode correctly.
+
+---
+
+# Subroadmap — Phase 7: Pillar Separation — Mode-Aware Dashboards
+
+Item: Gate dashboards and dashboard actions by active Client/Supplier mode
+Status: Completed
+
+Acceptance Criteria
+- `/client` is only reachable in Client mode; Supplier mode redirects to `/supplier/admin`.
+- Supplier Admin dashboard surface shows only supplier-relevant actions (e.g., New Quote); client-only actions (New PR, New PO) are hidden.
+- No console or terminal errors on preview for both dashboards.
+
+Plan & Alignment
+- Add mode-aware routing for `/client` and supplier admin routes in `App.tsx`.
+- Simplify Supplier Admin dashboard actions to reflect supplier context.
+- Preview `/client` and `/supplier/admin` and verify clean rendering and behavior.
+
+Tasks
+- [x] Gate `/client` route to Client mode and redirect others to `/supplier/admin`.
+- [x] Require Supplier mode on supplier admin/reporting/email routes.
+- [x] Hide client-only actions on Supplier Admin dashboard, show only New Quote.
+- [x] Preview `/client` and `/supplier/admin` for errors and visual checks.
+- [x] Update `CHANGELOG.md` after verification.
+
+Notes
+- Verified via preview; dashboards render correctly with mode-aware routing and actions; no errors observed.
+  - Client Dashboard verification: Only client-specific actions are present (Quick PR, budget, documents, invoice overview). No supplier-only actions (e.g., New Quote, Quote Builder) appear.
+
+---
+
+# Subroadmap — Performance & Reliability: Code Splitting & Dynamic Imports
+
+Item: Verify and finalize React.lazy/Suspense-based code splitting across heavy routes
+Status: Completed
+
+Acceptance Criteria
+- Heavy pages are loaded via `React.lazy` with a consistent `Suspense` fallback skeleton.
+- Key routes (`/client`, `/supplier/reporting`, `/client/quotes/:id`, `/procurement/po/preview`) render without console/terminal errors when lazy-loaded.
+- No visual regressions; neon theme skeletons match accessibility targets.
+- Roadmap and changelog updated to reflect completion.
+
+Plan & Alignment
+- Audit router (`webapp/src/App.tsx`) for lazy imports and a unified `Suspense` fallback.
+- Live-preview key routes to confirm chunk loading works and UI is error-free.
+- Update `roadmap.md` (mark code splitting complete) and add `CHANGELOG.md` entry.
+
+Tasks
+- [x] Audit lazy routes and fallback skeleton in `App.tsx`.
+- [x] Preview `/client`, `/supplier/reporting`, `/client/quotes/:id`, `/procurement/po/preview`.
+- [x] Update `roadmap.md` status for the performance item.
+- [x] Append `CHANGELOG.md` entry documenting verification and affected files.
+
+Notes
+- Verified via live previews on the listed routes; no browser errors observed and chunks load with the skeleton fallback.
+- `App.tsx` already uses `React.lazy` broadly; this cycle confirms and documents the setup per SOP.
+
+---
+
+# Subroadmap — Performance Optimization: Virtualize Long Lists
+
+Item: Virtualize heavy lists to reduce DOM work (PR List, Docs)
+Status: Completed
+
+Acceptance Criteria
+- PR List uses virtualized rows with smooth scroll and accessible selection.
+- Document Manager list remains virtualized with overscan tuned; no regressions.
+- Previews of `/procurement/pr` and `/docs` show no console/terminal errors.
+- Roadmap and changelog updated to reflect completion.
+
+Plan & Alignment
+- Enable virtualization in `PRList` by toggling DataTable `virtualize` and setting `height`/`rowHeight`.
+- Keep overscan via `computeOverscan('prList')`; reuse existing skeleton styles.
+- Verify behavior on live preview and update docs accordingly.
+
+Tasks
+- [x] Turn on DataTable virtualization in `webapp/src/pages/procurement/PRList.tsx`.
+- [x] Preview `/procurement/pr` and `/docs` for errors and feel.
+- [x] Update `roadmap.md` to mark “Virtualize long lists” completed.
+- [x] Append `CHANGELOG.md` entry with affected files and verification notes.
+
+Notes
+- `DocumentManager` already implements grid virtualization; this item focuses on PR List.
+- Verified `/procurement/pr` preview; no console/terminal errors; smooth scroll observed.
+
+---
+
+# Subroadmap — Performance & Build: Bundle Analysis & Tree‑Shaking
+
+Item: Integrate bundle visualizer, enable treeshake, inspect bundles, and document findings
+Status: Completed
+
+Acceptance Criteria
+- Visualizer generates `dist/stats.html` after production build and is accessible via preview.
+- Build enables Rollup treeshake with safe defaults to remove unused code paths.
+- Bundle inspection confirms major vendor chunks and app chunks; no preview errors.
+- Roadmap and changelog updated to reflect completion.
+
+Plan & Alignment
+- Add `rollup-plugin-visualizer` and wire into Vite build to output `dist/stats.html`.
+- Enable `treeshake` options under `build.rollupOptions` and turn on `sourcemap`.
+- Run `npm run build` and `npm run preview` to inspect `http://localhost:<port>/stats.html`.
+- Update `roadmap.md` and `CHANGELOG.md` with a short summary of findings.
+
+Tasks
+- [x] Add visualizer plugin and treeshake to `webapp/vite.config.ts`.
+- [x] Build app and open `dist/stats.html` via preview.
+- [x] Verify no browser errors; note any large chunks for follow‑up.
+- [x] Update `roadmap.md` and `CHANGELOG.md`.
+
+Notes
+- Verified via preview at `/stats.html` on the production build server; no browser errors.
+- Keep changes minimal and focused on build configuration; avoid aggressive drops unless verified (e.g., `drop: ['console']` deferred).
+
+---
+
+# Subroadmap — Phase 7: Backend Mode Guards & Audit active_mode
+
+Item: Persist active_mode in audit logs and enforce Client mode on PR reads
+Status: Completed
+
+Acceptance Criteria
+- `audit_log` includes `active_mode ENUM('Client','Supplier')` with supporting index.
+- Backend audit writes persist `active_mode` for all actions.
+- `GET /api/pr` and `GET /api/pr/:id` are guarded by Client mode.
+- DB docs updated with migration and verification steps; roadmap and changelog reflect changes.
+
+Plan & Alignment
+- Follow Front‑End ↔ Database Alignment Policy: schema designed, migration created under `db/migrations`, imported via WSL scripts; backend updated to log and guard; docs updated accordingly.
+
+Tasks
+- [x] Add migration `db/migrations/0020_audit_active_mode.sql` to create `active_mode` and `idx_audit_mode`.
+- [x] Update `webapp/server/index.mjs` `logAudit(...)` to write `active_mode`.
+- [x] Enforce Client mode on `GET /api/pr` and `GET /api/pr/:id` via `requireMode(['Client'])`.
+- [x] Update `docs/DB_SETUP.md` and `docs/id/DB_SETUP.md` with migration notes and verification.
+- [x] Update `CHANGELOG.md`, mark roadmap progress (mode‑sensitive audit logging completed).
+
+Notes
+- UI unchanged; backend enforcement and audit context strengthened.
+- Import migrations via WSL (`bash scripts/import-migrations.sh`) and verify with `bash scripts/verify-db.sh` and phpMyAdmin.
+
+---
+
+# Subroadmap — Phase 7: Mode Guards Extension — PO Summary & Invoice Status
+
+Item: Enforce Client mode on PO Summary and Invoice Status endpoints
+Status: Completed
+
+Acceptance Criteria
+- `GET /api/po/summary` is accessible only in Client mode; Supplier mode returns 403.
+- `GET /api/invoice/status` is accessible only in Client mode; Supplier mode returns 403.
+- Backend server responds `200` for Client mode when DB is available; guards evaluate prior to DB work.
+- Changelog updated; no UI changes required.
+
+Plan & Alignment
+- Extend `requireMode(['Client'])` to PO and invoice endpoints in `webapp/server/index.mjs`.
+- Verify behavior via dev server and WSL Docker for DB readiness.
+- Update `CHANGELOG.md` to reflect guard extension.
+
+Tasks
+- [x] Add `requireMode(['Client'])` to `GET /api/po/summary`.
+- [x] Add `requireMode(['Client'])` to `GET /api/invoice/status`.
+- [x] Start backend (`npm run server`) and WSL DB (`docker compose up -d`).
+- [x] Verify Supplier mode returns 403 and Client mode returns 200 (DB up).
+- [x] Update `CHANGELOG.md` with affected files and verification.
+
+Notes
+- Server listening at `http://localhost:3001`; DB reachability via WSL `mpsone-db` container.
+- Guard behavior confirmed even when DB is down (403 for Supplier occurs pre-DB).

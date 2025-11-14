@@ -10,7 +10,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Sidebar } from './components/Layout/Sidebar';
 import { RouteGuard } from './components/RouteGuard';
-import { Topbar, Breadcrumbs } from './components/Layout/Topbar';
+import { Topbar } from './components/Layout/Topbar';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const AdminDashboard = lazy(() => import('./pages/supplier/AdminDashboard'));
 const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard'));
@@ -203,6 +204,12 @@ function StartRedirect() {
   if (!ready) return null;
   if (userType === 'supplier') return <Navigate to="/supplier/admin" replace />;
   if (userType === 'client') return <Navigate to="/client" replace />;
+  // Fallback: if no user type, redirect to login/<default_mode> when available, else client
+  try {
+    const def = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_default_mode') : null);
+    const m = (def === 'supplier' || def === 'client') ? def : 'client';
+    return <Navigate to={`/login/${m}`} replace />;
+  } catch {}
   if (import.meta.env && (import.meta.env as any).DEV) {
     return <Navigate to="/login/client" replace />;
   }
@@ -237,6 +244,17 @@ export default function App() {
     }, [location.pathname, pillar]);
     return null;
   }
+  // Sidebar visibility state with persistence
+  const [sidebarVisible, setSidebarVisible] = useState<boolean>(() => {
+    try { return localStorage.getItem('mpsone_sidebar_hidden') !== '1'; } catch { return true; }
+  });
+  const toggleSidebar = () => {
+    setSidebarVisible(v => {
+      const next = !v;
+      try { localStorage.setItem('mpsone_sidebar_hidden', next ? '0' : '1'); } catch {}
+      return next;
+    });
+  };
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -247,76 +265,84 @@ export default function App() {
             <OfflineIndicator />
             {/* Accessibility: Skip to content link for keyboard users */}
             <a href="#main-content" className="skip-link" aria-label="Skip to main content">Skip to content</a>
-            <div className="layout">
-              <Sidebar />
+            <div className={sidebarVisible ? "layout" : "layout no-sidebar"}>
+              {sidebarVisible && <Sidebar />}
               <div className="content" id="main-content">
                 <Topbar>
-                  <Breadcrumbs items={["Home"]} />
+                  <button
+                    className="btn ghost tooltip"
+                    data-tip={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
+                    aria-label={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
+                    onClick={toggleSidebar}
+                    style={{ display: 'inline-flex', alignItems: 'center' }}
+                  >
+                    {sidebarVisible ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
                 </Topbar>
-                <Suspense fallback={<div className="main"><div className="skeleton" style={{ height: 160, borderRadius: 8 }}></div></div>}>
-                  <Routes>
-                    {/** Device-aware overscan for DocumentManager */}
-                    {/** On mobile widths, preload a bit more rows to reduce pop-in */}
-                    {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-                    {/* @ts-ignore window exists in browser */}
-                    {(() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1024; (w); return null; })()}
-                    {/* Auth routes */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/login/supplier" element={<Login />} />
-                    <Route path="/login/client" element={<Login />} />
-                    <Route path="/login/code" element={<CodeLogin />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/signup/supplier" element={<Signup />} />
-                    <Route path="/signup/client" element={<Signup />} />
-                    {/* Home: redirect based on stored user type, otherwise external */}
-                    <Route path="/" element={<StartRedirect />} />
-                    {/* Client routes (mode-aware) */}
-                    <Route path="/client" element={<RouteGuard requireUserType="client" fallbackTo="/login/client"><ClientDashboard /></RouteGuard>} />
-                    <Route path="/client/onboarding" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Onboarding /> : <Navigate to="/client" replace />} />
-                    <Route path="/client/quotes/:prId" element={<ClientQuoteGuard />} />
-                    <Route path="/client/suppliers" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <SupplierDirectory /> : <Navigate to="/procurement/workflow" replace />} />
+                  <Suspense fallback={<div className="main"><div className="skeleton" style={{ height: 160, borderRadius: 8 }}></div></div>}>
+                    <Routes>
+                      {/** Device-aware overscan for DocumentManager */}
+                      {/** On mobile widths, preload a bit more rows to reduce pop-in */}
+                      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+                      {/* @ts-ignore window exists in browser */}
+                      {(() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1024; (w); return null; })()}
+                      {/* Auth routes */}
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/login/supplier" element={<Login />} />
+                      <Route path="/login/client" element={<Login />} />
+                      <Route path="/login/code" element={<CodeLogin />} />
+                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/signup/supplier" element={<Signup />} />
+                      <Route path="/signup/client" element={<Signup />} />
+                      {/* Home: redirect based on stored user type, otherwise external */}
+                      <Route path="/" element={<StartRedirect />} />
+                      {/* Client routes (mode-aware) */}
+                      <Route path="/client" element={<RouteGuard requireUserType="client" fallbackTo="/login/client"><ClientDashboard /></RouteGuard>} />
+                      <Route path="/client/onboarding" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Onboarding /> : <Navigate to="/client" replace />} />
+                      <Route path="/client/quotes/:prId" element={<ClientQuoteGuard />} />
+                      <Route path="/client/suppliers" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <SupplierDirectory /> : <Navigate to="/procurement/workflow" replace />} />
 
-                    {/* Supplier routes (mode-aware, avoid redirect loops) */}
-                    <Route path="/supplier/admin" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><AdminDashboard /></RouteGuard>} />
-                    <Route path="/admin/invitations" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminInvitations /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
-                    <Route path="/admin/people" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <PeopleDirectory /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
-                    <Route path="/supplier/reporting" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
-                    <Route path="/supplier/email" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
-                    <Route path="/supplier/clients" element={(localStorage.getItem('mpsone_user_type') === 'supplier') ? <ClientDirectory /> : <Navigate to="/procurement/workflow" replace />} />
-                    <Route path="/supplier/enhanced" element={<ClientOnlyProcurement><EnhancedSupplierManagement /></ClientOnlyProcurement>} />
-                  <Route path="/procurement/pr" element={<ClientOnlyProcurement><PRList /></ClientOnlyProcurement>} />
-                  <Route path="/procurement/pr/new" element={<ClientOnlyProcurement><PRCreate /></ClientOnlyProcurement>} />
-                  <Route path="/procurement/pr/enhanced" element={<ClientOnlyProcurement><EnhancedPRCreation /></ClientOnlyProcurement>} />
-                  <Route path="/procurement/rfq/enhanced" element={<ClientOnlyProcurement><EnhancedRFQCreation /></ClientOnlyProcurement>} />
-                  <Route path="/finance/invoice-matching" element={<ClientOnlyProcurement><EnhancedInvoiceMatching /></ClientOnlyProcurement>} />
-                  <Route path="/procurement/po/preview" element={<ClientOnlyProcurement><POPreviewGuard /></ClientOnlyProcurement>} />
-                  <Route path="/procurement/quote-builder" element={(
-                    (localStorage.getItem('mpsone_user_type') === 'supplier' && hasApprovedPRForSupplier())
-                      ? <SupplierOnly><QuoteBuilder /></SupplierOnly>
-                      : <Navigate to="/procurement/workflow" replace />
-                  )} />
-                  <Route path="/procurement/workflow" element={<ClientOnlyProcurement><ProcurementWorkflow /></ClientOnlyProcurement>} />
-                  <Route path="/supply/order-tracker" element={<OrderTracker />} />
-                  <Route path="/inventory/delivery-notes" element={<DeliveryNotes />} />
-                  {/* Dev: DB connectivity status page */}
-                  <Route path="/dev/db-status" element={<DBStatus />} />
-                    <Route path="/docs" element={isLoggedInUserType() ? (<DocumentManager overscan={computeOverscan('documents')} />) : (<Navigate to="/login/client" replace />)} />
-                    <Route path="/comms" element={isLoggedInUserType() ? (<CommunicationHub />) : (<Navigate to="/login/client" replace />)} />
-                    <Route path="/settings" element={isLoggedInUserType() ? (<Settings />) : (<Navigate to="/login/client" replace />)} />
-                    <Route path="/notifications" element={isLoggedInUserType() ? (<Notifications />) : (<Navigate to="/login/client" replace />)} />
-                    <Route path="/help" element={<HelpCenter />} />
-                    <Route path="/help/docs" element={<DocViewer />} />
-                    {/* People profiles */}
-                    <Route path="/people/:userId" element={<UserProfile />} />
-                    {/* Legacy redirects */}
-                    <Route path="/admin" element={<Navigate to="/supplier/admin" replace />} />
-                    <Route path="/email" element={<Navigate to="/supplier/email" replace />} />
-                    <Route path="/reporting" element={<Navigate to="/supplier/reporting" replace />} />
-                    <Route path="/onboarding" element={<Navigate to="/client/onboarding" replace />} />
-                  </Routes>
-                </Suspense>
+                      {/* Supplier routes (mode-aware, avoid redirect loops) */}
+                      <Route path="/supplier/admin" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><AdminDashboard /></RouteGuard>} />
+                      <Route path="/admin/invitations" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminInvitations /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                      <Route path="/admin/people" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <PeopleDirectory /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                      <Route path="/supplier/reporting" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                      <Route path="/supplier/email" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                      <Route path="/supplier/clients" element={(localStorage.getItem('mpsone_user_type') === 'supplier') ? <ClientDirectory /> : <Navigate to="/procurement/workflow" replace />} />
+                      <Route path="/supplier/enhanced" element={<ClientOnlyProcurement><EnhancedSupplierManagement /></ClientOnlyProcurement>} />
+                    <Route path="/procurement/pr" element={<ClientOnlyProcurement><PRList /></ClientOnlyProcurement>} />
+                    <Route path="/procurement/pr/new" element={<ClientOnlyProcurement><PRCreate /></ClientOnlyProcurement>} />
+                    <Route path="/procurement/pr/enhanced" element={<ClientOnlyProcurement><EnhancedPRCreation /></ClientOnlyProcurement>} />
+                    <Route path="/procurement/rfq/enhanced" element={<ClientOnlyProcurement><EnhancedRFQCreation /></ClientOnlyProcurement>} />
+                    <Route path="/finance/invoice-matching" element={<ClientOnlyProcurement><EnhancedInvoiceMatching /></ClientOnlyProcurement>} />
+                    <Route path="/procurement/po/preview" element={<ClientOnlyProcurement><POPreviewGuard /></ClientOnlyProcurement>} />
+                    <Route path="/procurement/quote-builder" element={(
+                      (localStorage.getItem('mpsone_user_type') === 'supplier' && hasApprovedPRForSupplier())
+                        ? <SupplierOnly><QuoteBuilder /></SupplierOnly>
+                        : <Navigate to="/procurement/workflow" replace />
+                    )} />
+                    <Route path="/procurement/workflow" element={<ClientOnlyProcurement><ProcurementWorkflow /></ClientOnlyProcurement>} />
+                    <Route path="/supply/order-tracker" element={<OrderTracker />} />
+                    <Route path="/inventory/delivery-notes" element={<DeliveryNotes />} />
+                    {/* Dev: DB connectivity status page */}
+                    <Route path="/dev/db-status" element={<DBStatus />} />
+                      <Route path="/docs" element={isLoggedInUserType() ? (<DocumentManager overscan={computeOverscan('documents')} />) : (<Navigate to="/login/client" replace />)} />
+                      <Route path="/comms" element={isLoggedInUserType() ? (<CommunicationHub />) : (<Navigate to="/login/client" replace />)} />
+                      <Route path="/settings" element={isLoggedInUserType() ? (<Settings />) : (<Navigate to="/login/client" replace />)} />
+                      <Route path="/notifications" element={isLoggedInUserType() ? (<Notifications />) : (<Navigate to="/login/client" replace />)} />
+                      <Route path="/help" element={<HelpCenter />} />
+                      <Route path="/help/docs" element={<DocViewer />} />
+                      {/* People profiles */}
+                      <Route path="/people/:userId" element={<UserProfile />} />
+                      {/* Legacy redirects */}
+                      <Route path="/admin" element={<Navigate to="/supplier/admin" replace />} />
+                      <Route path="/email" element={<Navigate to="/supplier/email" replace />} />
+                      <Route path="/reporting" element={<Navigate to="/supplier/reporting" replace />} />
+                      <Route path="/onboarding" element={<Navigate to="/client/onboarding" replace />} />
+                    </Routes>
+                  </Suspense>
+                </div>
               </div>
-            </div>
             </ErrorBoundary>
           </PillarProvider>
         </BrowserRouter>
