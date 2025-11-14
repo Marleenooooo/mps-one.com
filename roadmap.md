@@ -143,4 +143,28 @@ Notes
  - Phase 3 verified (2025-11-11): Backend running in WSL; audit logs written on PR/thread/user actions; documents upload stub with scan status; pagination and filters present across PR, users, and docs.
  - Phase 4 Communications verified (2025-11-12): Subject column migrated; backend endpoints aligned; frontend wired; preview validated without errors.
   - Security & Access verified (2025-11-12): Frontend route guards standardized (`RouteGuard`); backend mode guard enforced on `/api/pr*` (Client only) and `/api/docs/upload` (Client/Supplier); previews validated without errors.
-  - Security & Access verified extension (2025-11-12): Backend mode guard enforced on `GET /api/po/summary` and `GET /api/invoice/status` (Client only); Supplier mode returns 403, Client mode returns 200 with DB available.
+ - Security & Access verified extension (2025-11-12): Backend mode guard enforced on `GET /api/po/summary` and `GET /api/invoice/status` (Client only); Supplier mode returns 403, Client mode returns 200 with DB available.
+
+Phase 8 — Enterprise Parity & Scalability (120–160%)
+- [ ] Multi-level approvals matrix with configurable steps and SLAs
+- [ ] Departmental budgets, threshold routing, and escalations
+- [ ] Contract repository with renewals, clauses, obligations tracking
+- [ ] 3-way/4-way match with invoice OCR and exception workflows
+- [ ] Payments module: payment runs, scheduling, reconciliation integrations
+- [ ] Supplier onboarding/KYC/compliance workflow with risk scoring
+- [ ] Supplier performance scorecards and corrective action workflows
+- [ ] ERP connectors (SAP/Oracle/Netsuite/Dynamics) and webhook framework
+- [ ] Document management integrations (SharePoint/Box/S3 with lifecycle rules)
+- [ ] Real-time updates via WebSocket/SSE for orders, invoices, messages
+- [ ] Observability: OpenTelemetry traces/metrics/logs with dashboards
+- [ ] Analytics: funnels, drilldowns, cohorts, anomaly detection, forecasting
+- [ ] Accessibility WCAG 2.1/2.2 AA end-to-end audit and fixes
+- [ ] Mobile/touch optimization with dedicated responsive interaction patterns
+- [ ] Internationalization: locale-aware currency/date/number; timezone preferences
+- [ ] Enterprise auth: OIDC/SAML, MFA, session/refresh rotation, secrets management
+- [ ] Fine-grained RBAC/ABAC enforced backend + UI element-level permissions
+- [ ] CI upgrades: typecheck/lint/security scan, dependency audit, quality gates
+- [ ] Migration orchestrator with rollback; environment promotion pipeline
+- [ ] Feature flags and environment-based configuration management
+- [ ] Performance: granular code splitting, SSR/edge, CDN strategy
+- [ ] Client/server caching strategy (immutable assets, SWR, stale-while-revalidate)

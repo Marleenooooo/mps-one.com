@@ -298,17 +298,17 @@ export default function App() {
                       <Route path="/" element={<StartRedirect />} />
                       {/* Client routes (mode-aware) */}
                       <Route path="/client" element={<RouteGuard requireUserType="client" fallbackTo="/login/client"><ClientDashboard /></RouteGuard>} />
-                      <Route path="/client/onboarding" element={(localStorage.getItem('mpsone_role') === 'Admin') ? <Onboarding /> : <Navigate to="/client" replace />} />
+                      <Route path="/client/onboarding" element={<RouteGuard requireUserType="client" requireRoleIn={["Admin"]} fallbackTo="/client"><Onboarding /></RouteGuard>} />
                       <Route path="/client/quotes/:prId" element={<ClientQuoteGuard />} />
-                      <Route path="/client/suppliers" element={(localStorage.getItem('mpsone_user_type') === 'client') ? <SupplierDirectory /> : <Navigate to="/procurement/workflow" replace />} />
+                      <Route path="/client/suppliers" element={<RouteGuard requireUserType="client" requireRoleIn={["Admin","PIC Procurement","PIC Finance","PIC Operational"]} fallbackTo="/login/client"><SupplierDirectory /></RouteGuard>} />
 
                       {/* Supplier routes (mode-aware, avoid redirect loops) */}
                       <Route path="/supplier/admin" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><AdminDashboard /></RouteGuard>} />
-                      <Route path="/admin/invitations" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <AdminInvitations /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
-                      <Route path="/admin/people" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <PeopleDirectory /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
-                      <Route path="/supplier/reporting" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <Reporting /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
+                      <Route path="/admin/invitations" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><AdminInvitations /></RouteGuard>} />
+                      <Route path="/admin/people" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><PeopleDirectory /></RouteGuard>} />
+                      <Route path="/supplier/reporting" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><Reporting /></RouteGuard>} />
                       <Route path="/supplier/email" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
-                      <Route path="/supplier/clients" element={(localStorage.getItem('mpsone_user_type') === 'supplier') ? <ClientDirectory /> : <Navigate to="/procurement/workflow" replace />} />
+                      <Route path="/supplier/clients" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin","PIC Procurement","PIC Finance"]} fallbackTo="/login/supplier"><ClientDirectory /></RouteGuard>} />
                       <Route path="/supplier/enhanced" element={<ClientOnlyProcurement><EnhancedSupplierManagement /></ClientOnlyProcurement>} />
                     <Route path="/procurement/pr" element={<ClientOnlyProcurement><PRList /></ClientOnlyProcurement>} />
                     <Route path="/procurement/pr/new" element={<ClientOnlyProcurement><PRCreate /></ClientOnlyProcurement>} />

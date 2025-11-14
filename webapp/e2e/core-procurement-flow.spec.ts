@@ -29,7 +29,8 @@ test.describe('End-to-end procurement core flow', () => {
 
     // 1) PR List: use demo Approved PR row PR-444 and send to suppliers
     await page.goto('/procurement/pr');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
     const prRow = page.locator('tr').filter({ hasText: 'PR-444' });
     await expect(prRow).toBeVisible();
     // Click "Send PR to suppliers" (enabled only for Approved)
@@ -41,7 +42,8 @@ test.describe('End-to-end procurement core flow', () => {
       localStorage.setItem('mock_pr_rows', JSON.stringify(rows));
     });
     await page.goto('/client/quotes/PR-444');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
     // Approve a quote version for first supplier and generate PO
     const supplierCard = page.locator('.card').filter({ hasText: /Supplier:/ });
     await expect(supplierCard.first()).toBeVisible();
@@ -56,14 +58,16 @@ test.describe('End-to-end procurement core flow', () => {
 
     // 4) Delivery Notes: adjust corrections to unlock invoicing
     await page.goto('/inventory/delivery-notes');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
     // Make large correction to ensure deliveredAmount > existing invoices for PO-9821
     const correctionInputs = page.locator('input[type="number"]').filter({ has: page.locator('[aria-label*="Safety Helmet"]') }).first();
     await correctionInputs.fill('200');
 
     // 5) Supplier Reporting: create invoice with gating validation
     await page.goto('/supplier/reporting');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
     // Find row for PO-9821 and open Create Invoice
     const poRow = page.locator('tr').filter({ hasText: 'PO-9821' });
     await expect(poRow).toBeVisible();

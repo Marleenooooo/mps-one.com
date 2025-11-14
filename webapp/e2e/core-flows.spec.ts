@@ -22,7 +22,6 @@ test.describe('Core workflows render', () => {
     await page.goto('/procurement/pr');
     await page.waitForLoadState('networkidle');
     await expect(page.locator('#main-content')).toBeVisible();
-    await expect(page.locator('.main')).toBeVisible();
   });
 
   test('Quote Comparison renders with approved PR context', async ({ page }) => {
@@ -33,7 +32,8 @@ test.describe('Core workflows render', () => {
       localStorage.setItem('mock_pr_rows', JSON.stringify(rows));
     });
     await page.goto('/client/quotes/PR-999');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
     // Fallback text hint is stable
     await expect(page.getByText('No quotes yet', { exact: false })).toBeVisible();
   });
@@ -46,31 +46,36 @@ test.describe('Core workflows render', () => {
       localStorage.setItem('mpsone_quote_accepted', JSON.stringify({ 'PR-1000': { supplierId: 'SUP-1', version: 1 } }));
     });
     await page.goto('/procurement/po/preview');
+    await page.waitForLoadState('networkidle');
     await expect(page.getByText('PO Preview', { exact: false })).toBeVisible();
   });
 
   test('Document Manager renders when logged in', async ({ page }) => {
     await seedClient(page);
     await page.goto('/docs');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
   });
 
   test('Communication Hub renders when logged in', async ({ page }) => {
     await seedClient(page);
     await page.goto('/comms');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
   });
 
   test('Order Tracker renders', async ({ page }) => {
     await seedSupplier(page);
     await page.goto('/supply/order-tracker');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
   });
 
   test('Delivery Notes renders', async ({ page }) => {
     await seedSupplier(page);
     await page.goto('/inventory/delivery-notes');
-    await expect(page.locator('.main')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#main-content')).toBeVisible();
   });
 });
 
