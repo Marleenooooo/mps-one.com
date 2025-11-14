@@ -39,6 +39,12 @@ function getNavItems(role: Role, userType: UserType) {
       const supplierAdmin = [...supplier];
       supplierAdmin.splice(1, 0, { to: '/admin/invitations', key: 'nav.invitations' });
       supplierAdmin.splice(2, 0, { to: '/admin/people', key: 'nav.people' });
+      supplierAdmin.splice(3, 0, { to: '/admin/approval-workflows', key: 'nav.approval_workflows' });
+      supplierAdmin.splice(4, 0, { to: '/admin/departmental-budgets', key: 'nav.departmental_budgets' });
+      supplierAdmin.splice(5, 0, { to: '/admin/supplier-onboarding', key: 'nav.supplier_onboarding' });
+      supplierAdmin.splice(6, 0, { to: '/admin/contracts', key: 'nav.contracts' });
+      supplierAdmin.splice(7, 0, { to: '/admin/invoice-matching', key: 'nav.invoice_matching' });
+      supplierAdmin.splice(8, 0, { to: '/admin/payments', key: 'nav.payments' });
       return supplierAdmin;
     }
     // Client Admin: full client menu, including onboarding

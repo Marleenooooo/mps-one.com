@@ -146,10 +146,10 @@ Notes
  - Security & Access verified extension (2025-11-12): Backend mode guard enforced on `GET /api/po/summary` and `GET /api/invoice/status` (Client only); Supplier mode returns 403, Client mode returns 200 with DB available.
 
 Phase 8 — Enterprise Parity & Scalability (120–160%)
-- [ ] Multi-level approvals matrix with configurable steps and SLAs
-- [ ] Departmental budgets, threshold routing, and escalations
-- [ ] Contract repository with renewals, clauses, obligations tracking
-- [ ] 3-way/4-way match with invoice OCR and exception workflows
+- [x] Multi-level approvals matrix with configurable steps and SLAs
+- [x] Departmental budgets, threshold routing, and escalations
+- [x] Contract repository with renewals, clauses, obligations tracking
+- [x] 3-way/4-way match with invoice OCR and exception workflows
 - [ ] Payments module: payment runs, scheduling, reconciliation integrations
 - [ ] Supplier onboarding/KYC/compliance workflow with risk scoring
 - [ ] Supplier performance scorecards and corrective action workflows

@@ -1,0 +1,45 @@
+ompact
+
+```
+export interface 
+SupplierOnboardingApplication {
+  id: number;
+  company_id: number;
+  application_number: string;
+  legal_name: string;
+  business_type: 'corporation' | 'llc' | 
+  'partnership' | 'sole_proprietorship' | 
+  'non_profit';
+  overall_status: 'draft' | 'submitted' | 
+  'under_review' | 'approved' | 'rejected' | 
+  'on_hold';
+  risk_score?: number;
+  risk_category?: 'low' | 'medium' | 
+  'high' | 'critical';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupplierKycDocument {
+  id: number;
+  application_id: number;
+  document_type: 
+  'certificate_of_incorporation' | 
+  'tax_certificate' | 'business_license' | 
+  'bank_statement' | 'other';
+  verification_status: 'pending' | 
+  'verified' | 'rejected' | 'expired';
+  created_at: string;
+  updated_at: string;
+}
+Phase 8 — Enterprise Parity & Scalability 
+(120–160%)
+- [x] Multi-level approvals matrix with 
+configurable steps and SLAs
+- [x] Departmental budgets, threshold 
+routing, and escalations
+- [x] Contract repository with renewals, 
+clauses, obligations tracking
+- [x] 3-way/4-way match with invoice OCR and 
+exception workflows
+```

@@ -45,6 +45,12 @@ const AdminInvitations = lazy(() => import('./pages/AdminInvitations'));
 const DeliveryNotes = lazy(() => import('./pages/DeliveryNotes'));
 const PeopleDirectory = lazy(() => import('./pages/admin/PeopleDirectory'));
 const UserProfile = lazy(() => import('./pages/people/UserProfile'));
+const ApprovalWorkflowManager = lazy(() => import('./pages/admin/ApprovalWorkflowManager'));
+const DepartmentalBudgetManager = lazy(() => import('./pages/admin/DepartmentalBudgetManager'));
+const ContractRepository = lazy(() => import('./pages/admin/ContractRepository'));
+const InvoiceMatchingManager = lazy(() => import('./pages/admin/InvoiceMatchingManager'));
+const SupplierOnboardingManager = lazy(() => import('./pages/admin/SupplierOnboardingManager'));
+const PaymentsManager = lazy(() => import('./pages/admin/PaymentsManager'));
 
 function hasApprovedPRForSupplier(): boolean {
   try {
@@ -306,6 +312,12 @@ export default function App() {
                       <Route path="/supplier/admin" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><AdminDashboard /></RouteGuard>} />
                       <Route path="/admin/invitations" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><AdminInvitations /></RouteGuard>} />
                       <Route path="/admin/people" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><PeopleDirectory /></RouteGuard>} />
+                      <Route path="/admin/approval-workflows" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><ApprovalWorkflowManager /></RouteGuard>} />
+                      <Route path="/admin/departmental-budgets" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><DepartmentalBudgetManager /></RouteGuard>} />
+                      <Route path="/admin/supplier-onboarding" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><SupplierOnboardingManager /></RouteGuard>} />
+                      <Route path="/admin/contracts" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><ContractRepository /></RouteGuard>} />
+                      <Route path="/admin/invoice-matching" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><InvoiceMatchingManager /></RouteGuard>} />
+                      <Route path="/admin/payments" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><PaymentsManager /></RouteGuard>} />
                       <Route path="/supplier/reporting" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin"]} fallbackTo="/supplier/clients"><Reporting /></RouteGuard>} />
                       <Route path="/supplier/email" element={<SupplierOnly>{(localStorage.getItem('mpsone_role') === 'Admin') ? <EmailDashboard /> : <Navigate to="/supplier/clients" replace />}</SupplierOnly>} />
                       <Route path="/supplier/clients" element={<RouteGuard requireUserType="supplier" requireRoleIn={["Admin","PIC Procurement","PIC Finance"]} fallbackTo="/login/supplier"><ClientDirectory /></RouteGuard>} />

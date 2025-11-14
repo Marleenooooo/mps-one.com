@@ -19,7 +19,32 @@ export type Action =
   | 'confirm:delivery'
   | 'create:invoice'
   | 'mark:payment'
-  | 'view:audit-logs';
+  | 'view:audit-logs'
+  | 'create:approval-workflow'
+  | 'edit:approval-workflow'
+  | 'toggle:approval-workflow'
+  | 'manage:departments'
+  | 'manage:budgets'
+  | 'manage:budget-categories'
+  | 'manage:budget-thresholds'
+  | 'manage:invoice-matching'
+  | 'process:invoice-matching'
+  | 'resolve:matching-exceptions'
+  | 'manage:contracts'
+  | 'manage:contract-clauses'
+  | 'manage:contract-renewals'
+  | 'manage:payments'
+  | 'create:payment-run'
+  | 'schedule:payment-run'
+  | 'approve:payment-run'
+  | 'execute:payment-run'
+  | 'manage:payment-methods'
+  | 'reconcile:payments'
+  | 'manage:supplier-onboarding'
+  | 'review:onboarding-application'
+  | 'verify:kyc-docs'
+  | 'run:compliance-checks'
+  | 'score:risk';
 
 function getMode(): Mode {
   const v = localStorage.getItem('mpsone_user_type');
@@ -57,6 +82,26 @@ const POLICY: Record<Mode, Partial<Record<Role, Set<Action>>>> = {
       'confirm:delivery',
       'mark:payment',
       'view:audit-logs',
+      'create:approval-workflow',
+      'edit:approval-workflow',
+      'toggle:approval-workflow',
+      'manage:departments',
+      'manage:budgets',
+      'manage:budget-categories',
+      'manage:budget-thresholds',
+      'manage:invoice-matching',
+      'process:invoice-matching',
+      'resolve:matching-exceptions',
+      'manage:contracts',
+      'manage:contract-clauses',
+      'manage:contract-renewals',
+      'manage:payments',
+      'create:payment-run',
+      'schedule:payment-run',
+      'approve:payment-run',
+      'execute:payment-run',
+      'manage:payment-methods',
+      'reconcile:payments',
     ]),
     'Client PIC Operational': new Set<Action>([
       'create:pr',
@@ -75,12 +120,33 @@ const POLICY: Record<Mode, Partial<Record<Role, Set<Action>>>> = {
     'Client PIC Finance': new Set<Action>([
       'mark:payment',
       'view:audit-logs',
+      'reconcile:payments',
     ]),
   },
   Supplier: {
     'Supplier Admin': new Set<Action>([
       'switch:procurement-mode',
       'create:invoice',
+      'view:audit-logs',
+      'create:approval-workflow',
+      'edit:approval-workflow',
+      'toggle:approval-workflow',
+      'manage:departments',
+      'manage:budgets',
+      'manage:budget-categories',
+      'manage:budget-thresholds',
+      'manage:payments',
+      'create:payment-run',
+      'schedule:payment-run',
+      'approve:payment-run',
+      'execute:payment-run',
+      'manage:payment-methods',
+      'reconcile:payments',
+      'manage:supplier-onboarding',
+      'review:onboarding-application',
+      'verify:kyc-docs',
+      'run:compliance-checks',
+      'score:risk',
     ]),
     'Supplier PIC Procurement': new Set<Action>([
       'evaluate:quotes', // quote builder actions
@@ -90,6 +156,7 @@ const POLICY: Record<Mode, Partial<Record<Role, Set<Action>>>> = {
     'Supplier PIC Finance': new Set<Action>([
       'create:invoice',
       'mark:payment',
+      'reconcile:payments',
     ]),
   },
 };

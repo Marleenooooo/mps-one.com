@@ -69,7 +69,7 @@ test.describe('Persona access matrix', () => {
 
     await page.goto('/supplier/reporting');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('.main')).toBeVisible();
+    await expect(page.locator('#main-content')).toBeVisible();
 
     await page.goto('/procurement/pr');
     await page.waitForURL('**/login/client');
@@ -79,7 +79,7 @@ test.describe('Persona access matrix', () => {
     await seed(page, 'supplier', 'PIC Procurement');
     await page.goto('/supplier/clients');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('.main')).toBeVisible();
+    await expect(page.locator('#main-content')).toBeVisible();
 
     await page.goto('/supplier/admin');
     await page.waitForURL('**/supplier/clients');
@@ -92,7 +92,7 @@ test.describe('Persona access matrix', () => {
     await seed(page, 'supplier', 'PIC Finance');
     await page.goto('/supplier/clients');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('.main')).toBeVisible();
+    await expect(page.locator('#main-content')).toBeVisible();
 
     await page.goto('/supplier/admin');
     await page.waitForURL('**/supplier/clients');
