@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.1.45 (2025-11-15) — Admin Modules UI: Navigation & Discoverability
+
+### Highlights
+- Added Supplier Admin pages and improved discoverability for key admin workflows:
+  - Vendor Risk Assessment (`/admin/vendor-risk`)
+  - Budget Forecasting (`/admin/budget-forecasting`)
+  - Contract Negotiation (`/admin/contract-negotiation`)
+  - Supplier Performance Review (`/admin/supplier-performance`)
+  - Payment Reconciliation (`/admin/payment-reconciliation`)
+- Sidebar updated to include the five modules for Supplier Admin.
+- Global QuickSearch updated with grouped `Admin` entries for the five modules.
+- Breadcrumbs wired on all five pages using existing component and i18n keys.
+- EN/ID translations added for all labels.
+
+### Affected Files
+- `webapp/src/components/I18nProvider.tsx`
+- `webapp/src/components/Layout/Sidebar.tsx`
+- `webapp/src/components/Layout/Topbar.tsx`
+- `webapp/src/pages/admin/VendorRiskAssessment.tsx`
+- `webapp/src/pages/admin/BudgetForecasting.tsx`
+- `webapp/src/pages/admin/ContractNegotiation.tsx`
+- `webapp/src/pages/admin/SupplierPerformanceReview.tsx`
+- `webapp/src/pages/admin/PaymentReconciliation.tsx`
+- `webapp/src/App.tsx`
+
+### Verification
+- Built preview with `npm run build -- --base=/`.
+- Served preview at `http://localhost:4173/` via `npm run preview`.
+- Verified routes render without errors and appear in Sidebar/QuickSearch for Supplier Admin.
+
+### Notes
+- RBAC gating: items and routes visible only for `mpsone_user_type='supplier'` and role `Admin`.
+- Roadmap updated (Phase 8: Admin modules UI completion).
+- Subroadmap added section for Admin Modules — Discoverability & Breadcrumbs.
+
 ## v0.1.44 (2025-11-15) — Bridge Analytics Integration
 
 ### Highlights

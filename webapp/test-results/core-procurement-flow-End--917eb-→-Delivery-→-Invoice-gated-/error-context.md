@@ -1,6 +1,132 @@
 # Page snapshot
 
 ```yaml
-- link "Skip to content" [ref=e2] [cursor=pointer]:
-  - /url: "#app-root"
+- generic [ref=e2]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - paragraph [ref=e10]:
+        - strong [ref=e12]: Diskon besar untuk semua produk kami bagi proyek area murung raya kal-teng!
+      - generic [ref=e15]:
+        - link [ref=e16] [cursor=pointer]:
+          - /url: /
+          - img [ref=e18]:
+            - generic [ref=e19]: mps-one
+        - navigation [ref=e20]:
+          - list [ref=e21]:
+            - listitem [ref=e22]:
+              - link "Beranda" [ref=e25] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e26]:
+              - link "Belanja" [ref=e29] [cursor=pointer]:
+                - /url: /belanja
+            - listitem [ref=e30]:
+              - link "Tentang" [ref=e33] [cursor=pointer]:
+                - /url: /tentang
+            - listitem [ref=e34]:
+              - link "Kontak" [ref=e37] [cursor=pointer]:
+                - /url: /kontak
+        - button "Go to cart" [ref=e40] [cursor=pointer]:
+          - img [ref=e43]
+    - generic [ref=e45]:
+      - generic [ref=e47]:
+        - heading "Belanja Online Kebutuhan Proyek Anda Semudah ini." [level=1] [ref=e50]
+        - paragraph [ref=e53]: Temukan Produk Terbaik
+        - link "Jelajahi" [ref=e55] [cursor=pointer]:
+          - /url: /belanja
+        - link "Beli" [ref=e57] [cursor=pointer]:
+          - /url: https://mediumseagreen-jay-409729.hostingersite.com/login
+        - heading "Invoice n-30" [level=1] [ref=e63]
+      - generic [ref=e65]:
+        - heading "Kategori Produk Terbaik" [level=4] [ref=e68]
+        - paragraph [ref=e71]: Temukan Pilihan Anda
+        - generic [ref=e73] [cursor=pointer]: Jelajahi
+        - paragraph [ref=e82]: Belanja Dengan Mudah
+        - heading "Pengalaman Berbelanja Menarik" [level=4] [ref=e85]
+        - link "Lihat" [ref=e87] [cursor=pointer]:
+          - /url: https://mediumseagreen-jay-409729.hostingersite.com/login
+      - generic [ref=e94]:
+        - generic [ref=e97]:
+          - text: "Urutkan dari:"
+          - combobox "Urutkan dari:" [ref=e99] [cursor=pointer]:
+            - option "Default" [selected]
+            - option "Harga rendah ke tinggi"
+            - option "Harga tinggi ke rendah"
+            - option "Produk terbaru"
+        - generic [ref=e100]:
+          - link "kondisi baru Toyota Hilux Toyota Hilux Rp23000000.00 Rp22000000.00" [ref=e101] [cursor=pointer]:
+            - /url: https://mps-one.com/toyota-hilux
+            - generic [ref=e103]:
+              - paragraph [ref=e105]: kondisi baru
+              - img "Toyota Hilux" [ref=e107]
+              - generic [ref=e108]:
+                - heading "Toyota Hilux" [level=6] [ref=e109]
+                - generic [ref=e110]:
+                  - paragraph [ref=e111]: Rp23000000.00
+                  - paragraph [ref=e112]: Rp22000000.00
+          - link "Rakitan terintegrasi WTP (Mesin Pengolahan air kotor ke iar minum, semi automatic) WTP (Mesin Pengolahan air kotor ke iar minum, semi automatic) Rp150000000.00 Rp147000000.00" [ref=e113] [cursor=pointer]:
+            - /url: https://mps-one.com/produk-terbaik-untuk-anda
+            - generic [ref=e115]:
+              - paragraph [ref=e117]: Rakitan terintegrasi
+              - img "WTP (Mesin Pengolahan air kotor ke iar minum, semi automatic)" [ref=e119]
+              - generic [ref=e120]:
+                - heading "WTP (Mesin Pengolahan air kotor ke iar minum, semi automatic)" [level=6] [ref=e121]
+                - generic [ref=e122]:
+                  - paragraph [ref=e123]: Rp150000000.00
+                  - paragraph [ref=e124]: Rp147000000.00
+          - link "kondisi baru Excavator CAT-320 Excavator CAT-320 Rp600000.00 Rp500000.00" [ref=e125] [cursor=pointer]:
+            - /url: https://mps-one.com/produk-terbaik-untuk-anda-1
+            - generic [ref=e127]:
+              - paragraph [ref=e129]: kondisi baru
+              - img "Excavator CAT-320" [ref=e131]
+              - generic [ref=e132]:
+                - heading "Excavator CAT-320" [level=6] [ref=e133]
+                - generic [ref=e134]:
+                  - paragraph [ref=e135]: Rp600000.00
+                  - paragraph [ref=e136]: Rp500000.00
+      - generic [ref=e139]:
+        - paragraph [ref=e142]: MPS-One memberikan pengalaman berbelanja yang menyenangkan dengan antarmuka yang menarik. Produk berkualitas dan layanan pelanggan yang responsif membuat saya kembali lagi.
+        - paragraph [ref=e145]: Rina S.
+        - generic "The image features an open laptop displaying an online shopping website. The screen shows various t-shirts with artistic designs, priced in euros. The setting appears to be in a cafe or a relaxed workspace, with blurred figures and warm lighting in the background." [ref=e148]:
+          - img "The image features an open laptop displaying an online shopping website. The screen shows various t-shirts with artistic designs, priced in euros. The setting appears to be in a cafe or a relaxed workspace, with blurred figures and warm lighting in the background." [ref=e149]
+        - paragraph [ref=e152]: ★★★★★
+      - generic [ref=e155]:
+        - heading "Belanja" [level=5] [ref=e158]
+        - generic [ref=e160]:
+          - link "Go to Facebook page" [ref=e161] [cursor=pointer]:
+            - /url: https://www.facebook.com/
+            - img [ref=e162]
+          - link "Go to Instagram page" [ref=e164] [cursor=pointer]:
+            - /url: https://www.instagram.com/
+            - img [ref=e165]
+          - link "Go to Tiktok page" [ref=e167] [cursor=pointer]:
+            - /url: https://tiktok.com/
+            - img [ref=e168]
+        - paragraph [ref=e172]: Temukan produk terbaik dengan harga terjangkau.
+        - paragraph [ref=e175]:
+          - strong [ref=e177]: Dukungan
+        - paragraph [ref=e180]:
+          - strong [ref=e182]: Tentang
+        - paragraph [ref=e185]: marketing@mitrapowerservice.com
+        - generic [ref=e188]:
+          - generic [ref=e189]:
+            - text: Masukkan alamat email Anda*
+            - textbox "Masukkan alamat email Anda*" [ref=e190]:
+              - /placeholder: "Contoh: email@domain.com"
+          - generic [ref=e191]:
+            - text: Paragraf
+            - textbox "Paragraf" [ref=e192]:
+              - /placeholder: Masukkan pesan Anda
+          - generic [ref=e193]:
+            - text: Saya adalah:*
+            - generic [ref=e195] [cursor=pointer]:
+              - checkbox "Konsumen" [ref=e196]
+              - text: Konsumen
+            - generic [ref=e198] [cursor=pointer]:
+              - checkbox "Suplier" [ref=e199]
+              - text: Suplier
+          - button "Kirim Formulir Ini" [ref=e200] [cursor=pointer]
+        - paragraph [ref=e203]: © 2023. All rights reserved. Powered by MPS
+  - link "Open WhatsApp" [ref=e204] [cursor=pointer]:
+    - /url: "https://wa.me/6281352006569?text=Saya%20butuh%20penawaran%20anda%20dalam%20hal%20/%20item%20:"
+    - img [ref=e205]
 ```

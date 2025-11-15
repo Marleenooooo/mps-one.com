@@ -10,6 +10,12 @@ Legend
 - [~] In progress
 - [ ] Planned
 
+## Execution Order (Single Source of Truth)
+- Execute strictly in numeric phase order, looping PICK → PLAN → EXECUTE → NEXT per SOP.
+- Prioritize `mpsone` (procurement) as the mainline; `mpsbook` (social) follows with lightweight parity steps.
+- Bridge integration tasks are attached to the phase that benefits `mpsone` performance, reliability, or UX.
+- Acceptance for a phase requires: routes compile, preview shows no errors, core e2e tests pass, docs updated.
+
 ## Pillars & Bridge
 - Two pillars:
   - `mpsbook` — social network/media for business people and entrepreneurs (separate codebase & roadmap).
@@ -73,7 +79,7 @@ Legend
 
  
 
-## Phase 7 — Pillar Separation & Security Details
+### Pillar Separation & Security Details
   Core Rule Enforcement — Pillar Separation (Procurement now; Social deferred)
  - [~] Enforce zero data/navigation/UI bleed between pillars; handoff is explicit from People Directory (/admin/people) or Client/Supplier Directory pages (/client/suppliers, /supplier/clients) once Social routes exist.
   - [x] Pillar namespacing: Procurement under `/procurement/*`; Social routes deferred (planned: `/feed`, `/post/:id`, `/company/:id`, `/messages`).
@@ -159,6 +165,7 @@ Notes
 - [x] Payments module: payment runs, scheduling, reconciliation integrations
 - [x] Supplier onboarding/KYC/compliance workflow with risk scoring
 - [x] Supplier performance scorecards and corrective action workflows
+- [x] Admin modules UI: Vendor Risk, Budget Forecasting, Contract Negotiation, Supplier Performance, Payment Reconciliation (routes, sidebar, QuickSearch, breadcrumbs, i18n)
 - [x] ERP connectors (SAP/Oracle/Netsuite/Dynamics) and webhook framework
 - [x] Document management integrations (SharePoint/Box/S3 with lifecycle rules)
 - [x] Real-time updates via WebSocket/SSE for orders, invoices, messages
@@ -189,7 +196,7 @@ Notes
 - [ ] Fraud & Anomaly Detection: invoice/PO checks with explainable alerts.
 - [ ] No‑Code Automations: rules/triggers to auto‑route approvals and notifications.
 
-### Acceptance Criteria
+### Phase Acceptance Criteria (Applies to all phases)
 - Universal Quick Actions: PR draft created under 5s from source with ≥90% field accuracy.
 - Smart Auto‑Fill: vendor tax/address prefill coverage ≥85% with manual overrides.
 - Favorites: saved views open in ≤1s; one‑click access from Topbar.
@@ -202,3 +209,10 @@ Notes
 - Contract Intelligence: clauses extracted with ≥90% accuracy; renewal reminders scheduled.
 - Fraud Detection: anomaly alerts explainable; false positive rate below 5%.
 - No‑Code Automations: rules execute reliably with audit entries; rollback available.
+
+## mpsbook Sequential Roadmap (Lightweight Parity)
+- Phase A — Foundations: Theme, routing skeleton, basic pages (Feed, Messages placeholder).
+- Phase B — Profiles & Social Graph: People lists, follow/block, invites; doc viewer parity.
+- Phase C — Bridge Hooks: Shared analytics events, permissions matrix alignment.
+- Phase D — Performance: Lazy routes, virtualization for lists, bundle analysis.
+- Phase E — Release Prep: Docs polish, preview verification, error monitoring hooks.

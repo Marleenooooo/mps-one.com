@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 // Seed helpers
-async function seedClient(page) {
+async function seedClient(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem('mpsone_user_type', 'client');
     localStorage.setItem('mpsone_role', 'Admin');
@@ -10,7 +10,7 @@ async function seedClient(page) {
   });
 }
 
-async function seedSuppliers(page) {
+async function seedSuppliers(page: Page) {
   await page.addInitScript(() => {
     const suppliers = [
       { id: 'MBERKAH@', name: 'MBERKAH', code: 'MBERKAH@', status: 'pending' },
@@ -88,4 +88,3 @@ test.describe('End-to-end procurement core flow', () => {
     await expect(page.getByText(/INV-/)).toBeVisible();
   });
 });
-

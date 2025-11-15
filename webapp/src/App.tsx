@@ -283,7 +283,7 @@ export default function App() {
             <a href="#main-content" className="skip-link" aria-label="Skip to main content">Skip to content</a>
             <div className={sidebarVisible ? "layout" : "layout no-sidebar"}>
               {sidebarVisible && <Sidebar />}
-              <div className="content" id="main-content">
+              <main className="content" id="main-content" role="main">
                 <Topbar>
                   <button
                     className="btn ghost tooltip"
@@ -373,7 +373,7 @@ export default function App() {
                       <Route path="/onboarding" element={<Navigate to="/client/onboarding" replace />} />
                     </Routes>
                   </Suspense>
-                </div>
+                </main>
               </div>
             </ErrorBoundary>
           </PillarProvider>

@@ -1,14 +1,14 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 // Helper to seed localStorage prior to navigation
-async function seedClient(page) {
+async function seedClient(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem('mpsone_user_type', 'client');
     localStorage.setItem('mpsone_role', 'Admin');
   });
 }
 
-async function seedSupplier(page) {
+async function seedSupplier(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem('mpsone_user_type', 'supplier');
     localStorage.setItem('mpsone_role', 'Admin');
@@ -20,9 +20,9 @@ test.describe('Core workflows render', () => {
   test('PR List renders for client', async ({ page }) => {
     await seedClient(page);
     await page.goto('/procurement/pr');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('#main-content')).toBeVisible();
-    await expect(page.locator('#main-content')).toBeVisible();
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('#app-root')).toBeVisible();
+    await expect(page.locator('#app-root')).toBeVisible();
   });
 
   test('Quote Comparison renders with approved PR context', async ({ page }) => {
@@ -52,25 +52,25 @@ test.describe('Core workflows render', () => {
   test('Document Manager renders when logged in', async ({ page }) => {
     await seedClient(page);
     await page.goto('/docs');
-    await expect(page.locator('#main-content')).toBeVisible();
+    await expect(page.locator('#app-root')).toBeVisible();
   });
 
   test('Communication Hub renders when logged in', async ({ page }) => {
     await seedClient(page);
     await page.goto('/comms');
-    await expect(page.locator('#main-content')).toBeVisible();
+    await expect(page.locator('#app-root')).toBeVisible();
   });
 
   test('Order Tracker renders', async ({ page }) => {
     await seedSupplier(page);
     await page.goto('/supply/order-tracker');
-    await expect(page.locator('#main-content')).toBeVisible();
+    await expect(page.locator('#app-root')).toBeVisible();
   });
 
   test('Delivery Notes renders', async ({ page }) => {
     await seedSupplier(page);
     await page.goto('/inventory/delivery-notes');
-    await expect(page.locator('#main-content')).toBeVisible();
+    await expect(page.locator('#app-root')).toBeVisible();
   });
 });
 

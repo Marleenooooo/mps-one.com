@@ -867,3 +867,63 @@ Tasks
 Notes
 - No DB schema changes in this stabilization pass.
 - Verified `npx tsc --noEmit` succeeds; pages render without type errors.
+
+---
+
+# Subroadmap — Phase 8: Admin Modules — Discoverability & Breadcrumbs
+
+Item: Add Supplier Admin pages and improve discoverability (Vendor Risk, Budget Forecasting, Contract Negotiation, Supplier Performance, Payment Reconciliation)
+Status: Completed
+
+Acceptance Criteria
+- Routes exist for all five modules under `/admin/*` and are protected by Supplier Admin guard.
+- Sidebar shows links for all five modules for Supplier Admin.
+- Global QuickSearch includes entries grouped under `Admin` for all five modules.
+- Breadcrumbs added to each page using existing component and i18n keys.
+- EN/ID localization keys present and used across labels and breadcrumbs.
+- Build and preview succeed without console or terminal errors.
+
+Plan & Alignment
+- Define i18n keys in `I18nProvider.tsx` for page labels.
+- Add sidebar entries in `components/Layout/Sidebar.tsx` under Supplier Admin menu.
+- Add QuickSearch items in `components/Layout/Topbar.tsx` with `group: 'Admin'`.
+- Ensure `App.tsx` routes wrap each page with `RouteGuard` for Supplier Admin.
+- Verify pages render and breadcrumbs show correct path.
+
+Tasks
+- [x] Add EN/ID keys: `nav.vendor_risk`, `nav.budget_forecasting`, `nav.contract_negotiation`, `nav.supplier_performance`, `nav.payment_reconciliation`.
+- [x] Insert Supplier Admin sidebar links for five modules.
+- [x] Add QuickSearch items grouped under `Admin` for five modules.
+- [x] Ensure routes exist and are guarded in `App.tsx`.
+- [x] Add breadcrumbs to each new page.
+- [x] Build and preview to validate.
+
+References
+- `webapp/src/components/I18nProvider.tsx`
+- `webapp/src/components/Layout/Sidebar.tsx:49`–`53`
+- `webapp/src/components/Layout/Topbar.tsx:300`–`312`
+- `webapp/src/App.tsx:336`–`340`
+
+Notes
+- Role-based visibility maintained; Supplier Admin only.
+- QuickSearch grouping improves discoverability for admin workflows.
+# Subroadmap — Active Item
+
+Item: To be populated after next PICK from `roadmap.md`
+Status: Pending
+
+Acceptance Criteria
+- Define measurable outcomes for the picked item (UI, routes, guards, performance).
+- Verify via build/preview/tests and update docs.
+
+Plan & Alignment
+- Scope impacted files and any FE↔DB changes.
+- Keep changes minimal, consistent, and performance-first.
+
+Tasks
+- [ ] Implement
+- [ ] Verify (preview/tests)
+- [ ] Document (`CHANGELOG.md`, relevant docs)
+
+Notes
+- This file tracks only the current item. Reset after completion per SOP.
