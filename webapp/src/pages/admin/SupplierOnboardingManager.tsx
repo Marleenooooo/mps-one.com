@@ -5,6 +5,7 @@ import { StatisticsCard } from '../../components/StatisticsCard';
 import { DataTable, Column } from '../../components/DataTable';
 import { Badge } from '../../components/UI/badge';
 import { Button } from '../../components/UI/button';
+import type { VendorTrustSignal } from '../../../../thebridge/contracts/trustGraph';
 
 type ApplicationStatus = 'pending' | 'approved' | 'rejected' | 'in_review';
 interface SupplierApplication {
@@ -37,6 +38,7 @@ export default function SupplierOnboardingManager() {
   const [applications, setApplications] = useState<SupplierApplication[]>([]);
   const [kycDocs, setKycDocs] = useState<KYCDocument[]>([]);
   const [checks, setChecks] = useState<ComplianceCheck[]>([]);
+  const [trust, setTrust] = useState<VendorTrustSignal[]>([]);
 
   useEffect(() => {
     // Minimal mock data to make the page functional
@@ -51,6 +53,10 @@ export default function SupplierOnboardingManager() {
     setChecks([
       { id: 21, supplier_id: 1, check_type: 'Sanctions', status: 'pending', created_at: new Date().toISOString() },
       { id: 22, supplier_id: 2, check_type: 'Watchlist', status: 'passed', created_at: new Date().toISOString() },
+    ]);
+    setTrust([
+      { vendorId: 'PT Nusantara Abadi', score: 82, badges: [{ key: 'kyc_verified', label: 'KYC' }] },
+      { vendorId: 'CV Sumber Rejeki', score: 91, badges: [{ key: 'kyc_verified', label: 'KYC' }, { key: 'on_time', label: 'On‑time' }] },
     ]);
   }, []);
 
@@ -69,6 +75,11 @@ export default function SupplierOnboardingManager() {
 
   const applicationCols: Column<SupplierApplication>[] = [
     { key: 'supplier_name', header: t('suppliers_manager') || 'Supplier' },
+    { key: 'id' as keyof SupplierApplication, header: t('supplierOnboarding.risk_score') || 'Trust', render: (_v, row) => {
+      const s = trust.find(x => x.vendorId === row.supplier_name)?.score ?? 0;
+      const v = s >= 85 ? 'success' : s >= 70 ? 'info' : s >= 50 ? 'warning' : 'danger';
+      return <Badge variant={v}>{s}</Badge>;
+    } },
     { key: 'status', header: t('supplierOnboarding.status') || 'Status', render: (_v, row) => statusBadge(row.status) },
     { key: 'submitted_at', header: t('admin.realtime.timestamp') || 'Submitted', render: (v) => new Date(v).toLocaleString() },
     { key: 'id', header: t('common.actions') || 'Actions', render: (_v, row) => (
@@ -116,4 +127,3 @@ export default function SupplierOnboardingManager() {
     </div>
   );
 }
-

@@ -383,6 +383,27 @@ function QuickSearch() {
         }
       };
     }
+    const qa = s.match(/^(create\s+pr\s+from)\s+(email|excel|chat)$/i);
+    if (qa) {
+      const src = qa[2].toLowerCase();
+      return {
+        label: `${language === 'id' ? 'Buat PR dari' : 'Create PR from'} ${src}`,
+        path: '/procurement/pr/new',
+        icon: 'zap',
+        keywords: ['create','pr','from',src],
+        kind: 'action',
+        group: 'Quick Actions',
+        execute: () => {
+          try {
+            const DRAFT_KEY = 'mpsone_pr_draft';
+            const persisted = localStorage.getItem(DRAFT_KEY);
+            const base = persisted ? JSON.parse(persisted) : {};
+            const next = { ...base, source: src, title: base.title || '', neededBy: base.neededBy || new Date().toISOString().slice(0,10), items: base.items || [] };
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(next));
+          } catch {}
+        }
+      };
+    }
     // Navigation actions (EN + ID)
     const nav = s.match(/^(open|go|buka|ke)\s+(reporting|reports|pelaporan|laporan|docs|documents|dokumen|help|bantuan|email|comms|komunikasi|communication|order\s*tracker|pelacakan\s*pesanan|tracker|procurement|purchase\s*requests|permintaan\s*pembelian|pr|quote\s*builder|penyusun\s*penawaran)$/i);
     if (nav) {

@@ -2,13 +2,21 @@ Roadmap — From 0% to 100%
 
 Goal
 - Deliver a joyful, professional experience that connects companies/people and drives transactions through procurement.
+- Be reliable, easy to use, and a one‑stop solution for any procurement scenario.
+- Offer differentiators uncommon in procurement apps: AI copilot, scenario planner, conversational workflows, vendor trust graph.
 
 Legend
 - [x] Completed
 - [~] In progress
 - [ ] Planned
 
-Phase 0 — Foundations (0–10%)
+## Pillars & Bridge
+- Two pillars:
+  - `mpsbook` — social network/media for business people and entrepreneurs (separate codebase & roadmap).
+  - `mpsone` — procurement application (core product).
+- `thebridge` — shared integration layer (contracts, SDKs, events, auth helpers) connecting pillars without business‑logic coupling.
+
+## Phase 0 — Foundations (0–10%)
 - [x] Establish Neon Corporate theme across core components (buttons, headers, badges).
 - [x] Add i18n keys for navigation and Comms banner (`nav.people`, `nav.invitations`, `nav.comms`, `comms.blocked_banner`).
 - [x] Align People Directory and User Profile action buttons to neon palette.
@@ -16,40 +24,40 @@ Phase 0 — Foundations (0–10%)
 - [x] Centralize development SOP and theme in `.trae/rules/project_rules.md`.
 - [x] Slim README to product vision (two pillars).
 
-Phase 1 — Procurement Essentials (10–35%)
+## Phase 1 — Procurement Essentials (10–35%)
 - [x] Client: `PRCreate` with autosave and attachments; `PRList` base listing.
 - [x] Enforce PR approval gating in UI and route guards.
 - [x] Quote approval and PO generation actions with audit trail entries.
  - [x] Delivery Notes UI for multi‑delivery and corrections; compute available‑to‑invoice.
  - [x] Invoicing UI linked to Delivery Notes; prevent over‑invoice; payment status logic.
 
-Phase 2 — Social Graph MVP (35–55%)
+## Phase 2 — Social Graph MVP (35–55%)
 - [x] People Directory (`/admin/people`) with follow/block/invite actions.
 - [x] User Profile (`/people/:id`) with follower/following lists.
 - [x] Communication Hub (blocked banner and muted inputs on block).
 - [x] Backend API contract implemented for users/relationships/blocks/invites.
 - [x] DB migrations applied to real DB; phpMyAdmin verified.
 
-Phase 3 — Backend & Data Integrity (55–75%)
+## Phase 3 — Backend & Data Integrity (55–75%)
 - [x] Auth, RBAC, and audit trail services.
 - [x] Server‑side pagination/filters/export for tables.
 - [x] Secure document storage and AV scanning.
 
-Phase 4 — Integrations (75–85%)
+## Phase 4 — Integrations (75–85%)
 - [x] Email sync (IMAP/SMTP OAuth) and courier webhooks for delivery tracking.
 - [x] FX rates and tax utilities finalized; cache and daily locking.
  - [x] Communication Hub composer (/comms): To/Cc/Bcc, Subject persistence, toolbar, mentions, drag‑drop, shortcuts.
 
-Phase 5 — Performance & Accessibility (85–95%)
+## Phase 5 — Performance & Accessibility (85–95%)
 - [x] Virtualize long lists; code splitting and lazy load heavy routes.
 - [x] WCAG AA audit; focus management, ARIA detail, keyboard shortcuts.
 
-Phase 6 — Release & Scale (95–100%)
+## Phase 6 — Release & Scale (95–100%)
 - [x] Deployment hardening; staging checks; rollback playbooks.
 - [x] Product analytics, error monitoring, and tracing.
 - [x] Documentation polish and onboarding improvements.
 
-Phase 7 — Post-Release Polishing (100–120%)
+## Phase 7 — Post-Release Polishing (100–120%)
 - [x] i18n consistency cleanup and translations QA (remove duplicates; EN/ID parity).
  - [x] Theme & accessibility refinements per Neon VNS (contrast, focus, hover/active states).
  - [x] Communications: attachments persistence and upload service; rich editor serialization; labels/archiving.
@@ -65,7 +73,7 @@ Phase 7 — Post-Release Polishing (100–120%)
 
  
 
-Phase 7 — Pillar Separation & Security Details
+## Phase 7 — Pillar Separation & Security Details
   Core Rule Enforcement — Pillar Separation (Procurement now; Social deferred)
  - [~] Enforce zero data/navigation/UI bleed between pillars; handoff is explicit from People Directory (/admin/people) or Client/Supplier Directory pages (/client/suppliers, /supplier/clients) once Social routes exist.
   - [x] Pillar namespacing: Procurement under `/procurement/*`; Social routes deferred (planned: `/feed`, `/post/:id`, `/company/:id`, `/messages`).
@@ -88,9 +96,6 @@ Phase 7 — Pillar Separation & Security Details
 
   Security, Audit, User Flows, Permission Matrix & Accessibility (Target: 90–95%)
   A. Performance Optimization
-  - [ ] Virtualize long lists (tanstack-virtual / react-window)
-  - [x] Code splitting + React.lazy/Suspense + dynamic imports for heavy chunks/libraries
-  - [x] Virtualize long lists (PR List, People Directory, Documents)
   - [x] Image optimization (WebP/AVIF, srcset/sizes, native lazy loading)
   - [x] Bundle analysis + tree-shaking (visualizer integrated; report generated and verified)
   - [x] Proper caching (immutable assets, stale-while-revalidate for API where applicable)
@@ -146,7 +151,7 @@ Notes
   - Security & Access verified (2025-11-12): Frontend route guards standardized (`RouteGuard`); backend mode guard enforced on `/api/pr*` (Client only) and `/api/docs/upload` (Client/Supplier); previews validated without errors.
  - Security & Access verified extension (2025-11-12): Backend mode guard enforced on `GET /api/po/summary` and `GET /api/invoice/status` (Client only); Supplier mode returns 403, Client mode returns 200 with DB available.
 
-Phase 8 — Enterprise Parity & Scalability (120–160%)
+## Phase 8 — Enterprise Parity & Scalability (120–160%)
 - [x] Multi-level approvals matrix with configurable steps and SLAs
 - [x] Departmental budgets, threshold routing, and escalations
 - [x] Contract repository with renewals, clauses, obligations tracking
@@ -169,3 +174,31 @@ Phase 8 — Enterprise Parity & Scalability (120–160%)
 - [ ] Feature flags and environment-based configuration management
 - [ ] Performance: granular code splitting, SSR/edge, CDN strategy
 - [ ] Client/server caching strategy (immutable assets, SWR, stale-while-revalidate)
+
+## Phase 9 — User Convenience & Differentiators (160–180%)
+- [ ] Universal Quick Actions: one‑click PR creation from email/Excel/chat; auto‑parse attachments.
+- [ ] Smart Templates & Auto‑Fill: vendor‑aware forms; tax/address autofill; dynamic fields.
+- [ ] Saved Views & Favorites: pin dashboards, filters, and exports for fast repeat use.
+- [ ] Conversational Procurement: chat‑based PR/quote flows for non‑experts.
+- [ ] AI Procurement Copilot: draft PRs, compare quotes, flag anomalies, suggest negotiation tactics.
+- [ ] Scenario Planner: budget/lead‑time/risk “what‑if” simulations with recommended actions.
+- [ ] Vendor Trust Graph: reputation scores, compliance badges, social proof across companies.
+- [ ] Marketplace RFQ Broadcast: cross‑company discovery and instant supplier outreach.
+- [ ] Real‑time Co‑Editing: presence and collaborative edits on PRs/quotes with conflict safety.
+- [ ] Contract Intelligence: clause extraction, renewal forecasting, obligations reminders.
+- [ ] Fraud & Anomaly Detection: invoice/PO checks with explainable alerts.
+- [ ] No‑Code Automations: rules/triggers to auto‑route approvals and notifications.
+
+### Acceptance Criteria
+- Universal Quick Actions: PR draft created under 5s from source with ≥90% field accuracy.
+- Smart Auto‑Fill: vendor tax/address prefill coverage ≥85% with manual overrides.
+- Favorites: saved views open in ≤1s; one‑click access from Topbar.
+- Conversational Flows: complete PR/quote without leaving chat; latency ≤1s per step.
+- AI Copilot: PR draft quality ≥90% matching historical templates; explainable suggestions.
+- Scenario Planner: outputs ≥3 actionable recommendations per simulation.
+- Trust Graph: trust score computed and visible in onboarding and supplier lists; updated weekly.
+- RFQ Broadcast: selected suppliers notified instantly; response aggregation visible within the app.
+- Co‑Editing: concurrent edits preserved; conflict resolution prompts within 1s.
+- Contract Intelligence: clauses extracted with ≥90% accuracy; renewal reminders scheduled.
+- Fraud Detection: anomaly alerts explainable; false positive rate below 5%.
+- No‑Code Automations: rules execute reliably with audit entries; rollback available.

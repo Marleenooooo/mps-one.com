@@ -1,0 +1,9 @@
+{
+  "name": "mpsbook",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p ."
+  }
+}
