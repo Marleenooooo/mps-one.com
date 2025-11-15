@@ -37,6 +37,7 @@ import { Partnerships } from './pages/Partnerships';
 import { Leads } from './pages/Leads';
 import { RFQBroadcast } from './pages/RFQBroadcast';
 import { BusinessInquiry } from './pages/BusinessInquiry';
+import { CompareQuotes } from './pages/CompareQuotes';
 
 function Topbar() {
   return (
@@ -68,6 +69,7 @@ function Topbar() {
         <Link className="btn" to="/opportunities">Opportunities</Link>
         <Link className="btn" to="/dealrooms">Deal Rooms</Link>
         <Link className="btn" to="/offers">Offers</Link>
+        <Link className="btn" to="/compare">Compare</Link>
       </div>
     </div>
   );
@@ -110,6 +112,7 @@ export default function App() {
           <Route path="/opportunities" element={<Opportunities />} />
           <Route path="/dealrooms" element={<DealRooms />} />
           <Route path="/offers" element={<Offers />} />
+          <Route path="/compare" element={<CompareQuotes />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/partnerships" element={<Partnerships />} />
           <Route path="/leads" element={<Leads />} />
