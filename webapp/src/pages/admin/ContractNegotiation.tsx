@@ -1,8 +1,12 @@
 import React from 'react';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 
 export default function ContractNegotiation() {
   return (
     <div className="main" data-module="procurement">
+      <div style={{ padding: 8 }}>
+        <Breadcrumbs items={["nav.admin_dashboard","nav.contract_negotiation"]} />
+      </div>
       <div className="page-header procurement">
         <h1 style={{ margin: 0 }}>Contract Negotiation</h1>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -17,4 +21,3 @@ export default function ContractNegotiation() {
     </div>
   );
 }
-

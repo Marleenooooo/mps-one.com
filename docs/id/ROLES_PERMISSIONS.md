@@ -16,6 +16,13 @@ Peran: `Admin`, `PIC Operational`, `PIC Procurement`, `PIC Finance`.
 - Pertahankan audit trail untuk tiap transisi: aktor, timestamp, komentar.
 - Terapkan approval gating di UI/API: hanya PR yang disetujui terlihat oleh pemasok dan dapat dikonversi ke quote.
 
+### Modul Admin (mode Pemasok, wajib Admin)
+- `/admin/vendor-risk` — Penilaian Risiko Vendor
+- `/admin/budget-forecasting` — Peramalan Anggaran
+- `/admin/contract-negotiation` — Negosiasi Kontrak
+- `/admin/supplier-performance` — Tinjauan Performa Pemasok
+- `/admin/payment-reconciliation` — Rekonsiliasi Pembayaran
+
 ## Kebijakan Penyelarasan Alur Kerja
 - Front-end menegakkan akses berbasis peran sesuai siklus pengadaan.
 - Admin: konfigurasi korporat (Corporate Onboarding), undangan, menerbitkan PO dari quote yang diterima.

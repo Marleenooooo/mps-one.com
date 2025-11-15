@@ -280,6 +280,7 @@ function QuickSearch() {
     const docUserGuide = language === 'id' ? 'docs/id/USER_GUIDE.md' : 'docs/USER_GUIDE.md';
     const docWorkflows = language === 'id' ? 'docs/id/WORKFLOWS.md' : 'docs/WORKFLOWS.md';
     const userType = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_user_type') : null);
+    const role = (typeof localStorage !== 'undefined' ? localStorage.getItem('mpsone_role') : null);
     const canBuildQuote = (() => {
       try {
         if (userType !== 'supplier') return false;
@@ -303,7 +304,14 @@ function QuickSearch() {
     // Supplier-only items
     if (userType === 'supplier') {
       base.push({ label: t('nav.quote_builder') || 'Quote Builder', path: '/procurement/quote-builder', icon: 'message-square', keywords: ['quote', 'penawaran', 'builder'], kind: 'link' as const, disabled: (userType === 'supplier' && !canBuildQuote), tooltip: (userType === 'supplier' && !canBuildQuote) ? (t('gating.quote_builder_disabled') || 'Approve PRs and send to suppliers to build quotes') : undefined });
-      base.push({ label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: 'bar-chart-2', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' as const });
+      base.push({ label: t('nav.reporting') || 'Reporting', path: '/supplier/reporting', icon: 'bar-chart-2', keywords: ['reporting', 'finance', 'invoice', 'analytics'], kind: 'link' as const, group: 'Admin' });
+      if (role === 'Admin') {
+        base.push({ label: t('nav.vendor_risk') || 'Vendor Risk Assessment', path: '/admin/vendor-risk', icon: 'help-circle', keywords: ['risk','vendor','compliance'], kind: 'link' as const, group: 'Admin' });
+        base.push({ label: t('nav.budget_forecasting') || 'Budget Forecasting', path: '/admin/budget-forecasting', icon: 'dollar-sign', keywords: ['budget','forecast'], kind: 'link' as const, group: 'Admin' });
+        base.push({ label: t('nav.contract_negotiation') || 'Contract Negotiation', path: '/admin/contract-negotiation', icon: 'file-text', keywords: ['contract','negotiation'], kind: 'link' as const, group: 'Admin' });
+        base.push({ label: t('nav.supplier_performance') || 'Supplier Performance Review', path: '/admin/supplier-performance', icon: 'trending-up', keywords: ['supplier','performance','scorecard'], kind: 'link' as const, group: 'Admin' });
+        base.push({ label: t('nav.payment_reconciliation') || 'Payment Reconciliation', path: '/admin/payment-reconciliation', icon: 'dollar-sign', keywords: ['payment','reconciliation'], kind: 'link' as const, group: 'Admin' });
+      }
     }
     // Shared items
     base.push({ label: t('nav.order_tracker') || 'Order Tracker', path: '/supply/order-tracker', icon: 'truck', keywords: ['delivery', 'tracking', 'order', 'shipment'], kind: 'link' as const });

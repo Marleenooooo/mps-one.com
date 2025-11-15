@@ -20,6 +20,13 @@ This guide explains how to use the B2B Procurement Webapp end-to-end: initiating
 - Supplier Admin dashboards (e.g., `/supplier/admin`, Reporting, Email) require acting as Supplier; non-admin suppliers are redirected to `/supplier/clients`.
 - The Supplier Admin dashboard surfaces supplier-relevant actions (like New Quote) and hides client-only actions.
 
+### Admin Modules (Supplier mode)
+- Vendor Risk Assessment: `/admin/vendor-risk` — assess vendor risk and compliance flags.
+- Budget Forecasting: `/admin/budget-forecasting` — forecast departmental budgets.
+- Contract Negotiation: `/admin/contract-negotiation` — negotiation workspace.
+- Supplier Performance Review: `/admin/supplier-performance` — review and export scorecards.
+- Payment Reconciliation: `/admin/payment-reconciliation` — reconcile payments and outstanding items.
+
 ### Role-Based Access & Workflow Alignment
 - Admin: Corporate Onboarding, invitations, and can generate PO from accepted quotes.
 - PIC Procurement: manage PRs, review supplier quotes, convert accepted quotes to POs.

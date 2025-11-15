@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 
 export default function BudgetForecasting() {
   const [period, setPeriod] = useState('FY2026');
   const [dept, setDept] = useState('All Departments');
   return (
     <div className="main" data-module="procurement">
+      <div style={{ padding: 8 }}>
+        <Breadcrumbs items={["nav.admin_dashboard","nav.budget_forecasting"]} />
+      </div>
       <div className="page-header procurement">
         <h1 style={{ margin: 0 }}>Budget Forecasting</h1>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -36,4 +40,3 @@ export default function BudgetForecasting() {
     </div>
   );
 }
-

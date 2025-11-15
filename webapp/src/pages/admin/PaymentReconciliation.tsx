@@ -1,8 +1,12 @@
 import React from 'react';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 
 export default function PaymentReconciliation() {
   return (
     <div className="main" data-module="finance">
+      <div style={{ padding: 8 }}>
+        <Breadcrumbs items={["nav.admin_dashboard","nav.payment_reconciliation"]} />
+      </div>
       <div className="page-header procurement">
         <h1 style={{ margin: 0 }}>Payment Reconciliation</h1>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -17,4 +21,3 @@ export default function PaymentReconciliation() {
     </div>
   );
 }
-

@@ -50,6 +50,11 @@ function getNavItems(role: Role, userType: UserType) {
       supplierAdmin.splice(12, 0, { to: '/admin/document-integrations', key: 'nav.document_integrations' });
       supplierAdmin.splice(13, 0, { to: '/admin/realtime', key: 'nav.realtime' });
       supplierAdmin.splice(14, 0, { to: '/admin/analytics', key: 'nav.analytics' });
+      supplierAdmin.push({ to: '/admin/vendor-risk', key: 'nav.vendor_risk' });
+      supplierAdmin.push({ to: '/admin/budget-forecasting', key: 'nav.budget_forecasting' });
+      supplierAdmin.push({ to: '/admin/contract-negotiation', key: 'nav.contract_negotiation' });
+      supplierAdmin.push({ to: '/admin/supplier-performance', key: 'nav.supplier_performance' });
+      supplierAdmin.push({ to: '/admin/payment-reconciliation', key: 'nav.payment_reconciliation' });
       return supplierAdmin;
     }
     // Client Admin: full client menu, including onboarding

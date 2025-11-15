@@ -15,6 +15,13 @@ Panduan ini menjelaskan cara menggunakan Aplikasi B2B Procurement secara menyelu
 - Header halaman menggunakan warna modul untuk orientasi visual.
 - Topbar menyertakan toggle bahasa dan tema.
 
+### Modul Admin (mode Pemasok)
+- Penilaian Risiko Vendor: `/admin/vendor-risk` — menilai risiko vendor dan flag kepatuhan.
+- Peramalan Anggaran: `/admin/budget-forecasting` — perkiraan anggaran departemen.
+- Negosiasi Kontrak: `/admin/contract-negotiation` — ruang kerja negosiasi.
+- Tinjauan Performa Pemasok: `/admin/supplier-performance` — tinjau dan ekspor scorecard.
+- Rekonsiliasi Pembayaran: `/admin/payment-reconciliation` — rekonsiliasi pembayaran dan item outstanding.
+
 ### Akses Berbasis Peran & Penyelarasan Alur Kerja
 - Admin: Corporate Onboarding, undangan, dan dapat menerbitkan PO dari quote diterima.
 - PIC Procurement: mengelola PR, meninjau quote pemasok, mengonversi quote diterima menjadi PO.

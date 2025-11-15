@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 
 export default function SupplierPerformanceReview() {
   const [supplier, setSupplier] = useState('Select supplier');
   return (
     <div className="main" data-module="procurement">
+      <div style={{ padding: 8 }}>
+        <Breadcrumbs items={["nav.admin_dashboard","nav.supplier_performance"]} />
+      </div>
       <div className="page-header procurement">
         <h1 style={{ margin: 0 }}>Supplier Performance Review</h1>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -29,4 +33,3 @@ export default function SupplierPerformanceReview() {
     </div>
   );
 }
-

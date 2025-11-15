@@ -1,5 +1,4 @@
 # Changelog
-# Changelog
 
 ## v0.1.44 (2025-11-15) — Bridge Analytics Integration
 
@@ -1173,3 +1172,23 @@ Affected Files
 Notes
 - Roles read from `localStorage:mpsone_role` with sensible defaults per mode.
 - Backend enforcement will follow; this change is frontend-only and preserves layout.
+## v0.1.45 (2025-11-15) — Admin Modules & mpsbook Compare
+
+### Highlights
+- Added supplier Admin modules in mpsone:
+  - Vendor Risk Assessment (`/admin/vendor-risk`)
+  - Budget Forecasting (`/admin/budget-forecasting`)
+  - Contract Negotiation (`/admin/contract-negotiation`)
+  - Supplier Performance Review (`/admin/supplier-performance`)
+  - Payment Reconciliation (`/admin/payment-reconciliation`)
+- Added `Compare Quotes` page in mpsbook with topbar link and route (`/compare`).
+
+### Affected Files
+- `webapp/src/pages/admin/{VendorRiskAssessment.tsx,BudgetForecasting.tsx,ContractNegotiation.tsx,SupplierPerformanceReview.tsx,PaymentReconciliation.tsx}` (new)
+- `webapp/src/App.tsx` (routes with `RouteGuard` for supplier Admin)
+- `mpsbook/webapp/src/pages/CompareQuotes.tsx` (new)
+- `mpsbook/webapp/src/App.tsx` (route and topbar link)
+
+### Verification
+- mpsone build and preview: no console or terminal errors; routes render behind Admin guard.
+- mpsbook build and preview: `/compare` accessible via topbar; layout renders cleanly.

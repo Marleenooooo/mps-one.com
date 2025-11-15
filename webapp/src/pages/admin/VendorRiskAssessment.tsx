@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '../../components/Layout/Topbar';
 
 export default function VendorRiskAssessment() {
   const [query, setQuery] = useState('');
@@ -6,6 +7,9 @@ export default function VendorRiskAssessment() {
   const [status, setStatus] = useState('All');
   return (
     <div className="main" data-module="procurement">
+      <div style={{ padding: 8 }}>
+        <Breadcrumbs items={["nav.admin_dashboard","nav.vendor_risk"]} />
+      </div>
       <div className="page-header procurement">
         <h1 style={{ margin: 0 }}>Vendor Risk Assessment</h1>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -54,4 +58,3 @@ export default function VendorRiskAssessment() {
     </div>
   );
 }
-
