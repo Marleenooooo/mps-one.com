@@ -1,9 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: './',
-  server: { host: true, port: 5174 },
+  server: {
+    fs: {
+      allow: [path.resolve(__dirname, '../../thebridge')]
+    }
+  },
+  resolve: {
+    alias: {
+      '@thebridge': path.resolve(__dirname, '../../thebridge')
+    }
+  }
 });
-

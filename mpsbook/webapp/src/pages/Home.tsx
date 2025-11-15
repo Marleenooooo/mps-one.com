@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listPosts, listUsers } from '../services/mock';
+import { listPosts, listUsers, isFollowing, followUser, unfollowUser } from '../services/mock';
 import { Composer } from '../components/Composer';
 import { PostCard } from '../components/PostCard';
 
@@ -10,6 +10,14 @@ export function Home() {
   useEffect(() => { refresh(); }, []);
   const byId = Object.fromEntries(users.map(u => [u.id, u]));
   const meId = users[0]?.id || 'u1';
+  function toggleFollow(targetId: string) {
+    if (isFollowing(meId, targetId)) {
+      unfollowUser(meId, targetId);
+    } else {
+      followUser(meId, targetId);
+    }
+    refresh();
+  }
 
   return (
     <div style={{ padding: 16 }}>
@@ -31,6 +39,9 @@ export function Home() {
                   <div style={{ fontWeight: 600 }}>{u.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{u.headline || '—'}</div>
                 </div>
+                <div style={{ marginLeft: 'auto' }}>
+                  <button className="btn" onClick={() => toggleFollow(u.id)}>{isFollowing(meId, u.id) ? 'Unfollow' : 'Follow'}</button>
+                </div>
               </div>
             ))}
           </div>
@@ -39,7 +50,7 @@ export function Home() {
           <Composer authorId={meId} onPosted={refresh} />
           <div className="feed" aria-label="Feed">
             {posts.map(p => (
-              <PostCard key={p.id} post={p} author={byId[p.authorId]} />
+              <PostCard key={p.id} post={p} author={byId[p.authorId]} meId={meId} />
             ))}
           </div>
         </div>
@@ -65,4 +76,3 @@ export function Home() {
     </div>
   );
 }
-

@@ -10,8 +10,11 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": []
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@thebridge/*": ["../../thebridge/*"]
+    }
   },
   "include": ["src"]
 }
-
