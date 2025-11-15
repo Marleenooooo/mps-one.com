@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { listUsers } from '../services/mock';
-import type { TrustBadge } from '../../../thebridge/contracts/trustGraph';
+import type { TrustBadge, VendorTrustSignal } from '../../../thebridge/contracts/trustGraph';
+import { BridgeClient, getClaims } from '../../../thebridge/sdk';
 
 export function Profile() {
   const users = listUsers();
   const me = users[0];
-  const badges: TrustBadge[] = (me.badges || []).map(b => ({ key: b.key, label: b.label }));
+  const [trust, setTrust] = useState<VendorTrustSignal[]>([]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const claims = getClaims();
+        if (claims?.companyId) {
+          const bc = new BridgeClient('http://localhost:3001');
+          const signals = await bc.getVendorTrust(claims.companyId, '');
+          setTrust(signals);
+        }
+      } catch {}
+    })();
+  }, []);
+  const badges: TrustBadge[] = [
+    ...(me.badges || []).map(b => ({ key: b.key, label: b.label })),
+    ...((trust[0]?.badges || []).map(b => ({ key: b.key, label: b.label })) || []),
+  ];
   return (
     <div style={{ padding: 16 }}>
       <div className="card" style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16 }}>
@@ -27,4 +44,3 @@ export function Profile() {
     </div>
   );
 }
-

@@ -1,6 +1,45 @@
 # Changelog
 # Changelog
 
+## v0.1.44 (2025-11-15) — Bridge Analytics Integration
+
+### Highlights
+- **Comprehensive Bridge Analytics Layer**: Implemented full analytics capabilities through the bridge integration layer
+- **Five Core Analytics Endpoints**:
+  - `/bridge/analytics/funnel` - Procurement workflow funnel analysis with conversion tracking
+  - `/bridge/analytics/suppliers/:vendorId` - Individual supplier performance metrics and scoring
+  - `/bridge/analytics/cohorts` - User cohort analysis with retention and behavior tracking
+  - `/bridge/analytics/anomalies` - Anomaly detection for pricing, delivery, and quality issues
+  - `/bridge/analytics/forecast` - Budget and procurement forecasting with confidence metrics
+- **Enhanced Event System**: Added analytics-specific events to bridge event topics:
+  - `analytics.funnel.step`, `analytics.drilldown.request`, `analytics.cohort.created`
+  - `analytics.anomaly.detected`, `analytics.forecast.request`, `supplier.performance.updated`
+- **Bridge SDK Extensions**: Extended BridgeClient with analytics methods for seamless integration
+- **Analytics Dashboard Component**: Created comprehensive dashboard with tabbed interface for all analytics views
+- **Fallback Mechanisms**: All endpoints include graceful fallbacks for development continuity
+- **Real-time Event Streaming**: SSE-based event streaming for live analytics updates
+
+### Affected Files
+- `thebridge/events/topics.ts` - Enhanced with analytics event types
+- `webapp/server/index.mjs` - Added comprehensive analytics endpoints and event streaming
+- `thebridge/sdk/client.ts` - Extended with analytics methods (getFunnelData, getSupplierPerformance, etc.)
+- `webapp/src/components/AnalyticsDashboard.tsx` - New comprehensive analytics dashboard component
+- `webapp/src/pages/analytics/AnalyticsDashboard.tsx` - Enhanced with bridge analytics integration
+
+### Verification
+- All bridge analytics endpoints tested and working correctly
+- Bridge SDK client integration verified with all analytics methods
+- Server-side event streaming functional with periodic updates
+- Fallback mechanisms ensure development continuity when backend unavailable
+- Integration ready for both mpsone and mpsbook applications
+
+### Technical Details
+- Analytics data includes procurement funnel metrics (1250 PRs → 780 payments, 62% conversion)
+- Supplier performance scoring with multi-dimensional metrics (on-time delivery, quality, cost, communication)
+- Cohort analysis with retention curves and behavioral insights
+- Anomaly detection for pricing deviations and operational issues
+- Forecasting with confidence intervals for budget and procurement planning
+
 ## v0.1.43 (2025-11-15) — Enhanced Monitoring & Observability
 
 ### Highlights

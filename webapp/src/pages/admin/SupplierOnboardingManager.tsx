@@ -6,6 +6,7 @@ import { DataTable, Column } from '../../components/DataTable';
 import { Badge } from '../../components/UI/badge';
 import { Button } from '../../components/UI/button';
 import type { VendorTrustSignal } from '../../../../thebridge/contracts/trustGraph';
+import { BridgeClient, getClaims } from '../../../../thebridge/sdk';
 
 type ApplicationStatus = 'pending' | 'approved' | 'rejected' | 'in_review';
 interface SupplierApplication {
@@ -54,10 +55,19 @@ export default function SupplierOnboardingManager() {
       { id: 21, supplier_id: 1, check_type: 'Sanctions', status: 'pending', created_at: new Date().toISOString() },
       { id: 22, supplier_id: 2, check_type: 'Watchlist', status: 'passed', created_at: new Date().toISOString() },
     ]);
-    setTrust([
-      { vendorId: 'PT Nusantara Abadi', score: 82, badges: [{ key: 'kyc_verified', label: 'KYC' }] },
-      { vendorId: 'CV Sumber Rejeki', score: 91, badges: [{ key: 'kyc_verified', label: 'KYC' }, { key: 'on_time', label: 'On‑time' }] },
-    ]);
+    (async () => {
+      try {
+        const claims = getClaims();
+        const bc = new BridgeClient('http://localhost:3001');
+        const signals = await bc.getVendorTrust(claims?.companyId || 'COMPANY-DEV', '');
+        setTrust(signals);
+      } catch {
+        setTrust([
+          { vendorId: 'PT Nusantara Abadi', score: 82, badges: [{ key: 'kyc_verified', label: 'KYC' }] },
+          { vendorId: 'CV Sumber Rejeki', score: 91, badges: [{ key: 'kyc_verified', label: 'KYC' }, { key: 'on_time', label: 'On‑time' }] },
+        ]);
+      }
+    })();
   }, []);
 
   const statusBadge = (s: string) => {

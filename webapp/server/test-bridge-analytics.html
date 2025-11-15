@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Analytics Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .endpoint { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeeba; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Bridge Analytics Integration Test</h1>
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        const bridgeUrl = 'http://localhost:3001';
+        
+        function addResult(title, status, data) {
+            const div = document.createElement('div');
+            div.className = `endpoint ${status}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <p>Status: <strong>${status}</strong></p>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(div);
+        }
+        
+        async function testEndpoint(endpoint, title) {
+            try {
+                addResult(title, 'loading', 'Testing...');
+                const response = await fetch(`${bridgeUrl}${endpoint}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(title, 'success', data);
+                } else {
+                    addResult(title, 'error', { error: data, status: response.status });
+                }
+            } catch (error) {
+                addResult(title, 'error', { error: error.message });
+            }
+        }
+        
+        // Test all analytics endpoints
+        async function runTests() {
+            await testEndpoint('/bridge/analytics/funnel', 'Funnel Analytics');
+            await testEndpoint('/bridge/analytics/suppliers/SUP-1', 'Supplier Performance');
+            await testEndpoint('/bridge/analytics/cohorts', 'Cohort Analysis');
+            await testEndpoint('/bridge/analytics/anomalies', 'Anomaly Detection');
+            await testEndpoint('/bridge/analytics/forecast', 'Forecasting');
+        }
+        
+        runTests();
+    </script>
+</body>
+</html>

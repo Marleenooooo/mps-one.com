@@ -5,7 +5,16 @@ export type EventTopic =
   | 'trust.updated'
   | 'rfq.broadcast'
   | 'quote.created'
-  | 'po.created';
+  | 'po.created'
+  | 'analytics.funnel.step'
+  | 'analytics.drilldown.request'
+  | 'analytics.cohort.created'
+  | 'analytics.anomaly.detected'
+  | 'analytics.forecast.request'
+  | 'supplier.performance.updated'
+  | 'quote.comparison.request'
+  | 'procurement.approval.made'
+  | 'budget.forecast.updated';
 
 export interface EventEnvelope<T = any> {
   topic: EventTopic;

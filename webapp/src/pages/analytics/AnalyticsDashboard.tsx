@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '../../components/I18nProvider';
 import { analytics, trackUserEvent } from '../../services/analytics';
+import { AnalyticsDashboard as BridgeAnalyticsDashboard } from '../../components/AnalyticsDashboard';
+import { BridgeClient } from '../../../../thebridge/sdk/client';
 
 export default function AnalyticsDashboard() {
   const { t } = useI18n();
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [funnelAnalytics, setFunnelAnalytics] = useState<any>(null);
+  const [bridgeAnalyticsEnabled, setBridgeAnalyticsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [selectedFunnel, setSelectedFunnel] = useState<string>('procurement_workflow');
 
@@ -41,7 +44,22 @@ export default function AnalyticsDashboard() {
     <div className="main">
       <div className="page-header analytics" style={{ borderImage: 'linear-gradient(90deg, var(--module-color), var(--module-gradient-end)) 1' }}>
         <h1>{t('analytics.dashboard') || 'Analytics Dashboard'}</h1>
+        <div style={{ marginLeft: 'auto' }}>
+          <button
+            className="button"
+            onClick={() => setBridgeAnalyticsEnabled(!bridgeAnalyticsEnabled)}
+            style={{ fontSize: 12 }}
+          >
+            {bridgeAnalyticsEnabled ? '🔍 Bridge Analytics' : '📊 Local Analytics'}
+          </button>
+        </div>
       </div>
+
+      {bridgeAnalyticsEnabled && (
+        <div style={{ marginBottom: 24 }}>
+          <BridgeAnalyticsDashboard />
+        </div>
+      )}
 
       <div className="card" style={{ padding: 16, marginBottom: 16 }}>
         <h3>Analytics Summary</h3>
@@ -237,6 +255,37 @@ export default function AnalyticsDashboard() {
           )}
         </div>
       </div>
+      
+      {!bridgeAnalyticsEnabled && (
+        <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+          <h3>Analytics Summary</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+            <div className="card" style={{ padding: 12, background: 'var(--bg-secondary)' }}>
+              <h4>Session Info</h4>
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Session ID</div>
+                <div style={{ fontSize: 14, fontFamily: 'monospace' }}>{analyticsData?.session_id}</div>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Total Events</div>
+                <div style={{ fontSize: 18, fontWeight: 'bold' }}>{analyticsData?.total_events || 0}</div>
+              </div>
+            </div>
+            
+            <div className="card" style={{ padding: 12, background: 'var(--bg-secondary)' }}>
+              <h4>User Context</h4>
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Mode</div>
+                <div style={{ fontSize: 14 }}>{analyticsData?.user_context?.mode || 'Unknown'}</div>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Role</div>
+                <div style={{ fontSize: 14 }}>{analyticsData?.user_context?.role || 'Unknown'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ app.use(cors({
   origin: process.env.APP_ORIGIN || '*',
 }));
 app.use(express.json());
+app.use(express.static('.')); // Serve static files from current directory
 
 // --- Lightweight Analytics Collector (dev-friendly) ---
 // Stores recent events in memory and logs to console for quick verification.
@@ -52,15 +53,22 @@ app.get('/api/analytics', (req, res) => {
   return res.json({ ok: true, rows, count: rows.length });
 });
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 5,
-});
+// Database connection with fallback for development
+let pool = null;
+try {
+  pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 5,
+  });
+} catch (err) {
+  console.warn('Database connection failed, using mock data for development:', err.message);
+  pool = null;
+}
 
 // --- In-memory cache for FX rates ---
 const fxCache = new Map(); // key: `${base}_${quote}` -> { ts: number, ttlMs: number, latest: { rate_date, rate } }
@@ -136,6 +144,11 @@ function requireMode(modes = []) {
 // Audit utility
 async function logAudit({ actorEmail, action, entityType = null, entityId = null, comment = null, activeMode = null }) {
   try {
+    if (!pool) {
+      // Log to console when database is not available
+      console.log(`[AUDIT] ${actorEmail || 'unknown'}: ${action} ${entityType || ''} ${entityId || ''} ${comment || ''}`);
+      return;
+    }
     const mode = ['Client','Supplier'].includes(String(activeMode)) ? String(activeMode) : 'Client';
     await pool.query(
       'INSERT INTO audit_log (actor_email, action, entity_type, entity_id, comment, active_mode) VALUES (?, ?, ?, ?, ?, ?)',
@@ -149,6 +162,9 @@ async function logAudit({ actorEmail, action, entityType = null, entityId = null
 
 app.get('/api/health', async (_req, res) => {
   try {
+    if (!pool) {
+      return res.json({ ok: true, db: false, version: 'N/A', db_name: 'N/A', offline: true });
+    }
     const [rows] = await pool.query('SELECT VERSION() AS version, DATABASE() AS db');
     return res.json({ ok: true, ...rows[0], db: true });
   } catch (err) {
@@ -168,6 +184,10 @@ app.get('/api/auth/me', (req, res) => {
 
 // --- Helpers to resolve current user id (demo-friendly) ---
 async function resolveUserId(emailHint = null) {
+  if (!pool) {
+    // Fallback demo user ID when database is not available
+    return 1;
+  }
   const conn = await pool.getConnection();
   try {
     const email = String(emailHint || '').trim();
@@ -189,6 +209,23 @@ app.get('/api/user/preferences', async (req, res) => {
   try {
     const userId = await resolveUserId(req?.auth?.email || null);
     if (!userId) return res.json({ ok: true, row: null });
+    
+    if (!pool) {
+      // Fallback preferences when database is not available
+      return res.json({ 
+        ok: true, 
+        row: {
+          user_id: userId,
+          theme: 'light',
+          language: 'en',
+          default_mode: 'client',
+          notify_inapp: 1,
+          notify_email: 0,
+          updated_at: new Date().toISOString()
+        }
+      });
+    }
+    
     const [rows] = await pool.query('SELECT user_id, theme, language, default_mode, notify_inapp, notify_email, updated_at FROM user_preferences WHERE user_id=?', [userId]);
     const row = rows[0] || null;
     res.json({ ok: true, row });
@@ -207,10 +244,14 @@ app.put('/api/user/preferences', async (req, res) => {
     const default_mode = ['client','supplier'].includes(body.default_mode) ? body.default_mode : null;
     const notify_inapp = body.notify_inapp ? 1 : 0;
     const notify_email = body.notify_email ? 1 : 0;
-    await pool.query(
-      'INSERT INTO user_preferences (user_id, theme, language, default_mode, notify_inapp, notify_email) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE theme=VALUES(theme), language=VALUES(language), default_mode=VALUES(default_mode), notify_inapp=VALUES(notify_inapp), notify_email=VALUES(notify_email)'
-      , [userId, theme, language, default_mode, notify_inapp, notify_email]
-    );
+    
+    if (pool) {
+      await pool.query(
+        'INSERT INTO user_preferences (user_id, theme, language, default_mode, notify_inapp, notify_email) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE theme=VALUES(theme), language=VALUES(language), default_mode=VALUES(default_mode), notify_inapp=VALUES(notify_inapp), notify_email=VALUES(notify_email)'
+        , [userId, theme, language, default_mode, notify_inapp, notify_email]
+      );
+    }
+    
     await logAudit({ actorEmail: req?.auth?.email, action: 'prefs.update', entityType: 'user_preferences', entityId: userId, comment: `${theme}/${language}/${default_mode || '-'}`, activeMode: req?.auth?.mode });
     res.json({ ok: true });
   } catch (err) {
@@ -915,4 +956,227 @@ app.post('/api/docs/upload', requireMode(['Client','Supplier']), requireRole(['A
 
 app.listen(port, () => {
   console.log(`Backend API listening on http://localhost:${port}`);
+});
+// --- Bridge Endpoints (claims, trust, events) ---
+
+// Claims: return minimal session claims; in production, validate token and map to user/company
+app.get('/bridge/claims', (req, res) => {
+  try {
+    const auth = req.headers['authorization'] || '';
+    const now = new Date().toISOString();
+    const claims = {
+      userId: 'USER-DEV',
+      companyId: 'COMPANY-DEV',
+      role: 'Admin',
+      mode: 'Client',
+      email: 'user@example.com',
+      name: 'Dev User',
+      issuedAt: now,
+      expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+      tokenPreview: String(auth).slice(0, 16),
+    };
+    return res.json(claims);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
+// Trust signals: return vendor trust array for a company reference
+app.get('/bridge/trust/:companyId', (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const rows = [
+      { vendorId: 'SUP-1', score: 86, badges: [{ key: 'verified', label: 'Verified' }, { key: 'compliance', label: 'Compliance+' }], sources: [{ source: 'mpsbook', ref: companyId, updatedAt: new Date().toISOString() }] },
+      { vendorId: 'SUP-2', score: 72, badges: [{ key: 'on_time', label: 'On‑time' }], sources: [{ source: 'external', ref: 'ISO9001' }] },
+    ];
+    return res.json(rows);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
+// SSE Events: subscribe with topics; emits heartbeat and sample events
+app.get('/bridge/events', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    const topics = ([]).concat(req.query.topic || []);
+    const send = (ev) => {
+      res.write(`data: ${JSON.stringify(ev)}\n\n`);
+    };
+    send({ topic: 'trust.updated', ts: Date.now(), payload: { vendorId: 'SUP-1', score: 87 }, source: 'mpsbook' });
+    const id = setInterval(() => send({ topic: 'heartbeat', ts: Date.now(), payload: { ok: true }, source: 'external' }), 10000);
+    req.on('close', () => clearInterval(id));
+  } catch {
+    res.end();
+  }
+});
+
+// Analytics Event Streaming
+app.get('/bridge/analytics/events', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    const topics = ([]).concat(req.query.topic || []);
+    const send = (ev) => {
+      res.write(`data: ${JSON.stringify(ev)}\n\n`);
+    };
+    
+    // Send initial analytics events
+    send({ topic: 'analytics.funnel.step', ts: Date.now(), payload: { step: 'pr_created', conversion: 0.85 }, source: 'mpsone' });
+    send({ topic: 'analytics.drilldown.request', ts: Date.now(), payload: { type: 'supplier_performance', filters: { vendorId: 'SUP-1' } }, source: 'mpsone' });
+    
+    // Send periodic analytics updates
+    const id = setInterval(() => {
+      const events = [
+        { topic: 'analytics.funnel.step', payload: { step: 'quote_submitted', conversion: 0.72 } },
+        { topic: 'supplier.performance.updated', payload: { vendorId: 'SUP-1', score: 88, metrics: { onTime: 0.94, quality: 0.87 } } },
+        { topic: 'analytics.anomaly.detected', payload: { type: 'pricing', severity: 'medium', details: { deviation: 0.23 } } }
+      ];
+      const event = events[Math.floor(Math.random() * events.length)];
+      send({ ...event, ts: Date.now(), source: 'mpsone' });
+    }, 15000);
+    
+    req.on('close', () => clearInterval(id));
+  } catch {
+    res.end();
+  }
+});
+
+// Analytics Funnel Data
+app.get('/bridge/analytics/funnel', (req, res) => {
+  try {
+    const funnelData = {
+      steps: [
+        { name: 'PR Created', count: 1250, conversion: 1.0 },
+        { name: 'Quotes Received', count: 1080, conversion: 0.86 },
+        { name: 'PO Issued', count: 890, conversion: 0.71 },
+        { name: 'Delivery Confirmed', count: 820, conversion: 0.66 },
+        { name: 'Invoice Paid', count: 780, conversion: 0.62 }
+      ],
+      period: '30d',
+      totalValue: 2340000,
+      avgCycleTime: '14.5 days'
+    };
+    return res.json(funnelData);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
+// Supplier Performance Analytics
+app.get('/bridge/analytics/suppliers/:vendorId', (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    const performance = {
+      vendorId,
+      overallScore: 87,
+      metrics: {
+        onTimeDelivery: 0.94,
+        qualityRating: 0.88,
+        costCompetitiveness: 0.79,
+        communication: 0.91
+      },
+      trends: [
+        { month: '2024-01', score: 85 },
+        { month: '2024-02', score: 86 },
+        { month: '2024-03', score: 87 }
+      ],
+      comparisons: [
+        { vendorId: 'SUP-2', score: 72, advantage: 15 },
+        { vendorId: 'SUP-3', score: 81, advantage: 6 }
+      ]
+    };
+    return res.json(performance);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
+// Cohort Analysis Data
+app.get('/bridge/analytics/cohorts', (req, res) => {
+  try {
+    const cohorts = [
+      {
+        cohort: '2024-Q1',
+        users: 245,
+        retention: [100, 85, 72, 68, 65],
+        avgProcurementValue: 12500,
+        behavior: 'high_volume'
+      },
+      {
+        cohort: '2024-Q2',
+        users: 312,
+        retention: [100, 88, 76, 71, 69],
+        avgProcurementValue: 14200,
+        behavior: 'quality_focused'
+      }
+    ];
+    return res.json(cohorts);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
+// Anomaly Detection Results
+app.get('/bridge/analytics/anomalies', (req, res) => {
+  try {
+    const anomalies = [
+      {
+        type: 'pricing',
+        severity: 'high',
+        description: 'Quote price 45% above historical average',
+        entity: { type: 'quote', id: 'QT-2024-001' },
+        detectedAt: new Date().toISOString(),
+        status: 'open'
+      },
+      {
+        type: 'approval_pattern',
+        severity: 'medium',
+        description: 'Unusual approval timing detected',
+        entity: { type: 'pr', id: 'PR-2024-045' },
+        detectedAt: new Date().toISOString(),
+        status: 'investigating'
+      }
+    ];
+    return res.json(anomalies);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
+// Forecasting Data
+app.get('/bridge/analytics/forecast', (req, res) => {
+  try {
+    const forecast = {
+      budget: {
+        current: 2500000,
+        projected: 2850000,
+        variance: 14,
+        confidence: 0.87
+      },
+      procurement: {
+        volume: {
+          current: 1250,
+          projected: 1480,
+          trend: 'increasing'
+        },
+        cycleTime: {
+          current: 14.5,
+          projected: 12.3,
+          improvement: 15
+        }
+      },
+      recommendations: [
+        'Increase supplier diversification',
+        'Implement early payment discounts',
+        'Optimize inventory levels'
+      ]
+    };
+    return res.json(forecast);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
 });

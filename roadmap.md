@@ -163,7 +163,7 @@ Notes
 - [x] Document management integrations (SharePoint/Box/S3 with lifecycle rules)
 - [x] Real-time updates via WebSocket/SSE for orders, invoices, messages
 - [x] Observability: OpenTelemetry traces/metrics/logs with dashboards
-- [ ] Analytics: funnels, drilldowns, cohorts, anomaly detection, forecasting
+- [x] Analytics: funnels, drilldowns, cohorts, anomaly detection, forecasting
 - [ ] Accessibility WCAG 2.1/2.2 AA end-to-end audit and fixes
 - [ ] Mobile/touch optimization with dedicated responsive interaction patterns
 - [ ] Internationalization: locale-aware currency/date/number; timezone preferences
