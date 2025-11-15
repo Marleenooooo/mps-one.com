@@ -49,6 +49,7 @@ function getNavItems(role: Role, userType: UserType) {
       supplierAdmin.splice(11, 0, { to: '/admin/erp-connectors', key: 'nav.erp_connectors' });
       supplierAdmin.splice(12, 0, { to: '/admin/document-integrations', key: 'nav.document_integrations' });
       supplierAdmin.splice(13, 0, { to: '/admin/realtime', key: 'nav.realtime' });
+      supplierAdmin.splice(14, 0, { to: '/admin/analytics', key: 'nav.analytics' });
       return supplierAdmin;
     }
     // Client Admin: full client menu, including onboarding

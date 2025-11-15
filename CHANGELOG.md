@@ -1,6 +1,38 @@
 # Changelog
 # Changelog
 
+## v0.1.43 (2025-11-15) — Enhanced Monitoring & Observability
+
+### Highlights
+- Enhanced monitoring service with contextual attributes using `currentContext()` from permissions
+- Added detailed OpenTelemetry-style spans for critical procurement workflows:
+  - PR creation workflow with validation, API calls, and progress tracking
+  - Quote approval/rejection workflows with permission checks and audit logging
+  - PO generation workflow with supplier and quote context
+- Integrated comprehensive metrics collection:
+  - Counters for PR creation attempts/successes/failures by department
+  - Quote approval metrics by supplier and action type
+  - PO generation metrics with quote value tracking
+  - Histogram metrics for item counts and operation durations
+- Enhanced error tracking with detailed error types and context
+- All spans now include user mode, role, and contextual information automatically
+
+### Affected Files
+- `webapp/src/services/monitoring.ts` - Enhanced with contextual attributes and metrics collection
+- `webapp/src/pages/procurement/PRCreate.tsx` - Added comprehensive workflow monitoring
+- `webapp/src/pages/client/QuoteComparison.tsx` - Added quote approval and PO generation monitoring
+
+### Verification
+- Dev server running without errors at `http://localhost:5173/`
+- Monitoring spans visible in browser console with `[otel]` and `[metrics]` prefixes
+- All critical procurement workflows instrumented with performance tracking
+- Contextual attributes automatically included in all spans (user mode, role, URL, timestamp)
+
+### Notes
+- Monitoring enhancements align with Phase 8 roadmap item "Observability: OpenTelemetry traces/metrics/logs"
+- Metrics collection includes automatic memory management (max 1000 metrics)
+- All monitoring is lightweight and production-ready with dev-only console visibility
+
 ## v0.1.42 (2025-11-15) — Admin Stabilization & i18n Cleanup
 
 ### Highlights

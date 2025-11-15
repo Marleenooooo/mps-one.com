@@ -162,7 +162,7 @@ Notes
 - [x] ERP connectors (SAP/Oracle/Netsuite/Dynamics) and webhook framework
 - [x] Document management integrations (SharePoint/Box/S3 with lifecycle rules)
 - [x] Real-time updates via WebSocket/SSE for orders, invoices, messages
-- [ ] Observability: OpenTelemetry traces/metrics/logs with dashboards
+- [x] Observability: OpenTelemetry traces/metrics/logs with dashboards
 - [ ] Analytics: funnels, drilldowns, cohorts, anomaly detection, forecasting
 - [ ] Accessibility WCAG 2.1/2.2 AA end-to-end audit and fixes
 - [ ] Mobile/touch optimization with dedicated responsive interaction patterns

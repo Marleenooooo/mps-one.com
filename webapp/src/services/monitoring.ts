@@ -1,5 +1,7 @@
 /* Lightweight monitoring and analytics hooks (dev-friendly, no external deps)
    Plus minimal OpenTelemetry-like spans behind env flags */
+import { currentContext } from './permissions';
+
 type EventPayload = {
   name: string;
   data?: Record<string, any>;
@@ -68,13 +70,26 @@ export function trackEvent(name: string, data: Record<string, any> = {}) {
 }
 
 // Minimal OpenTelemetry-like span helpers
+function enrichAttributes(attributes: Record<string, any> = {}): Record<string, any> {
+  const context = currentContext();
+  return {
+    ...attributes,
+    user_mode: context.mode,
+    user_role: context.role,
+    user_agent: navigator.userAgent,
+    url: location.href,
+    timestamp: Date.now(),
+  };
+}
+
 export function startSpan(name: string, attributes: Record<string, any> = {}): Span {
+  const enrichedAttrs = enrichAttributes(attributes);
   const span: Span = {
     traceId: rid(),
     spanId: rid(),
     name,
     startTime: performance.now(),
-    attributes,
+    attributes: enrichedAttrs,
   };
   if ((import.meta as any).env?.DEV) {
     // eslint-disable-next-line no-console
@@ -133,6 +148,75 @@ export function withSpan<T>(name: string, fn: () => T, attributes: Record<string
     endSpan(s, { error: serializeReason(e) });
     throw e;
   }
+}
+
+// Metrics collection for performance tracking
+type MetricValue = number | string | boolean;
+type MetricType = 'counter' | 'gauge' | 'histogram';
+
+interface Metric {
+  name: string;
+  type: MetricType;
+  value: MetricValue;
+  labels?: Record<string, string>;
+  timestamp: number;
+}
+
+const metrics: Metric[] = [];
+
+export function recordMetric(name: string, value: MetricValue, type: MetricType = 'gauge', labels?: Record<string, string>) {
+  const metric: Metric = {
+    name,
+    type,
+    value,
+    labels: {
+      ...labels,
+      user_mode: currentContext().mode,
+      user_role: currentContext().role,
+    },
+    timestamp: Date.now(),
+  };
+  
+  metrics.push(metric);
+  
+  // Keep only last 1000 metrics to prevent memory leaks
+  if (metrics.length > 1000) {
+    metrics.splice(0, metrics.length - 1000);
+  }
+  
+  // Dispatch to analytics
+  dispatch({
+    name: 'metric',
+    data: metric,
+    ts: Date.now(),
+    url: location.href,
+    ua: navigator.userAgent,
+  });
+  
+  if ((import.meta as any).env?.DEV) {
+    // eslint-disable-next-line no-console
+    console.debug('[metrics]', metric);
+  }
+}
+
+export function incrementCounter(name: string, labels?: Record<string, string>) {
+  recordMetric(name, 1, 'counter', labels);
+}
+
+export function recordHistogram(name: string, value: number, labels?: Record<string, string>) {
+  recordMetric(name, value, 'histogram', labels);
+}
+
+export function recordGauge(name: string, value: number, labels?: Record<string, string>) {
+  recordMetric(name, value, 'gauge', labels);
+}
+
+export function getMetrics(): Metric[] {
+  return [...metrics];
+}
+
+export function clearMetrics() {
+  metrics.length = 0;
 }
 
 function serializeReason(reason: any) {

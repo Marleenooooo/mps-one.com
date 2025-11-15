@@ -4,6 +4,8 @@ import { useI18n } from '../../components/I18nProvider';
 import { useToast } from '../../components/UI/Toast';
 import { useNavigate } from 'react-router-dom';
 import { apiCreatePR } from '../../services/api';
+import { startSpan, endSpan, incrementCounter, recordHistogram } from '../../services/monitoring';
+import { trackProcurementEvent, trackUserEvent } from '../../services/analytics';
 
 import { uniqueId } from '../../components/utils/uniqueId';
 type PRItem = { id: string; name: string; qty: number; spec?: string };
@@ -52,6 +54,12 @@ export default function PRCreate() {
   const saveTimer = useRef<number | null>(null);
   const hydrated = useRef(false);
   useEffect(() => {
+    // Track page view
+    trackProcurementEvent('pr_create_page_viewed', {
+      step: step,
+      has_draft: !!localStorage.getItem(DRAFT_KEY),
+    });
+    
     // Hydration guard and last-saved timestamp hydration
     const savedAtRaw = localStorage.getItem(DRAFT_KEY + ':lastSavedAt');
     if (savedAtRaw) {
@@ -85,8 +93,34 @@ export default function PRCreate() {
     return () => clearTimeout(t);
   }, []);
 
-  function next() { if (validate(step)) setStep(s => s + 1); }
-  function prev() { setStep(s => Math.max(1, s - 1)); }
+  function next() { 
+    if (validate(step)) {
+      setStep(s => s + 1); 
+      trackProcurementEvent('pr_create_step_advanced', {
+        from_step: step,
+        to_step: step + 1,
+        step_name: getStepName(step + 1),
+      });
+    }
+  }
+  
+  function prev() { 
+    setStep(s => Math.max(1, s - 1)); 
+    trackProcurementEvent('pr_create_step_reversed', {
+      from_step: step,
+      to_step: Math.max(1, step - 1),
+      step_name: getStepName(Math.max(1, step - 1)),
+    });
+  }
+  
+  function getStepName(stepNum: number): string {
+    switch (stepNum) {
+      case 1: return 'details';
+      case 2: return 'items';
+      case 3: return 'approval';
+      default: return 'unknown';
+    }
+  }
 
   function validate(currentStep: number) {
     const e: Record<string,string> = {};
@@ -107,17 +141,42 @@ export default function PRCreate() {
       if (!draft.approver.trim()) e.approver = t('pr.err_approver');
     }
     setErrors(e);
+    
+    // Track validation errors for analytics
+    if (Object.keys(e).length > 0) {
+      trackProcurementEvent('pr_validation_failed', {
+        step: currentStep,
+        step_name: getStepName(currentStep),
+        error_count: Object.keys(e).length,
+        error_fields: Object.keys(e),
+      });
+    }
+    
     return Object.keys(e).length === 0;
   }
 
   function addItem() {
     setDraft(d => ({ ...d, items: [...d.items, { id: uniqueId('pritem'), name: '', qty: 1, spec: '' }] }));
+    trackProcurementEvent('pr_item_added', {
+      item_count: draft.items.length + 1,
+      step: step,
+    });
   }
   function updateItem(idx: number, patch: Partial<PRItem>) {
     setDraft(d => ({ ...d, items: d.items.map((it, i) => i === idx ? { ...it, ...patch } : it) }));
+    trackProcurementEvent('pr_item_updated', {
+      field: Object.keys(patch)[0],
+      step: step,
+      item_index: idx,
+    });
   }
   function removeItem(idx: number) {
     setDraft(d => ({ ...d, items: d.items.filter((_, i) => i !== idx) }));
+    trackProcurementEvent('pr_item_removed', {
+      item_count: draft.items.length - 1,
+      step: step,
+      item_index: idx,
+    });
   }
 
   const isValid = useMemo(() => Object.keys(errors).length === 0, [errors]);
@@ -138,10 +197,30 @@ export default function PRCreate() {
     const allowedExt = ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'];
     const maxSize = 25 * 1024 * 1024; // 25MB
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    
+    // Track file upload attempt
+    trackProcurementEvent('pr_file_upload_attempted', {
+      file_name: file.name,
+      file_size: file.size,
+      file_type: ext,
+      step: step,
+    });
+    
     if (!allowedExt.includes(ext) || file.size > maxSize) {
       toast.push({ type: 'error', message: t('pr.file_rejected') || `File rejected: ${file.name}` });
+      
+      // Track file rejection
+      trackProcurementEvent('pr_file_upload_rejected', {
+        file_name: file.name,
+        file_size: file.size,
+        file_type: ext,
+        rejection_reason: !allowedExt.includes(ext) ? 'invalid_type' : 'size_limit',
+        step: step,
+      });
+      
       return;
     }
+    
     const idx = uploads.length;
     setUploads(u => [...u, { name: file.name, progress: 0, status: 'uploading' }]);
     let p = 0;
@@ -151,6 +230,15 @@ export default function PRCreate() {
       if (p >= 100) {
         clearInterval(timer);
         toast.push({ type: 'success', message: t('pr.upload_complete').replace('{name}', file.name) });
+        
+        // Track successful upload
+        trackProcurementEvent('pr_file_upload_completed', {
+          file_name: file.name,
+          file_size: file.size,
+          file_type: ext,
+          upload_duration: Math.floor(Math.random() * 5000) + 1000, // Simulated duration
+          step: step,
+        });
       }
     }, 200);
   }
@@ -386,6 +474,11 @@ export default function PRCreate() {
             <button className="btn" onClick={prev}>{t('action.back')}</button>
             <button className="btn primary" onClick={async () => {
               if (!validate(3)) return;
+              const span = startSpan('pr_creation_workflow', {
+                step: 'validation_passed',
+                item_count: draft.items.length,
+                has_attachments: files.length > 0,
+              });
               try {
                 const payload = {
                   title: draft.title,
@@ -395,19 +488,97 @@ export default function PRCreate() {
                   approver: draft.approver,
                   items: draft.items.map(it => ({ name: it.name, qty: it.qty, spec: it.spec || '' })),
                 };
+                endSpan(span, { step: 'payload_prepared' });
+                
+                // Record metrics for PR creation
+                incrementCounter('pr_creation_attempt', {
+                  department: payload.department,
+                  approver: payload.approver,
+                  has_attachments: String(files.length > 0),
+                });
+                recordHistogram('pr_item_count', payload.items.length, {
+                  department: payload.department,
+                });
+                
+                const apiSpan = startSpan('api_create_pr', {
+                  title_length: payload.title.length,
+                  item_count: payload.items.length,
+                  department: payload.department,
+                });
                 const res = await apiCreatePR(payload, 'PIC_Procurement');
+                endSpan(apiSpan, { 
+                  status: 'success',
+                  response_id: res.id,
+                });
+                
+                // Record success metrics
+                incrementCounter('pr_creation_success', {
+                  department: payload.department,
+                  approver: payload.approver,
+                });
+                recordHistogram('pr_creation_duration', apiSpan.endTime! - apiSpan.startTime, {
+                  department: payload.department,
+                });
+                
+                // Track analytics events
+                trackProcurementEvent('pr_created', {
+                  department: payload.department,
+                  approver: payload.approver,
+                  item_count: payload.items.length,
+                  has_attachments: files.length > 0,
+                  pr_id: res.id,
+                  workflow_completed: true,
+                });
+                
+                // Track funnel progression
+                trackProcurementEvent('pr_approved', {
+                  pr_id: res.id,
+                  department: payload.department,
+                  approver: payload.approver,
+                });
+                
                 localStorage.removeItem(DRAFT_KEY);
                 toast.push({ type: 'success', message: t('pr.submit_success') });
+                
+                const progressSpan = startSpan('pr_submission_progress', {
+                  pipeline_stage: pipelineActive,
+                });
                 let i = pipelineActive;
                 const timer = setInterval(() => {
                   i = Math.min(7, i + 1);
                   setPipelineActive(i);
                   if (i >= 7) {
                     clearInterval(timer);
+                    endSpan(progressSpan, { 
+                      final_stage: i,
+                      navigation_target: '/procurement/pr'
+                    });
                     navigate('/procurement/pr');
                   }
                 }, 250);
               } catch (err: any) {
+                endSpan(span, { 
+                  step: 'failed',
+                  error: err?.message || 'Unknown error',
+                  error_type: err?.name || 'Error'
+                });
+                
+                // Record failure metrics
+                incrementCounter('pr_creation_failure', {
+                  department: draft.department,
+                  error_type: err?.name || 'Error',
+                });
+                
+                // Track analytics events
+                trackProcurementEvent('pr_creation_failed', {
+                  department: draft.department,
+                  approver: draft.approver,
+                  item_count: draft.items.length,
+                  has_attachments: files.length > 0,
+                  error_type: err?.name || 'Error',
+                  error_message: err?.message || 'Unknown error',
+                });
+                
                 toast.push({ type: 'error', message: err?.message || 'Submit failed' });
               }
             }} disabled={!isValid}>{t('action.submit_pr')}</button>

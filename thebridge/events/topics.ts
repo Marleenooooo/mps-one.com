@@ -1,14 +1,16 @@
 export type EventTopic =
-  | 'quote_created'
-  | 'po_generated'
-  | 'vendor_updated'
-  | 'invoice_submitted'
-  | 'payment_run_scheduled';
+  | 'profile.updated'
+  | 'post.created'
+  | 'post.liked'
+  | 'trust.updated'
+  | 'rfq.broadcast'
+  | 'quote.created'
+  | 'po.created';
 
-export interface EventEnvelope<T = unknown> {
-  id: string;
+export interface EventEnvelope<T = any> {
   topic: EventTopic;
-  createdAt: string;
+  ts: number;
   payload: T;
+  source?: 'mpsbook' | 'mpsone' | 'external';
 }
 

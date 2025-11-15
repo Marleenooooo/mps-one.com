@@ -6,6 +6,8 @@ import { AuditTimeline } from '../../components/UI/AuditTimeline';
 import { formatIDR } from '../../components/utils/format';
 import { useI18n } from '../../components/I18nProvider';
 import { canPerform } from '../../services/permissions';
+import { startSpan, endSpan, incrementCounter, recordHistogram } from '../../services/monitoring';
+import { trackQuoteEvent, trackProcurementEvent } from '../../services/analytics';
 
 type QuoteVersion = { version: number; total: number; taxPct: number; discountPct: number; validUntil: string; status?: 'accepted' | 'pending' | 'rejected' };
 
@@ -23,6 +25,13 @@ export default function QuoteComparison() {
       try { navigate('/procurement/workflow', { replace: true }); } catch {}
       return;
     }
+    
+    // Track page view
+    trackQuoteEvent('quote_comparison_page_viewed', {
+      pr_id: prId,
+      user_type: userType,
+      quote_count: Object.keys(quotes).length,
+    });
     // Guard: only allow viewing comparison for Approved PRs
     try {
       const rows = JSON.parse(localStorage.getItem('mock_pr_rows') || '[]');
@@ -57,6 +66,28 @@ export default function QuoteComparison() {
   }, [prId]);
 
   function acceptQuote(supplierId: string, version: number) {
+    const span = startSpan('quote_approval_workflow', {
+      action: 'approve',
+      supplier_id: supplierId,
+      quote_version: version,
+      pr_id: prId,
+      has_permission: canPerform('evaluate:quotes'),
+    });
+    
+    // Record quote approval metrics
+    incrementCounter('quote_approval_attempt', {
+      action: 'approve',
+      supplier_id: supplierId,
+    });
+    
+    // Track analytics events
+    trackQuoteEvent('quote_approval_attempted', {
+      supplier_id: supplierId,
+      quote_version: version,
+      pr_id: prId,
+      has_permission: canPerform('evaluate:quotes'),
+    });
+    
     const next = { ...quotes };
     const list = (next[supplierId] || []).map(q => ({ ...q, status: q.version === version ? 'accepted' : q.status }));
     next[supplierId] = list;
@@ -72,11 +103,73 @@ export default function QuoteComparison() {
       listAudit.push({ entity: 'PR', id: String(prId), action: 'quote_approved', actorRole: localStorage.getItem('mpsone_role'), actorType: localStorage.getItem('mpsone_user_type'), at: Date.now(), comment: `Supplier ${supplierId} v${version}` });
       audit[key] = listAudit;
       pillarStorage.setItem('mpsone_audit_trail', JSON.stringify(audit));
+      
+      endSpan(span, {
+        status: 'success',
+        storage_updated: true,
+        audit_logged: true,
+        quote_count: Object.keys(next).length,
+      });
+      
+      // Record success metrics
+      incrementCounter('quote_approval_success', {
+        action: 'approve',
+        supplier_id: supplierId,
+      });
+      
+      // Track analytics events
+      trackQuoteEvent('quote_approved', {
+        supplier_id: supplierId,
+        quote_version: version,
+        pr_id: prId,
+        quote_value: list.find(q => q.version === version)?.total || 0,
+        workflow_progression: true,
+      });
+      
+      // Track funnel progression
+      trackProcurementEvent('quote_approved', {
+        supplier_id: supplierId,
+        quote_version: version,
+        pr_id: prId,
+        quote_value: list.find(q => q.version === version)?.total || 0,
+      });
+      
       alert(t('quote.approved_alert').replace('{version}', String(version)).replace('{supplier}', String(supplierId)) || `Approved quote v${version} from ${supplierId}. You can now generate a PO.`);
-    } catch {}
+    } catch (error) {
+      endSpan(span, {
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        storage_updated: false,
+      });
+      
+      // Record failure metrics
+      incrementCounter('quote_approval_failure', {
+        action: 'approve',
+        supplier_id: supplierId,
+        error_type: error instanceof Error ? error.name : 'UnknownError',
+      });
+      
+      throw error;
+    }
   }
 
   function rejectQuote(supplierId: string, version: number) {
+    const span = startSpan('quote_rejection_workflow', {
+      action: 'reject',
+      supplier_id: supplierId,
+      quote_version: version,
+      pr_id: prId,
+      has_permission: canPerform('evaluate:quotes'),
+    });
+    
+    // Track analytics events
+    trackQuoteEvent('quote_rejection_attempted', {
+      supplier_id: supplierId,
+      quote_version: version,
+      pr_id: prId,
+      has_permission: canPerform('evaluate:quotes'),
+    });
+    
     const next = { ...quotes };
     const list = (next[supplierId] || []).map(q => ({ ...q, status: q.version === version ? 'rejected' : q.status }));
     next[supplierId] = list;
@@ -89,8 +182,32 @@ export default function QuoteComparison() {
       listAudit.push({ entity: 'PR', id: String(prId), action: 'quote_rejected', actorRole: localStorage.getItem('mpsone_role'), actorType: localStorage.getItem('mpsone_user_type'), at: Date.now(), comment: `Supplier ${supplierId} v${version}` });
       audit[key] = listAudit;
       pillarStorage.setItem('mpsone_audit_trail', JSON.stringify(audit));
+      
+      endSpan(span, {
+        status: 'success',
+        storage_updated: true,
+        audit_logged: true,
+        quote_count: Object.keys(next).length,
+      });
+      
+      // Track analytics events
+      trackQuoteEvent('quote_rejected', {
+        supplier_id: supplierId,
+        quote_version: version,
+        pr_id: prId,
+        quote_value: list.find(q => q.version === version)?.total || 0,
+        workflow_progression: false,
+      });
+      
       alert(t('quote.rejected_alert').replace('{version}', String(version)).replace('{supplier}', String(supplierId)) || `Rejected quote v${version} from ${supplierId}.`);
-    } catch {}
+    } catch (error) {
+      endSpan(span, {
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        storage_updated: false,
+      });
+      throw error;
+    }
   }
 
   const supplierIds = useMemo(() => Object.keys(quotes), [quotes]);
@@ -135,6 +252,25 @@ export default function QuoteComparison() {
                     {q.status === 'accepted' ? (
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button className="btn" aria-disabled={!canPerform('create:po')} onClick={() => {
+                          const span = startSpan('po_generation_workflow', {
+                            action: 'generate_from_quote',
+                            pr_id: prId,
+                            supplier_id: sid,
+                            quote_version: q.version,
+                            has_permission: canPerform('create:po'),
+                            quote_total: q.total,
+                          });
+                          
+                          // Record PO generation metrics
+                          incrementCounter('po_generation_attempt', {
+                            supplier_id: sid,
+                            quote_version: String(q.version),
+                          });
+                          recordHistogram('quote_total_value', q.total, {
+                            supplier_id: sid,
+                            quote_version: String(q.version),
+                          });
+                          
                           try {
                             const poSeed = { prId, supplierId: sid, version: q.version };
                             pillarStorage.setItem('mpsone_po_from_quote', JSON.stringify(poSeed));
@@ -144,7 +280,36 @@ export default function QuoteComparison() {
                             listAudit.push({ entity: 'PR', id: String(prId), action: 'po_generate', actorRole: localStorage.getItem('mpsone_role'), actorType: localStorage.getItem('mpsone_user_type'), at: Date.now(), comment: `From ${sid} v${q.version}` });
                             audit[key] = listAudit;
                             pillarStorage.setItem('mpsone_audit_trail', JSON.stringify(audit));
-                          } catch {}
+                            
+                            endSpan(span, {
+                              status: 'success',
+                              storage_updated: true,
+                              audit_logged: true,
+                              navigation_target: '/procurement/po/preview',
+                            });
+                            
+                            // Record success metrics
+                            incrementCounter('po_generation_success', {
+                              supplier_id: sid,
+                              quote_version: String(q.version),
+                            });
+                            
+                          } catch (error) {
+                            endSpan(span, {
+                              status: 'error',
+                              error: error instanceof Error ? error.message : 'Unknown error',
+                              storage_updated: false,
+                            });
+                            
+                            // Record failure metrics
+                            incrementCounter('po_generation_failure', {
+                              supplier_id: sid,
+                              quote_version: String(q.version),
+                              error_type: error instanceof Error ? error.name : 'UnknownError',
+                            });
+                            
+                            throw error;
+                          }
                           navigate('/procurement/po/preview');
                         }}>{t('po.generate_from_quote') || 'Generate PO'}</button>
                       </div>
